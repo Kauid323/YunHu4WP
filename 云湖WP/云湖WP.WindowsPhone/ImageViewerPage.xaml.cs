@@ -6,6 +6,7 @@ using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using 云湖WP.Api.Message;
 using 云湖WP.Utils;
@@ -125,6 +126,11 @@ namespace 云湖WP
             {
                 BorderAvatarLetter.Visibility = Visibility.Collapsed;
                 BtnSave.Visibility = Visibility.Visible;
+                UpdateImageContainerSize();
+                if (ImgScrollViewer != null)
+                {
+                    ImgScrollViewer.ChangeView(0, 0, 1.0f);
+                }
             }
             else
             {
@@ -139,6 +145,44 @@ namespace 云湖WP
                     PanelError.Visibility = Visibility.Visible;
                 }
                 BtnSave.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void ImgScrollViewer_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateImageContainerSize();
+        }
+
+        private void UpdateImageContainerSize()
+        {
+            if (ImgScrollViewer == null || ImageContainer == null || ImgFull == null) return;
+
+            double vw = ImgScrollViewer.ActualWidth > 0 ? ImgScrollViewer.ActualWidth : Window.Current.Bounds.Width;
+            double vh = ImgScrollViewer.ActualHeight > 0 ? ImgScrollViewer.ActualHeight : Window.Current.Bounds.Height;
+
+            if (vw > 0 && vh > 0)
+            {
+                ImageContainer.Width = vw;
+                ImageContainer.Height = vh;
+                ImgFull.Width = vw;
+                ImgFull.Height = vh;
+            }
+        }
+
+        private void ImgScrollViewer_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            if (ImgScrollViewer == null) return;
+
+            if (ImgScrollViewer.ZoomFactor > 1.05f)
+            {
+                // 双击缩小恢复至全屏自适应
+                ImgScrollViewer.ChangeView(null, null, 1.0f);
+            }
+            else
+            {
+                // 双击放大 2.5 倍并居中到双击位置
+                var pos = e.GetPosition(ImageContainer);
+                ImgScrollViewer.ChangeView(pos.X, pos.Y, 2.5f);
             }
         }
 

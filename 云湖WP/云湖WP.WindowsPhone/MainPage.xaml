@@ -196,7 +196,7 @@
                         </ListView.ItemContainerStyle>
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <Border BorderThickness="1" BorderBrush="#25FFFFFF" Background="#0AFFFFFF" Padding="14" Tapped="PostCard_Tapped">
+                                <Border BorderThickness="1" BorderBrush="#25FFFFFF" Background="#0AFFFFFF" Padding="14">
                                     <StackPanel>
                                         <!-- 作者信息行 -->
                                         <Grid Margin="0,0,0,8">

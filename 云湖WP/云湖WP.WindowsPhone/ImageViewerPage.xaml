@@ -14,17 +14,19 @@
 
         <!-- 纯全屏手势缩放与查看区 -->
         <ScrollViewer x:Name="ImgScrollViewer" 
-                      HorizontalScrollBarVisibility="Auto" 
-                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Hidden" 
+                      VerticalScrollBarVisibility="Hidden"
                       HorizontalScrollMode="Auto"
                       VerticalScrollMode="Auto"
                       ZoomMode="Enabled" 
                       MinZoomFactor="1.0" 
-                      MaxZoomFactor="4.0"
+                      MaxZoomFactor="5.0"
                       Background="Black"
                       HorizontalAlignment="Stretch"
-                      VerticalAlignment="Stretch">
-            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                      VerticalAlignment="Stretch"
+                      DoubleTapped="ImgScrollViewer_DoubleTapped"
+                      SizeChanged="ImgScrollViewer_SizeChanged">
+            <Grid x:Name="ImageContainer" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <!-- 纯字形默认头像块 (当无头像图片或未设置头像时在中心大尺寸展示) -->
                 <Border x:Name="BorderAvatarLetter" Width="180" Height="180" Background="{ThemeResource PhoneAccentBrush}" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <TextBlock x:Name="TxtAvatarLetter" Text="云" FontSize="72" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />

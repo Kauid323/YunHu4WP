@@ -117,6 +117,8 @@
       <RootProperty Name="Padding" />
       <RootProperty Name="Foreground" />
       <RootEvent Name="ViewChanged" />
+      <RootEvent Name="DoubleTapped" />
+      <RootEvent Name="SizeChanged" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.TextBox">
       <RootProperty Name="Header" />

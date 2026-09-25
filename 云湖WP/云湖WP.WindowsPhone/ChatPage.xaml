@@ -80,7 +80,7 @@
                     <Border x:Name="TopLoadMoreBorder" HorizontalAlignment="Stretch" Padding="8,8" Margin="0,0,0,8" Background="Transparent" Tapped="TopLoadMoreBorder_Tapped" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <SymbolIcon Symbol="Refresh" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock x:Name="TxtTopLoadMore" Text="点击或继续上滑加载更早消息..." FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                            <TextBlock x:Name="TxtTopLoadMore" Text="点击加载更早历史消息" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
                 </ListView.Header>

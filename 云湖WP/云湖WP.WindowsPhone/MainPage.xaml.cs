@@ -627,16 +627,6 @@ namespace 云湖WP
             }
         }
 
-        private void PostCard_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-            var element = sender as FrameworkElement;
-            if (element != null && element.DataContext is CommunityPostItem)
-            {
-                var post = element.DataContext as CommunityPostItem;
-                ShowPostDetails(post);
-            }
-        }
-
         private void ShowPostDetails(CommunityPostItem post)
         {
             if (post == null) return;

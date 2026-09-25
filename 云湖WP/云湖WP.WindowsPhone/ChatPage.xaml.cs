@@ -39,6 +39,9 @@ namespace 云湖WP
         private bool _isLoadingHistory = false;
         private bool _hasMoreHistory = true;
         private bool _isSending = false;
+        private bool _isInitialLoadDone = false;
+        private double _lastScrollOffset = 0;
+        private DateTime _lastLoadMoreTime = DateTime.MinValue;
 
         public ChatPage()
         {
@@ -90,6 +93,8 @@ namespace 云湖WP
 
             _hasMoreHistory = true;
             _isLoadingHistory = false;
+            _isInitialLoadDone = false;
+            AppLogger.Log("ChatPage", string.Format("OnNavigatedTo: ChatId={0}, Title={1}", _chatId, _title));
             await LoadHistoryMessagesAsync();
         }
 
@@ -118,6 +123,7 @@ namespace 云湖WP
                 _avatarUrl = "";
                 _hasMoreHistory = true;
                 _isLoadingHistory = false;
+                _isInitialLoadDone = false;
                 if (TxtChatTitle != null)
                 {
                     TxtChatTitle.Text = "云湖聊天";
@@ -161,15 +167,25 @@ namespace 云湖WP
             var sv = sender as ScrollViewer;
             if (sv == null) return;
 
-            // 当滑动到顶部 (VerticalOffset <= 60) 且有更多历史数据且当前不在加载中时触发
-            if (sv.VerticalOffset <= 60 && !_isLoadingHistory && _hasMoreHistory && _messageList.Count > 0)
+            // 严格防护：必须已完成初次加载、当前无加载任务、有更多历史数据
+            if (_isInitialLoadDone && !_isLoadingHistory && _hasMoreHistory && _messageList.Count > 0)
             {
-                await LoadMoreHistoryMessagesAsync();
+                // 只有在列表已具备滚动内容（高度>120）、用户主动由下方向上滑动到顶部边缘（VerticalOffset <= 10 且 _lastScrollOffset > 30）时才触发
+                if (sv.ScrollableHeight > 120 && sv.VerticalOffset <= 10 && _lastScrollOffset > 30)
+                {
+                    if ((DateTime.Now - _lastLoadMoreTime).TotalMilliseconds > 2500)
+                    {
+                        AppLogger.Log("ChatPage", string.Format("User scroll reached top, trigger LoadMoreHistory: Offset={0}, Last={1}, Scrollable={2}", sv.VerticalOffset, _lastScrollOffset, sv.ScrollableHeight));
+                        await LoadMoreHistoryMessagesAsync();
+                    }
+                }
             }
+            _lastScrollOffset = sv.VerticalOffset;
         }
 
         private async void TopLoadMoreBorder_Tapped(object sender, TappedRoutedEventArgs e)
         {
+            AppLogger.Log("ChatPage", "TopLoadMoreBorder tapped manually");
             await LoadMoreHistoryMessagesAsync();
         }
 
@@ -201,7 +217,9 @@ namespace 云湖WP
 
             _isLoadingHistory = true;
             _hasMoreHistory = true;
+            _isInitialLoadDone = false;
             string errMsg = null;
+            AppLogger.Log("ChatPage", "LoadHistoryMessagesAsync started");
             try
             {
                 MsgProgressBar.Visibility = Visibility.Visible;
@@ -227,6 +245,8 @@ namespace 云湖WP
                     {
                         TopLoadMoreBorder.Visibility = _hasMoreHistory ? Visibility.Visible : Visibility.Collapsed;
                     }
+
+                    AppLogger.Log("ChatPage", string.Format("Initial messages loaded: {0}", list.Count));
                     ScrollToBottom();
 
                     // 平滑预加载发送者头像
@@ -255,14 +275,16 @@ namespace 云湖WP
             {
                 MsgProgressBar.Visibility = Visibility.Collapsed;
                 errMsg = "网络异常: " + ex.Message;
-            }
-            finally
-            {
-                _isLoadingHistory = false;
+                AppLogger.Log("ChatPage", "LoadHistoryMessagesAsync error: " + ex.Message);
             }
 
             // 确保绑定内部 ScrollViewer
             EnsureScrollViewerAttached();
+
+            // 延迟完成初始状态，避免进入页面时误触发分页
+            await Task.Delay(500);
+            _isInitialLoadDone = true;
+            _isLoadingHistory = false;
 
             if (errMsg != null)
             {
@@ -281,6 +303,9 @@ namespace 云湖WP
             }
 
             _isLoadingHistory = true;
+            _lastLoadMoreTime = DateTime.Now;
+            AppLogger.Log("ChatPage", "LoadMoreHistoryMessagesAsync starting...");
+
             if (TxtTopLoadMore != null)
             {
                 TxtTopLoadMore.Text = "正在加载更早历史消息...";
@@ -341,15 +366,33 @@ namespace 云湖WP
                         newOlderList.Add(m);
                     }
 
+                    AppLogger.Log("ChatPage", string.Format("Fetched {0} history items, new older items: {1}", res.Messages.Count, newOlderList.Count));
+
                     if (newOlderList.Count > 0)
                     {
                         // 确保新拉取的消息按时间升序排列
                         newOlderList.Sort((a, b) => a.SendTime.CompareTo(b.SendTime));
 
-                        // 倒序依次插入到头部 index 0 (由 ItemsStackPanel ItemsUpdatingScrollMode=KeepItemsInView 原生完美锚定视口，不再产生估算跳动)
+                        // 记录插入前顶部的消息作为锚点
+                        var anchorItem = _messageList.Count > 0 ? _messageList[0] : null;
+
+                        // 倒序依次插入到头部 index 0
                         for (int i = newOlderList.Count - 1; i >= 0; i--)
                         {
                             _messageList.Insert(0, newOlderList[i]);
+                        }
+
+                        // 保持视口定位在原顶部消息
+                        if (anchorItem != null)
+                        {
+                            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                            {
+                                try
+                                {
+                                    ChatListView.ScrollIntoView(anchorItem, ScrollIntoViewAlignment.Leading);
+                                }
+                                catch { }
+                            });
                         }
 
                         // 允许继续加载下一页更早的历史消息
@@ -382,16 +425,16 @@ namespace 云湖WP
             catch (Exception ex)
             {
                 MsgProgressBar.Visibility = Visibility.Collapsed;
-                System.Diagnostics.Debug.WriteLine("LoadMoreHistoryMessages failed: " + ex.Message);
+                AppLogger.Log("ChatPage", "LoadMoreHistoryMessages error: " + ex.Message);
             }
 
             if (TxtTopLoadMore != null)
             {
-                TxtTopLoadMore.Text = _hasMoreHistory ? "点击或继续上滑加载更早消息..." : "已加载全部历史消息";
+                TxtTopLoadMore.Text = _hasMoreHistory ? "点击加载更早历史消息" : "已加载全部历史消息";
             }
 
-            // 短暂延迟 300ms 释放加载状态，防止高频惯性滚动重复触发 (C# 5.0 语法兼容)
-            await Task.Delay(300);
+            // 保持加载锁定至少 1200ms，防止高频惯性滚动连环触发
+            await Task.Delay(1200);
             _isLoadingHistory = false;
         }
 

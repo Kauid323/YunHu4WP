@@ -43,9 +43,11 @@ namespace 云湖WP
         private async void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             e.Handled = true;
+            string err = string.Format("未捕获异常: {0}\n{1}", e.Message, e.Exception != null ? e.Exception.ToString() : "");
+            云湖WP.Utils.AppLogger.Log("UnhandledException", err);
             try
             {
-                var dialog = new Windows.UI.Popups.MessageDialog("程序发生未捕获异常:\n" + e.Message + "\n" + (e.Exception != null ? e.Exception.ToString() : ""), "运行错误");
+                var dialog = new Windows.UI.Popups.MessageDialog(err, "运行错误");
                 await dialog.ShowAsync();
             }
             catch { }
