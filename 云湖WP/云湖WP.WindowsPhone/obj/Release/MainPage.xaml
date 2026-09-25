@@ -24,7 +24,7 @@
                     </StackPanel>
 
                     <!-- 会话列表视图 (原生 Windows Phone 虚拟化列表) -->
-                    <ListView x:ConnectionId='14' x:Name="ConvListView" 
+                    <ListView x:ConnectionId='15' x:Name="ConvListView" 
                               SelectionMode="None" 
                               IsItemClickEnabled="True" 
                                                                 
@@ -74,7 +74,7 @@
 
             <!-- 2. 联系人与群组 -->
             <PivotItem Header="联系人" Margin="0">
-                <ScrollViewer x:ConnectionId='8' x:Name="ContactsScrollViewer"
+                <ScrollViewer x:ConnectionId='9' x:Name="ContactsScrollViewer"
                               HorizontalScrollMode="Disabled" 
                               HorizontalScrollBarVisibility="Disabled" 
                               VerticalScrollMode="Auto" 
@@ -82,7 +82,7 @@
                                                                      >
                     <StackPanel Margin="16,10,16,24">
                         <!-- 分类导航 -->
-                        <Border x:ConnectionId='9' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                                >
+                        <Border x:ConnectionId='10' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                                >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="40" />
@@ -97,7 +97,7 @@
                             </Grid>
                         </Border>
 
-                        <Border x:ConnectionId='10' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                                >
+                        <Border x:ConnectionId='11' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                                >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="40" />
@@ -112,7 +112,7 @@
                             </Grid>
                         </Border>
 
-                        <Border x:ConnectionId='11' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                                >
+                        <Border x:ConnectionId='12' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                                >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="40" />
@@ -131,7 +131,7 @@
                         <TextBlock Text="常用联系" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,20,0,8" />
 
                         <!-- 联系人条目 -->
-                        <Border x:ConnectionId='12' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                            >
+                        <Border x:ConnectionId='13' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                            >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="46" />
@@ -147,7 +147,7 @@
                             </Grid>
                         </Border>
 
-                        <Border x:ConnectionId='13' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                            >
+                        <Border x:ConnectionId='14' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                            >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="46" />
@@ -167,93 +167,103 @@
             </PivotItem>
 
             <!-- 3. 动态广场 -->
+            <!-- 3. 动态广场 (社区文章与推荐动态) -->
             <PivotItem Header="动态" Margin="0">
-                <ScrollViewer x:ConnectionId='7' x:Name="MomentsScrollViewer"
-                              HorizontalScrollMode="Disabled" 
-                              HorizontalScrollBarVisibility="Disabled" 
-                              VerticalScrollMode="Auto" 
-                              VerticalScrollBarVisibility="Auto"
-                                                                     >
-                    <StackPanel Margin="16,10,16,24">
-                        <!-- 动态卡片 1（Metro 无圆角） -->
-                        <Border BorderThickness="1" BorderBrush="#22FFFFFF" Background="#0AFFFFFF" Padding="14" Margin="0,0,0,14">
-                            <StackPanel>
-                                <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="36" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <Border Width="32" Height="32" Background="{ThemeResource PhoneAccentBrush}">
-                                        <TextBlock Text="湖" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                    </Border>
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
-                                        <TextBlock Text="云湖官方团队" FontSize="14" FontWeight="SemiBold" />
-                                        <TextBlock Text="今天 09:00" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" />
-                                    </StackPanel>
-                                    <Border Grid.Column="2" Background="{ThemeResource PhoneAccentBrush}" Padding="6,2" VerticalAlignment="Center">
-                                        <TextBlock Text="官方" FontSize="10" Foreground="White" />
-                                    </Border>
-                                </Grid>
+                <Grid Margin="0">
+                    <ProgressBar x:Name="CommunityProgressBar" IsIndeterminate="True" VerticalAlignment="Top" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}" Canvas.ZIndex="10"/>
 
-                                <TextBlock Text="云湖 Windows Phone 客户端正式启航！" FontSize="15" FontWeight="SemiBold" Margin="0,2,0,6" TextWrapping="Wrap" />
-                                <TextBlock Text="基于原生 WinRT Metro 现代设计风格，纯粹矩形方块，无圆角，超轻量，回归纯粹的沟通体验。" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" TextWrapping="Wrap" LineHeight="18" Margin="0,0,0,10" />
-
-                                <Grid Margin="0,4,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <SymbolIcon Symbol="Like" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="128 点赞" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                        <SymbolIcon Symbol="Comment" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="32 评论" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- 动态卡片 2 -->
-                        <Border BorderThickness="1" BorderBrush="#22FFFFFF" Background="#0AFFFFFF" Padding="14" Margin="0,0,0,14">
-                            <StackPanel>
-                                <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="36" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <Border Width="32" Height="32" Background="#FF7B1FA2">
-                                        <TextBlock Text="极" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                    </Border>
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
-                                        <TextBlock Text="极客讨论区" FontSize="14" FontWeight="SemiBold" />
-                                        <TextBlock Text="昨天 18:40" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" />
-                                    </StackPanel>
-                                </Grid>
-
-                                <TextBlock Text="WP8.1 Metro 现代磁贴设计为什么如此令人着迷？" FontSize="15" FontWeight="SemiBold" Margin="0,2,0,6" TextWrapping="Wrap" />
-                                <TextBlock Text="排版至上，几何直角，超清爽的信息流动，在如今圆角泛滥的时代尤为独特。" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" TextWrapping="Wrap" LineHeight="18" Margin="0,0,0,10" />
-
-                                <Grid Margin="0,4,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <SymbolIcon Symbol="Like" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="64 点赞" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                        <SymbolIcon Symbol="Comment" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="19 评论" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
+                    <!-- 空状态提示 -->
+                    <StackPanel x:Name="EmptyCommunityPanel" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16,0,16,0">
+                        <TextBlock Text="暂无动态内容" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                        <TextBlock Text="点击下方刷新或切换筛选查看最新分享" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Center" />
                     </StackPanel>
-                </ScrollViewer>
+
+                    <!-- 动态列表视图 (Metro 纯几何卡片) -->
+                    <ListView x:ConnectionId='7' x:Name="CommunityListView"
+                              SelectionMode="None"
+                              IsItemClickEnabled="True"
+                                                                     
+                                                               
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch"
+                              Padding="16,10">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0,0,0,12" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border x:ConnectionId='8' BorderThickness="1" BorderBrush="#25FFFFFF" Background="#0AFFFFFF" Padding="14"                         >
+                                    <StackPanel>
+                                        <!-- 作者信息行 -->
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="36" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            
+                                            <!-- 作者头像 (纯直角 Metro 32x32) -->
+                                            <Grid Width="32" Height="32" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                <Border Background="{ThemeResource PhoneAccentBrush}">
+                                                    <TextBlock Text="{Binding DisplayAvatarLetter}" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                </Border>
+                                                <Image Source="{Binding AvatarBitmap}" Stretch="UniformToFill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                                            </Grid>
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
+                                                <TextBlock Text="{Binding DisplayAuthor}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding DisplayTime}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,1,0,0" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- 文章标题 (加粗) -->
+                                        <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,6" />
+
+                                        <!-- 文章内容预览 (精简段落) -->
+                                        <TextBlock Text="{Binding Content}" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" TextWrapping="Wrap" LineHeight="18" MaxHeight="54" TextTrimming="CharacterEllipsis" Margin="0,0,0,10" />
+
+                                        <!-- 统计信息行 (点赞数、评论数、收藏数、投币数) -->
+                                        <Grid Margin="0,4,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- 1. 点赞数 -->
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                <SymbolIcon Symbol="Like" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding LikeText}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <!-- 2. 评论数 -->
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                <SymbolIcon Symbol="Comment" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding CommentText}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <!-- 3. 收藏数 -->
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                <SymbolIcon Symbol="Favorite" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding CollectText}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <!-- 4. 投币数 -->
+                                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                <FontIcon FontFamily="Segoe UI Symbol" Glyph="&#xE13D;" FontSize="11" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding AmountText}" FontSize="11" Foreground="{ThemeResource PhoneAccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
             </PivotItem>
 
             <!-- 4. 我的信息 -->
@@ -342,13 +352,21 @@
     <Page.BottomAppBar>
         <CommandBar x:Name="MainCommandBar" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" ClosedDisplayMode="Compact">
             <CommandBar.PrimaryCommands>
-                <AppBarButton x:ConnectionId='15' x:Name="AppBarBtnRefresh" Icon="Refresh" Label="刷新"                                />
-                <AppBarButton x:ConnectionId='16' x:Name="AppBarBtnNewChat" Icon="Add" Label="发起聊天"                                />
-                <AppBarButton x:ConnectionId='17' x:Name="AppBarBtnSearch" Icon="Find" Label="搜索"                               />
+                <AppBarButton x:ConnectionId='16' x:Name="AppBarBtnRefresh" Icon="Refresh" Label="刷新"                                />
+                <AppBarButton x:Name="AppBarBtnFilter" Icon="Filter" Label="筛选" Visibility="Collapsed">
+                    <AppBarButton.Flyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem x:ConnectionId='19' x:Name="FlyoutItemLatest" Text="最新文章 (当前)"                            />
+                            <MenuFlyoutItem x:ConnectionId='20' x:Name="FlyoutItemHot" Text="热门推荐"                         />
+                        </MenuFlyout>
+                    </AppBarButton.Flyout>
+                </AppBarButton>
+                <AppBarButton x:ConnectionId='17' x:Name="AppBarBtnNewChat" Icon="Add" Label="发起聊天"                                />
+                <AppBarButton x:ConnectionId='18' x:Name="AppBarBtnSearch" Icon="Find" Label="搜索"                               />
             </CommandBar.PrimaryCommands>
             <CommandBar.SecondaryCommands>
-                <AppBarButton x:ConnectionId='18' x:Name="AppBarBtnSettings" Label="设置"                                 />
-                <AppBarButton x:ConnectionId='19' x:Name="AppBarBtnLogout" Label="退出登录"                               />
+                <AppBarButton x:ConnectionId='21' x:Name="AppBarBtnSettings" Label="设置"                                 />
+                <AppBarButton x:ConnectionId='22' x:Name="AppBarBtnLogout" Label="退出登录"                               />
             </CommandBar.SecondaryCommands>
         </CommandBar>
     </Page.BottomAppBar>

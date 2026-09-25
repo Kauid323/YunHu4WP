@@ -180,20 +180,20 @@ namespace 云湖WP
             Frame.Navigate(typeof(ImageViewerPage), navArgs);
         }
 
-        private async void BtnCopyId_Click(object sender, RoutedEventArgs e)
+        private void BtnCopyId_Click(object sender, RoutedEventArgs e)
         {
-            await CopyIdInternalAsync();
+            CopyIdInternal();
         }
 
-        private async void BtnCopyId_Tapped(object sender, TappedRoutedEventArgs e)
+        private void BtnCopyId_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            await CopyIdInternalAsync();
+            CopyIdInternal();
         }
 
-        private async Task CopyIdInternalAsync()
+        private void CopyIdInternal()
         {
             if (string.IsNullOrEmpty(_userId)) return;
-            await ShowToastAsync("用户 ID: " + _userId);
+            Frame.Navigate(typeof(TextViewerPage), _userId);
         }
 
         private async void BtnCopyInviteCode_Click(object sender, RoutedEventArgs e)
@@ -213,7 +213,7 @@ namespace 云湖WP
                 await ShowToastAsync("暂无可用邀请码");
                 return;
             }
-            await ShowToastAsync("我的邀请码: " + _inviteCode);
+            Frame.Navigate(typeof(TextViewerPage), _inviteCode);
         }
 
         private void BtnEditProfile_Click(object sender, RoutedEventArgs e)

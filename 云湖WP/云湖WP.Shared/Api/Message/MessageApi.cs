@@ -568,6 +568,9 @@ namespace 云湖WP.Api.Message
                     case 9:
                         target.StickerUrl = ProtocolParser.ReadString(stream);
                         break;
+                    case 18:
+                        target.FileSize = (long)ProtocolParser.ReadUInt64(stream);
+                        break;
                     case 37:
                         target.Tip = ProtocolParser.ReadString(stream);
                         break;

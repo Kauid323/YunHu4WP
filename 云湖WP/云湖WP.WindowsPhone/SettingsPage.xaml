@@ -9,98 +9,76 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+        <!-- 原生 Windows Phone 8.1 Metro Pivot 设置容器 -->
+        <Pivot Title="设置" Margin="0">
+            
+            <!-- 1. 通用设置 -->
+            <PivotItem Header="通用" Margin="19,0,19,0">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,10,0,24">
+                        <!-- 极速省流开关 -->
+                        <ToggleSwitch x:Name="ToggleDisableImages" 
+                                      Header="禁用图片加载 (省流模式)" 
+                                      Toggled="ToggleDisableImages_Toggled" 
+                                      Margin="0,0,0,14" 
+                                      HorizontalAlignment="Left" />
 
-        <!-- 1. 原生 Windows Phone 大标题顶栏 -->
-        <StackPanel Grid.Row="0" Margin="19,18,19,8">
-            <TextBlock Text="云湖" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Typography.Capitals="SmallCaps" />
-            <TextBlock Text="设置" FontSize="42" FontWeight="Light" Margin="0,-4,0,0" />
-        </StackPanel>
+                        <!-- 并发下载线程数 -->
+                        <Grid Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="图片并发下载数" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                            <TextBlock x:Name="TxtThreadCount" Grid.Column="1" Text="4 线程" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" VerticalAlignment="Center" />
+                        </Grid>
 
-        <!-- 2. 设置内容区 (原生 WP 纯居左排版) -->
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <StackPanel Margin="19,10,19,24">
-                
-                <!-- 图片与性能设置 -->
-                <TextBlock Text="图片与性能" FontSize="15" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,12" HorizontalAlignment="Left" />
+                        <Slider x:Name="SliderThreads" 
+                                Minimum="1" 
+                                Maximum="16" 
+                                StepFrequency="1" 
+                                SmallChange="1" 
+                                LargeChange="2" 
+                                Value="4" 
+                                ValueChanged="SliderThreads_ValueChanged" 
+                                Margin="0,0,0,20"/>
 
-                <!-- 完全不加载任何图片开关 -->
-                <ToggleSwitch x:Name="ToggleDisableImages" 
-                              Header="完全不加载任何图片 (极速省流)" 
-                              Toggled="ToggleDisableImages_Toggled" 
-                              Margin="0,0,0,6" 
-                              HorizontalAlignment="Left" />
-                <TextBlock Text="开启后将完全禁用头像与图片下载，在低配或弱网环境下达到最高流畅度与省流效果。" 
-                           FontSize="12" 
-                           Foreground="{ThemeResource PhoneMidBrush}" 
-                           TextWrapping="Wrap" 
-                           LineHeight="16" 
-                           Margin="0,0,0,18" 
-                           HorizontalAlignment="Left" />
+                        <!-- 清除缓存按钮 -->
+                        <Button x:Name="BtnClearCache" 
+                                Content="清除本地缓存" 
+                                HorizontalAlignment="Stretch" 
+                                BorderThickness="1" 
+                                Click="BtnClearCache_Click" 
+                                Margin="0,0,0,16" />
+                    </StackPanel>
+                </ScrollViewer>
+            </PivotItem>
 
-                <!-- 并发下载线程数 -->
-                <Grid Margin="0,0,0,4">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="并发下载线程数" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                    <TextBlock x:Name="TxtThreadCount" Grid.Column="1" Text="4 线程" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" VerticalAlignment="Center" />
-                </Grid>
+            <!-- 2. 关于 -->
+            <PivotItem Header="关于" Margin="19,0,19,0">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,10,0,24">
+                        <TextBlock Text="云湖 Windows Phone 客户端" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,4" HorizontalAlignment="Left" />
+                        <TextBlock x:Name="TxtAppVersion" Text="版本 1.0.0.1 (WinRT Universal)" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,0,20" HorizontalAlignment="Left" />
 
-                <Slider x:Name="SliderThreads" 
-                        Minimum="1" 
-                        Maximum="16" 
-                        StepFrequency="1" 
-                        SmallChange="1" 
-                        LargeChange="2" 
-                        Value="4" 
-                        ValueChanged="SliderThreads_ValueChanged" 
-                        Margin="0,0,0,16"/>
-
-                <!-- 清除缓存按钮 -->
-                <Button x:Name="BtnClearCache" 
-                        Content="清除头像与图片缓存" 
-                        HorizontalAlignment="Stretch" 
-                        BorderThickness="1" 
-                        Click="BtnClearCache_Click" 
-                        Margin="0,0,0,24" />
-
-                <!-- 分割线 -->
-                <Border Height="1" Background="#1FFFFFFF" Margin="0,0,0,18" />
-
-                <!-- 关于云湖 WP -->
-                <TextBlock Text="关于" FontSize="15" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,10" HorizontalAlignment="Left" />
-                
-                <TextBlock Text="云湖 Windows Phone 客户端" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,2" HorizontalAlignment="Left" />
-                <TextBlock x:Name="TxtAppVersion" Text="版本 1.0.0.0 (WinRT Universal)" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,0,8" HorizontalAlignment="Left" />
-                <TextBlock Text="基于原生 Windows Phone 8.1 现代设计语言（Metro UI）打造，致敬纯粹几何直角与字阶排版美学，提供纯净专注的即时沟通体验。" 
-                           FontSize="13" 
-                           Foreground="{ThemeResource PhoneMidBrush}" 
-                           TextWrapping="Wrap" 
-                           LineHeight="18" 
-                           Margin="0,0,0,14" 
-                           HorizontalAlignment="Left" />
-
-                <!-- GitHub 开源仓库入口 -->
-                <Border BorderThickness="1" BorderBrush="#33FFFFFF" Padding="14,12" Background="Transparent" Margin="0,0,0,6" Tapped="BtnGithub_Tapped">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="开源地址 / GitHub" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Left" />
-                            <TextBlock Text="github.com/Kauid323/Yhchat_MD3" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,2,0,0" HorizontalAlignment="Left" />
-                        </StackPanel>
-                        <TextBlock Grid.Column="1" Text=">" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
-                    </Grid>
-                </Border>
-                
-            </StackPanel>
-        </ScrollViewer>
+                        <!-- GitHub 开源仓库入口 -->
+                        <Border BorderThickness="1" BorderBrush="#33FFFFFF" Padding="14,12" Background="Transparent" Margin="0,0,0,6" Tapped="BtnGithub_Tapped">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="开源地址 / GitHub" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                                    <TextBlock Text="github.com/Kauid323/Yhchat_MD3" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text=">" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </PivotItem>
+            
+        </Pivot>
     </Grid>
 </Page>

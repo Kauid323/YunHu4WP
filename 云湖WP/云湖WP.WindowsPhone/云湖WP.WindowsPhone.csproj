@@ -107,6 +107,12 @@
     <Compile Include="MyProfilePage.xaml.cs">
       <DependentUpon>MyProfilePage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="PostDetailPage.xaml.cs">
+      <DependentUpon>PostDetailPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TextViewerPage.xaml.cs">
+      <DependentUpon>TextViewerPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -152,6 +158,14 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="MyProfilePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="PostDetailPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="TextViewerPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

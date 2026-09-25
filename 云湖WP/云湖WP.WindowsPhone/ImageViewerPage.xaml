@@ -48,8 +48,8 @@
                 Visibility="Collapsed"
                 HorizontalAlignment="Right" 
                 VerticalAlignment="Bottom" 
-                Margin="0,0,18,24" 
-                Padding="16,10" 
+                Margin="0,0,18,21" 
+                Padding="13,10" 
                 Background="#B0000000" 
                 BorderBrush="#55FFFFFF" 
                 BorderThickness="1" 
@@ -57,7 +57,6 @@
                 Canvas.ZIndex="25">
             <StackPanel Orientation="Horizontal">
                 <SymbolIcon Symbol="Save" Foreground="White" Margin="0,0,8,0" VerticalAlignment="Center" />
-                <TextBlock Text="保存" FontSize="15" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center" />
             </StackPanel>
         </Button>
     </Grid>

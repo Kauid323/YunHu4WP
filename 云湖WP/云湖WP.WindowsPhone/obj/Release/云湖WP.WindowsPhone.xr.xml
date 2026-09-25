@@ -1,16 +1,31 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Roots >
   <Roots.PropertyPathNames>
+    <RootPropertyPathName Name="AmountText" />
+    <RootPropertyPathName Name="CollectText" />
+    <RootPropertyPathName Name="CommentText" />
+    <RootPropertyPathName Name="LikeText" />
+    <RootPropertyPathName Name="Content" />
+    <RootPropertyPathName Name="Title" />
+    <RootPropertyPathName Name="DisplayTime" />
+    <RootPropertyPathName Name="DisplayAuthor" />
+    <RootPropertyPathName Name="AvatarBitmap" />
+    <RootPropertyPathName Name="DisplayAvatarLetter" />
     <RootPropertyPathName Name="FormattedTime" />
     <RootPropertyPathName Name="ChatContent" />
     <RootPropertyPathName Name="DisplayTitle" />
-    <RootPropertyPathName Name="AvatarBitmap" />
     <RootPropertyPathName Name="AvatarLetter" />
     <RootPropertyPathName Name="SelfBubbleVisibility" />
     <RootPropertyPathName Name="SenderAvatarBitmap" />
     <RootPropertyPathName Name="SenderAvatarLetter" />
     <RootPropertyPathName Name="TextMsgVisibility" />
     <RootPropertyPathName Name="Text" />
+    <RootPropertyPathName Name="FileMsgVisibility" />
+    <RootPropertyPathName Name="DownloadStatusText" />
+    <RootPropertyPathName Name="DownloadProgress" />
+    <RootPropertyPathName Name="DownloadProgressVisibility" />
+    <RootPropertyPathName Name="FormattedFileSize" />
+    <RootPropertyPathName Name="DisplayFileName" />
     <RootPropertyPathName Name="ImageMsgVisibility" />
     <RootPropertyPathName Name="OtherBubbleVisibility" />
     <RootPropertyPathName Name="DisplaySenderName" />
@@ -74,8 +89,9 @@
       <RootProperty Name="TextTrimming" />
       <RootProperty Name="TextWrapping" />
       <RootProperty Name="LineHeight" />
-      <RootProperty Name="Visibility" />
+      <RootProperty Name="MaxHeight" />
       <RootProperty Name="MaxWidth" />
+      <RootProperty Name="Visibility" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.PivotItem">
       <RootProperty Name="Header" />
@@ -104,6 +120,7 @@
       <RootProperty Name="FontSize" />
       <RootProperty Name="Margin" />
       <RootProperty Name="BorderThickness" />
+      <RootProperty Name="BorderBrush" />
       <RootProperty Name="VerticalAlignment" />
       <RootProperty Name="AcceptsReturn" />
       <RootProperty Name="Height" />
@@ -126,9 +143,11 @@
       <RootProperty Name="Padding" />
       <RootProperty Name="BorderThickness" />
       <RootProperty Name="Template" />
+      <RootProperty Name="Flyout" />
       <RootProperty Name="Visibility" />
       <RootProperty Name="BorderBrush" />
       <RootEvent Name="Click" />
+      <RootEvent Name="PointerPressed" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.ColumnDefinition">
       <RootProperty Name="Width" />
@@ -145,6 +164,8 @@
       <RootProperty Name="HorizontalAlignment" />
       <RootProperty Name="Width" />
       <RootProperty Name="Visibility" />
+      <RootProperty Name="MinWidth" />
+      <RootProperty Name="MaxWidth" />
       <RootEvent Name="Tapped" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.Image">
@@ -174,18 +195,15 @@
       <RootEvent Name="Click" />
     </RootType>
     <RootType FullName="云湖WP.LoginPage" />
-    <RootType FullName="Windows.UI.Xaml.Controls.SymbolIcon">
-      <RootProperty Name="Symbol" />
-      <RootProperty Name="Foreground" />
-      <RootProperty Name="Margin" />
-      <RootProperty Name="VerticalAlignment" />
-      <RootProperty Name="HorizontalAlignment" />
-    </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.ProgressBar">
       <RootProperty Name="IsIndeterminate" />
       <RootProperty Name="VerticalAlignment" />
       <RootProperty Name="Visibility" />
       <RootProperty Name="Foreground" />
+      <RootProperty Name="Value" />
+      <RootProperty Name="Minimum" />
+      <RootProperty Name="Maximum" />
+      <RootProperty Name="Height" />
       <RootProperty Name="Margin" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.Canvas">
@@ -197,9 +215,9 @@
       <RootProperty Name="IsItemClickEnabled" />
       <RootProperty Name="HorizontalAlignment" />
       <RootProperty Name="VerticalAlignment" />
+      <RootProperty Name="Padding" />
       <RootProperty Name="ItemContainerStyle" />
       <RootProperty Name="ItemTemplate" />
-      <RootProperty Name="Padding" />
       <RootProperty Name="Header" />
       <RootEvent Name="ItemClick" />
       <RootEvent Name="Loaded" />
@@ -219,17 +237,41 @@
     <RootType FullName="Windows.UI.Xaml.DataTemplate">
       <RootProperty Name="Template" />
     </RootType>
+    <RootType FullName="Windows.UI.Xaml.Controls.FontIcon">
+      <RootProperty Name="FontFamily" />
+      <RootProperty Name="Glyph" />
+      <RootProperty Name="FontSize" />
+      <RootProperty Name="Foreground" />
+      <RootProperty Name="Margin" />
+      <RootProperty Name="VerticalAlignment" />
+      <RootProperty Name="HorizontalAlignment" />
+    </RootType>
     <RootType FullName="Windows.UI.Xaml.Data.Binding" />
+    <RootType FullName="Windows.UI.Xaml.Controls.SymbolIcon">
+      <RootProperty Name="Symbol" />
+      <RootProperty Name="Foreground" />
+      <RootProperty Name="Margin" />
+      <RootProperty Name="VerticalAlignment" />
+      <RootProperty Name="HorizontalAlignment" />
+    </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.CommandBar">
       <RootProperty Name="Background" />
       <RootProperty Name="ClosedDisplayMode" />
       <RootProperty Name="PrimaryCommands" />
       <RootProperty Name="SecondaryCommands" />
-      <RootProperty Name="IsSticky" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.AppBarButton">
       <RootProperty Name="Icon" />
       <RootProperty Name="Label" />
+      <RootProperty Name="Visibility" />
+      <RootProperty Name="Flyout" />
+      <RootEvent Name="Click" />
+    </RootType>
+    <RootType FullName="Windows.UI.Xaml.Controls.MenuFlyout">
+      <RootProperty Name="Items" />
+    </RootType>
+    <RootType FullName="Windows.UI.Xaml.Controls.MenuFlyoutItem">
+      <RootProperty Name="Text" />
       <RootEvent Name="Click" />
     </RootType>
     <RootType FullName="云湖WP.MainPage" />
@@ -241,14 +283,6 @@
       <RootProperty Name="Template" />
     </RootType>
     <RootType FullName="Microsoft.Xaml.Tools.DirectUI.ProxyTypes.TemplateBindingExtension" />
-    <RootType FullName="Windows.UI.Xaml.Controls.FontIcon">
-      <RootProperty Name="FontFamily" />
-      <RootProperty Name="Glyph" />
-      <RootProperty Name="FontSize" />
-      <RootProperty Name="Foreground" />
-      <RootProperty Name="HorizontalAlignment" />
-      <RootProperty Name="VerticalAlignment" />
-    </RootType>
     <RootType FullName="云湖WP.ChatPage" />
     <RootType FullName="Windows.UI.Xaml.Documents.Typography">
       <RootMethod Name="GetCapitals" />

@@ -7,6 +7,7 @@ using Windows.Phone.UI.Input;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Popups;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -37,6 +38,7 @@ namespace 云湖WP
         private ScrollViewer _chatScrollViewer;
         private bool _isLoadingHistory = false;
         private bool _hasMoreHistory = true;
+        private bool _isSending = false;
 
         public ChatPage()
         {
@@ -48,8 +50,10 @@ namespace 云湖WP
         {
             base.OnNavigatedTo(e);
 
-            // 注册硬件返回按键事件
+            // 注册硬件返回按键事件与软键盘面板监听
             HardwareButtons.BackPressed += HardwareButtons_BackPressed;
+            InputPane.GetForCurrentView().Showing += InputPane_Showing;
+            InputPane.GetForCurrentView().Hiding += InputPane_Hiding;
 
             // 如果是从子页面（如用户详情页、大图查看器）返回，且已有消息列表，直接保持原状态，不重复请求或刷新
             if (e.NavigationMode == NavigationMode.Back && _messageList.Count > 0)
@@ -93,6 +97,8 @@ namespace 云湖WP
         {
             base.OnNavigatedFrom(e);
             HardwareButtons.BackPressed -= HardwareButtons_BackPressed;
+            InputPane.GetForCurrentView().Showing -= InputPane_Showing;
+            InputPane.GetForCurrentView().Hiding -= InputPane_Hiding;
 
             if (_chatScrollViewer != null)
             {
@@ -340,26 +346,10 @@ namespace 云湖WP
                         // 确保新拉取的消息按时间升序排列
                         newOlderList.Sort((a, b) => a.SendTime.CompareTo(b.SendTime));
 
-                        // 记录插入前顶部的消息，以便插入后保持视图位置不跳变
-                        var previousTopItem = _messageList.Count > 0 ? _messageList[0] : null;
-
-                        // 倒序依次插入到头部 index 0
+                        // 倒序依次插入到头部 index 0 (由 ItemsStackPanel ItemsUpdatingScrollMode=KeepItemsInView 原生完美锚定视口，不再产生估算跳动)
                         for (int i = newOlderList.Count - 1; i >= 0; i--)
                         {
                             _messageList.Insert(0, newOlderList[i]);
-                        }
-
-                        // 恢复之前的顶部消息位置，避免视口跳动
-                        if (previousTopItem != null)
-                        {
-                            try
-                            {
-                                ChatListView.ScrollIntoView(previousTopItem, ScrollIntoViewAlignment.Leading);
-                            }
-                            catch
-                            {
-                                try { ChatListView.ScrollIntoView(previousTopItem); } catch { }
-                            }
                         }
 
                         // 允许继续加载下一页更早的历史消息
@@ -495,19 +485,40 @@ namespace 云湖WP
 #endif
 
         /// <summary>
-        /// 上传本地图片到七牛云并发送图片消息
+        /// 上传本地图片到七牛云并发送图片消息 (带实时进度条显示)
         /// </summary>
         private async Task UploadAndSendLocalImageAsync(Windows.Storage.StorageFile file)
         {
             if (file == null || string.IsNullOrEmpty(_token)) return;
 
             string errMsg = null;
-            MsgProgressBar.Visibility = Visibility.Visible;
+            UploadProgressPanel.Visibility = Visibility.Visible;
+            UploadProgressBar.Value = 0;
+            TxtUploadPercentage.Text = "0%";
+            TxtUploadStatus.Text = "准备上传...";
+
+            var uploadProgress = new Progress<double>(pct =>
+            {
+                UploadProgressBar.Value = pct;
+                TxtUploadPercentage.Text = string.Format("{0:0}%", pct);
+                if (pct < 20)
+                {
+                    TxtUploadStatus.Text = "准备图片数据...";
+                }
+                else if (pct < 95)
+                {
+                    TxtUploadStatus.Text = "正在直传七牛云...";
+                }
+                else
+                {
+                    TxtUploadStatus.Text = "上传完成，正在发送...";
+                }
+            });
 
             try
             {
-                // 调用系统七牛云直传组件
-                string publicUrl = await QiniuUploadHelper.UploadImageAsync(file, _token);
+                // 调用系统七牛云直传组件 (附带实时进度报告)
+                string publicUrl = await QiniuUploadHelper.UploadImageAsync(file, _token, uploadProgress);
                 if (!string.IsNullOrEmpty(publicUrl))
                 {
                     await DoSendImageAsync(publicUrl);
@@ -523,7 +534,7 @@ namespace 云湖WP
             }
             finally
             {
-                MsgProgressBar.Visibility = Visibility.Collapsed;
+                UploadProgressPanel.Visibility = Visibility.Collapsed;
             }
 
             if (errMsg != null)
@@ -564,6 +575,29 @@ namespace 云湖WP
             await dialog.ShowAsync();
         }
 
+        #region 软键盘与 CommandBar 交互防冲突处理
+
+        private void InputPane_Showing(InputPane sender, InputPaneVisibilityEventArgs args)
+        {
+            // 当软键盘弹出时，隐藏底部的 CommandBar，防止其遮挡或截获发送按钮的触摸事件
+            if (this.BottomAppBar != null)
+            {
+                this.BottomAppBar.Visibility = Visibility.Collapsed;
+                this.BottomAppBar.IsOpen = false;
+            }
+        }
+
+        private void InputPane_Hiding(InputPane sender, InputPaneVisibilityEventArgs args)
+        {
+            // 当软键盘收起时，恢复底部的 CommandBar
+            if (this.BottomAppBar != null)
+            {
+                this.BottomAppBar.Visibility = Visibility.Visible;
+            }
+        }
+
+        #endregion
+
         #region XAML 兼容事件处理器 (确保 VS2013 任意缓存版本均能 100% 编译通过)
 
         private void BtnAttach_Click(object sender, RoutedEventArgs e)
@@ -576,9 +610,10 @@ namespace 云湖WP
 
         private void TxtInput_GotFocus(object sender, RoutedEventArgs e)
         {
-            if (this.BottomAppBar != null && this.BottomAppBar.IsOpen)
+            if (this.BottomAppBar != null)
             {
                 this.BottomAppBar.IsOpen = false;
+                this.BottomAppBar.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -660,6 +695,12 @@ namespace 云湖WP
         private async void BtnSend_Click(object sender, RoutedEventArgs e)
         {
             await DoSendMessageAsync();
+            // 发送后保持输入框焦点，使用户可以连续键入，避免键盘意外收起
+            try
+            {
+                TxtInput.Focus(FocusState.Programmatic);
+            }
+            catch { }
         }
 
         private async void TxtInput_KeyDown(object sender, KeyRoutedEventArgs e)
@@ -668,50 +709,64 @@ namespace 云湖WP
             {
                 e.Handled = true;
                 await DoSendMessageAsync();
+                try
+                {
+                    TxtInput.Focus(FocusState.Programmatic);
+                }
+                catch { }
             }
         }
 
         private async Task DoSendMessageAsync()
         {
+            if (_isSending) return;
             string text = TxtInput.Text;
             if (string.IsNullOrWhiteSpace(text)) return;
 
+            _isSending = true;
             TxtInput.Text = "";
 
-            // 本地乐观添加消息
-            var localMsg = new ChatMessageItem
-            {
-                MsgId = Guid.NewGuid().ToString("N"),
-                ChatId = _chatId,
-                ChatType = _chatType,
-                Direction = "right",
-                ContentType = 1,
-                Text = text.Trim(),
-                SendTime = DateTime.UtcNow.Ticks / 10000 - 62135596800000L, // UTC ms
-                SenderName = "我"
-            };
-
-            _messageList.Add(localMsg);
-            EmptyMsgPanel.Visibility = Visibility.Collapsed;
-            ScrollToBottom();
-
-            string sendErr = null;
             try
             {
-                var res = await MessageApi.SendTextMessageAsync(_token, _chatId, _chatType, text.Trim());
-                if (!res.IsSuccess)
+                // 本地乐观添加消息
+                var localMsg = new ChatMessageItem
                 {
-                    sendErr = "发送失败: " + res.Msg;
+                    MsgId = Guid.NewGuid().ToString("N"),
+                    ChatId = _chatId,
+                    ChatType = _chatType,
+                    Direction = "right",
+                    ContentType = 1,
+                    Text = text.Trim(),
+                    SendTime = DateTime.UtcNow.Ticks / 10000 - 62135596800000L, // UTC ms
+                    SenderName = "我"
+                };
+
+                _messageList.Add(localMsg);
+                EmptyMsgPanel.Visibility = Visibility.Collapsed;
+                ScrollToBottom();
+
+                string sendErr = null;
+                try
+                {
+                    var res = await MessageApi.SendTextMessageAsync(_token, _chatId, _chatType, text.Trim());
+                    if (!res.IsSuccess)
+                    {
+                        sendErr = "发送失败: " + res.Msg;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    sendErr = "发送异常: " + ex.Message;
+                }
+
+                if (sendErr != null)
+                {
+                    await ShowToastAsync(sendErr);
                 }
             }
-            catch (Exception ex)
+            finally
             {
-                sendErr = "发送异常: " + ex.Message;
-            }
-
-            if (sendErr != null)
-            {
-                await ShowToastAsync(sendErr);
+                _isSending = false;
             }
         }
 
@@ -728,15 +783,13 @@ namespace 云湖WP
 
             var flyout = new MenuFlyout();
 
-            // 1. 复制文本 (填入输入框并自动全选，触发系统剪贴板复制栏)
+            // 1. 复制/查看文本 (进入独立全屏页面，巨大输入框随意复制)
             if (!string.IsNullOrEmpty(msg.Text))
             {
-                var itemCopy = new MenuFlyoutItem { Text = "复制/填入输入框" };
+                var itemCopy = new MenuFlyoutItem { Text = "复制/查看文本" };
                 itemCopy.Click += (s, args) =>
                 {
-                    TxtInput.Text = msg.Text ?? "";
-                    TxtInput.Focus(FocusState.Programmatic);
-                    TxtInput.SelectAll();
+                    Frame.Navigate(typeof(TextViewerPage), msg.Text);
                 };
                 flyout.Items.Add(itemCopy);
             }
@@ -806,6 +859,65 @@ namespace 云湖WP
             {
                 MsgProgressBar.Visibility = Visibility.Collapsed;
                 errMsg = "撤回异常: " + ex.Message;
+            }
+
+            if (errMsg != null)
+            {
+                await ShowToastAsync(errMsg);
+            }
+        }
+
+        /// <summary>
+        /// 点击文件消息卡片，带 Referer 防盗链请求头与实时进度条进行文件下载 (静默下载，不弹无谓 Toast)
+        /// </summary>
+        private async void FileBubble_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            e.Handled = true;
+            var element = sender as FrameworkElement;
+            if (element == null) return;
+
+            var msg = element.DataContext as ChatMessageItem;
+            if (msg == null) return;
+
+            if (string.IsNullOrEmpty(msg.FileUrl))
+            {
+                return;
+            }
+
+            if (msg.IsDownloading || msg.IsDownloaded)
+            {
+                return;
+            }
+
+            msg.IsDownloading = true;
+            msg.DownloadProgress = 0;
+            msg.DownloadStatusText = "准备下载...";
+
+            var downloadProgress = new Progress<double>(pct =>
+            {
+                msg.DownloadProgress = pct;
+                msg.DownloadStatusText = string.Format("下载中 {0:0}%", pct);
+            });
+
+            string errMsg = null;
+
+            try
+            {
+                var savedFile = await FileDownloadHelper.DownloadFileWithProgressAsync(
+                    msg.FileUrl,
+                    msg.DisplayFileName,
+                    msg.FileSize,
+                    downloadProgress);
+
+                msg.IsDownloading = false;
+                msg.IsDownloaded = true;
+                msg.DownloadStatusText = "已下载";
+            }
+            catch (Exception ex)
+            {
+                msg.IsDownloading = false;
+                msg.DownloadStatusText = "下载失败(重试)";
+                errMsg = "文件下载失败: " + ex.Message;
             }
 
             if (errMsg != null)

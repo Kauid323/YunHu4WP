@@ -26,12 +26,13 @@ namespace 云湖WP.Api.Common
         private const string FileBaseUrl = "https://chat-file.jwznb.com/";
 
         /// <summary>
-        /// 上传本地图片文件到七牛云并返回公网访问 URL
+        /// 上传本地图片文件到七牛云并返回公网访问 URL (支持上传实时进度通知)
         /// </summary>
-        public static async Task<string> UploadImageAsync(StorageFile file, string userToken)
+        public static async Task<string> UploadImageAsync(StorageFile file, string userToken, IProgress<double> progress = null)
         {
             if (file == null) throw new ArgumentNullException("file");
 
+            if (progress != null) progress.Report(5.0);
             AppLogger.Log("QiniuUpload", string.Format("开始处理本地图片: Name={0}, Path={1}", file.Name, file.Path));
 
             // 1. 获取图片上传 Token
@@ -42,6 +43,7 @@ namespace 云湖WP.Api.Common
                 AppLogger.Log("QiniuUpload", "错误: 获取七牛云上传 Token 为空");
                 throw new Exception("获取七牛云图片上传凭证失败");
             }
+            if (progress != null) progress.Report(15.0);
             AppLogger.Log("QiniuUpload", "获取上传 Token 成功: " + uploadToken.Substring(0, Math.Min(16, uploadToken.Length)) + "...");
 
             // 2. 使用安全 Stream 流式读取文件字节
@@ -77,14 +79,17 @@ namespace 云湖WP.Api.Common
             // 3. 查询七牛上传 Host
             string uploadHost = await QueryUploadHostAsync(uploadToken, ImageBucket);
             AppLogger.Log("QiniuUpload", "七牛目标上传 Host: " + uploadHost);
+            if (progress != null) progress.Report(20.0);
 
             // 4. 手工封装整块 Multipart 二进制 Payload
             string boundary = "----YunhuWPBoundary" + DateTime.UtcNow.Ticks.ToString("x");
             byte[] multipartPayload = BuildMultipartPayload(boundary, uploadToken, fileKey, fileBytes, mimeType);
             AppLogger.Log("QiniuUpload", string.Format("Multipart 表单构建完成，总 Payload 长度={0} 字节", multipartPayload.Length));
 
-            // 5. 执行直传
-            await DirectUploadPayloadAsync(uploadHost, boundary, multipartPayload);
+            // 5. 执行直传 (带流式写入进度报告)
+            await DirectUploadPayloadAsync(uploadHost, boundary, multipartPayload, progress);
+
+            if (progress != null) progress.Report(100.0);
 
             string finalUrl = ImageBaseUrl + fileKey;
             AppLogger.Log("QiniuUpload", "图片直传成功！公网地址: " + finalUrl);
@@ -209,7 +214,7 @@ namespace 云湖WP.Api.Common
         /// <summary>
         /// 使用多通道策略执行直传 (通道 1: HttpWebRequest; 通道 2: WinRT 单块 BufferContent; 支持 HTTPS/HTTP 自动降级)
         /// </summary>
-        private static async Task DirectUploadPayloadAsync(string uploadHost, string boundary, byte[] payload)
+        private static async Task DirectUploadPayloadAsync(string uploadHost, string boundary, byte[] payload, IProgress<double> progress = null)
         {
             Exception lastEx = null;
             string[] hostsToTry = new string[] { uploadHost, "upload-z2.qiniup.com", "up-z2.qiniup.com" };
@@ -232,7 +237,19 @@ namespace 云湖WP.Api.Common
 
                         using (var reqStream = await request.GetRequestStreamAsync())
                         {
-                            await reqStream.WriteAsync(payload, 0, payload.Length);
+                            int chunkSize = 32768; // 32 KB
+                            int sent = 0;
+                            while (sent < payload.Length)
+                            {
+                                int count = Math.Min(chunkSize, payload.Length - sent);
+                                await reqStream.WriteAsync(payload, sent, count);
+                                sent += count;
+                                if (progress != null)
+                                {
+                                    double pct = 20.0 + ((double)sent / payload.Length) * 75.0;
+                                    progress.Report(pct);
+                                }
+                            }
                             await reqStream.FlushAsync();
                         }
 

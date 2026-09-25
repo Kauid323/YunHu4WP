@@ -65,3 +65,13 @@ e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.
 e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\MyProfilePage.g.cs
 e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\MyProfilePage.xaml
 e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\MyProfilePage.xbf
+e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\PostDetailPage.g.i.cs
+e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\PostDetailPage.g.cs
+e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\PostDetailPage.xaml
+e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\PostDetailPage.xbf
+e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Debug\PostDetailPage.xbf
+e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\TextViewerPage.g.i.cs
+e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\TextViewerPage.g.cs
+e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\TextViewerPage.xaml
+e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\TextViewerPage.xbf
+e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Debug\TextViewerPage.xbf

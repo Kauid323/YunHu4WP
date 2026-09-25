@@ -70,6 +70,12 @@
     <AppxPackagedFile Include="e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Debug\MyProfilePage.xbf">
       <PackagePath>MyProfilePage.xbf</PackagePath>
     </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Debug\PostDetailPage.xbf">
+      <PackagePath>PostDetailPage.xbf</PackagePath>
+    </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Debug\TextViewerPage.xbf">
+      <PackagePath>TextViewerPage.xbf</PackagePath>
+    </AppxPackagedFile>
     <AppxPackagedFile Include="e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Debug\云湖WP.WindowsPhone.xr.xml">
       <PackagePath>云湖WP.WindowsPhone.xr.xml</PackagePath>
     </AppxPackagedFile>

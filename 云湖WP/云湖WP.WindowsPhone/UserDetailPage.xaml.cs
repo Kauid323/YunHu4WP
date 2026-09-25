@@ -46,6 +46,10 @@ namespace 云湖WP
             {
                 _userId = (string)e.Parameter;
             }
+            else if (e.Parameter != null)
+            {
+                _userId = e.Parameter.ToString();
+            }
 
             // 初始显示传入的概要信息
             UpdateInitialUI();
@@ -73,7 +77,14 @@ namespace 云湖WP
         {
             TxtUserName.Text = !string.IsNullOrEmpty(_userName) ? _userName : (!string.IsNullOrEmpty(_userId) ? _userId : "云湖用户");
             TxtUserId.Text = !string.IsNullOrEmpty(_userId) ? ("ID: " + _userId) : "ID: -";
-            TxtAvatarLetter.Text = !string.IsNullOrEmpty(_userName) ? _userName.Substring(0, 1).ToUpper() : "云";
+            string letter = "云";
+            if (!string.IsNullOrEmpty(_userName))
+            {
+                letter = _userName.Length >= 2 && char.IsSurrogatePair(_userName, 0)
+                    ? _userName.Substring(0, 2)
+                    : _userName.Substring(0, 1).ToUpper();
+            }
+            TxtAvatarLetter.Text = letter;
 
             if (!string.IsNullOrEmpty(_avatarUrl))
             {
@@ -221,10 +232,10 @@ namespace 云湖WP
             Frame.Navigate(typeof(ChatPage), navArgs);
         }
 
-        private async void BtnCopyId_Click(object sender, RoutedEventArgs e)
+        private void BtnCopyId_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrEmpty(_userId)) return;
-            await ShowToastAsync("用户 ID: " + _userId);
+            Frame.Navigate(typeof(TextViewerPage), _userId);
         }
 
         private void BtnBack_Click(object sender, RoutedEventArgs e)

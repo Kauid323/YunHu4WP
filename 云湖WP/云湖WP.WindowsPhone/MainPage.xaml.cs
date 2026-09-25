@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Windows.Phone.UI.Input;
 using Windows.Storage;
@@ -12,6 +13,8 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using 云湖WP.Api.Common;
+using 云湖WP.Api.Community;
+using 云湖WP.Api.Community.PostDetail;
 using 云湖WP.Api.Conversation;
 using 云湖WP.Api.Message;
 using 云湖WP.Api.User;
@@ -33,7 +36,15 @@ namespace 云湖WP
         private string _userToken = "";
 
         private ScrollViewer _convScrollViewer;
+        private ScrollViewer _communityScrollViewer;
         private DispatcherTimer _scrollDebounceTimer;
+
+        // 社区动态数据源与筛选状态
+        private ObservableCollection<CommunityPostItem> _communityPostList = new ObservableCollection<CommunityPostItem>();
+        private string _currentCommunityFilter = "latest"; // "latest" (最新) 或 "hot" (热门)
+        private int _communityPage = 1;
+        private bool _isLoadingCommunity = false;
+        private bool _hasMoreCommunity = true;
 
         public MainPage()
         {
@@ -94,9 +105,46 @@ namespace 云湖WP
             }
         }
 
-        private void MainPivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void OnCommunityScrollViewerViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
+        {
+            OnScrollViewerViewChanged(sender, e);
+
+            if (_communityScrollViewer == null || _isLoadingCommunity || !_hasMoreCommunity || string.IsNullOrEmpty(_userToken))
+            {
+                return;
+            }
+
+            // 滚动接近底部（距底 250px）时自动无感加载下一页，无需手动刷新或多余文字
+            if (_communityScrollViewer.ScrollableHeight > 0 &&
+                _communityScrollViewer.VerticalOffset >= _communityScrollViewer.ScrollableHeight - 250)
+            {
+                await LoadCommunityPostsAsync(isRefresh: false);
+            }
+        }
+
+        private async void MainPivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             HideCommandBarOnScroll();
+
+            if (MainPivot == null) return;
+
+            if (MainPivot.SelectedIndex == 2) // 动态 Tab
+            {
+                if (AppBarBtnFilter != null) AppBarBtnFilter.Visibility = Visibility.Visible;
+                if (AppBarBtnNewChat != null) AppBarBtnNewChat.Visibility = Visibility.Collapsed;
+                if (AppBarBtnSearch != null) AppBarBtnSearch.Visibility = Visibility.Collapsed;
+
+                if (_communityPostList.Count == 0 && !string.IsNullOrEmpty(_userToken))
+                {
+                    await LoadCommunityPostsAsync(isRefresh: true);
+                }
+            }
+            else
+            {
+                if (AppBarBtnFilter != null) AppBarBtnFilter.Visibility = Visibility.Collapsed;
+                if (AppBarBtnNewChat != null) AppBarBtnNewChat.Visibility = Visibility.Visible;
+                if (AppBarBtnSearch != null) AppBarBtnSearch.Visibility = Visibility.Visible;
+            }
         }
 
         private void ConvListView_Loaded(object sender, RoutedEventArgs e)
@@ -108,6 +156,23 @@ namespace 云湖WP
                 {
                     _convScrollViewer.ViewChanged -= OnScrollViewerViewChanged;
                     _convScrollViewer.ViewChanged += OnScrollViewerViewChanged;
+                }
+            }
+        }
+
+        private void CommunityListView_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (CommunityListView != null)
+            {
+                CommunityListView.ItemsSource = _communityPostList;
+                if (_communityScrollViewer == null)
+                {
+                    _communityScrollViewer = FindVisualChild<ScrollViewer>(CommunityListView);
+                    if (_communityScrollViewer != null)
+                    {
+                        _communityScrollViewer.ViewChanged -= OnCommunityScrollViewerViewChanged;
+                        _communityScrollViewer.ViewChanged += OnCommunityScrollViewerViewChanged;
+                    }
                 }
             }
         }
@@ -402,6 +467,193 @@ namespace 云湖WP
             });
         }
 
+        /// <summary>
+        /// 从服务器拉取社区动态列表 (POST /v1/community/posts/post-list 或 post-list-recommend)
+        /// 支持首屏刷新与滑到底部自动增量分页加载
+        /// </summary>
+        private async Task LoadCommunityPostsAsync(bool isRefresh = false)
+        {
+            if (string.IsNullOrEmpty(_userToken) || _isLoadingCommunity) return;
+            if (!isRefresh && !_hasMoreCommunity) return;
+
+            _isLoadingCommunity = true;
+            if (CommunityProgressBar != null) CommunityProgressBar.Visibility = Visibility.Visible;
+
+            int targetPage = isRefresh ? 1 : (_communityPage + 1);
+
+            string errMsg = null;
+            try
+            {
+                CommunityPostListResult res;
+                if (_currentCommunityFilter == "hot")
+                {
+                    res = await CommunityApi.GetRecommendPostListAsync(_userToken, targetPage, 20);
+                }
+                else
+                {
+                    res = await CommunityApi.GetPostListAsync(_userToken, typ: 4, baId: 0, page: targetPage, size: 20);
+                }
+
+                if (res.IsSuccess && res.Posts != null)
+                {
+                    if (isRefresh)
+                    {
+                        _communityPage = 1;
+                        _communityPostList.Clear();
+                    }
+                    else
+                    {
+                        _communityPage = targetPage;
+                    }
+
+                    if (res.Posts.Count < 20)
+                    {
+                        _hasMoreCommunity = false;
+                    }
+                    else
+                    {
+                        _hasMoreCommunity = true;
+                    }
+
+                    foreach (var p in res.Posts)
+                    {
+                        _communityPostList.Add(p);
+                    }
+
+                    if (EmptyCommunityPanel != null)
+                    {
+                        EmptyCommunityPanel.Visibility = (_communityPostList.Count == 0) ? Visibility.Visible : Visibility.Collapsed;
+                    }
+
+                    // 预加载动态作者头像
+                    PreloadCommunityAvatars(res.Posts);
+                }
+                else
+                {
+                    if (!isRefresh)
+                    {
+                        _hasMoreCommunity = false;
+                    }
+                    if (_communityPostList.Count == 0 && EmptyCommunityPanel != null)
+                    {
+                        EmptyCommunityPanel.Visibility = Visibility.Visible;
+                    }
+                    if (!res.IsSuccess && !string.IsNullOrEmpty(res.Msg))
+                    {
+                        errMsg = "加载动态失败: " + res.Msg;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                errMsg = "获取社区动态异常: " + ex.Message;
+            }
+            finally
+            {
+                if (CommunityProgressBar != null) CommunityProgressBar.Visibility = Visibility.Collapsed;
+                _isLoadingCommunity = false;
+            }
+
+            if (errMsg != null && isRefresh)
+            {
+                await ShowToastAsync(errMsg);
+            }
+        }
+
+        private void PreloadCommunityAvatars(IEnumerable<CommunityPostItem> posts)
+        {
+            if (posts == null || ImageLoader.DisableAllImages) return;
+
+            var list = new List<CommunityPostItem>(posts);
+
+            Task.Run(async () =>
+            {
+                await Task.Delay(100);
+
+                foreach (var p in list)
+                {
+                    if (ImageLoader.DisableAllImages) break;
+                    if (p == null || string.IsNullOrEmpty(p.SenderAvatar) || p.AvatarBitmap != null) continue;
+
+                    var cur = p;
+                    string finalUrl = ImageHelper.FormatQiniuUrl(cur.SenderAvatar, 96, 96);
+
+                    try
+                    {
+                        byte[] bytes = await ImageLoader.GetImageBytesAsync(finalUrl);
+                        if (bytes != null && bytes.Length > 0)
+                        {
+                            await Dispatcher.RunAsync(CoreDispatcherPriority.Low, async () =>
+                            {
+                                var bmp = await ImageLoader.BytesToBitmapImageAsync(bytes, 96, 96);
+                                if (bmp != null)
+                                {
+                                    cur.AvatarBitmap = bmp;
+                                }
+                            });
+                        }
+                    }
+                    catch { }
+
+                    await Task.Delay(20);
+                }
+            });
+        }
+
+        private async void FilterLatest_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentCommunityFilter == "latest") return;
+            _currentCommunityFilter = "latest";
+            if (FlyoutItemLatest != null) FlyoutItemLatest.Text = "最新文章 (当前)";
+            if (FlyoutItemHot != null) FlyoutItemHot.Text = "热门推荐";
+            await LoadCommunityPostsAsync(isRefresh: true);
+        }
+
+        private async void FilterHot_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentCommunityFilter == "hot") return;
+            _currentCommunityFilter = "hot";
+            if (FlyoutItemLatest != null) FlyoutItemLatest.Text = "最新文章";
+            if (FlyoutItemHot != null) FlyoutItemHot.Text = "热门推荐 (当前)";
+            await LoadCommunityPostsAsync(isRefresh: true);
+        }
+
+        private void CommunityListView_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            var post = e.ClickedItem as CommunityPostItem;
+            if (post != null)
+            {
+                ShowPostDetails(post);
+            }
+        }
+
+        private void PostCard_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            var element = sender as FrameworkElement;
+            if (element != null && element.DataContext is CommunityPostItem)
+            {
+                var post = element.DataContext as CommunityPostItem;
+                ShowPostDetails(post);
+            }
+        }
+
+        private void ShowPostDetails(CommunityPostItem post)
+        {
+            if (post == null) return;
+            if (this.BottomAppBar != null)
+            {
+                this.BottomAppBar.IsOpen = false;
+            }
+
+            var args = new PostDetailNavigationArgs
+            {
+                PostId = post.Id,
+                InitialPost = post,
+                Token = _userToken
+            };
+            Frame.Navigate(typeof(PostDetailPage), args);
+        }
+
         private async Task ShowToastAsync(string message)
         {
             var dialog = new MessageDialog(message, "云湖");
@@ -412,9 +664,17 @@ namespace 云湖WP
 
         private async void AppBarBtnRefresh_Click(object sender, RoutedEventArgs e)
         {
-            await LoadUserProfileAsync();
-            await LoadConversationsAsync();
-            await ShowToastAsync("数据已刷新");
+            if (MainPivot != null && MainPivot.SelectedIndex == 2)
+            {
+                await LoadCommunityPostsAsync(isRefresh: true);
+                await ShowToastAsync("动态已刷新");
+            }
+            else
+            {
+                await LoadUserProfileAsync();
+                await LoadConversationsAsync();
+                await ShowToastAsync("数据已刷新");
+            }
         }
 
         private async void AppBarBtnNewChat_Click(object sender, RoutedEventArgs e)

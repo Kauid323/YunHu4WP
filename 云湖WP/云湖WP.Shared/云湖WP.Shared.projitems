@@ -23,6 +23,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Api\Common\YunhuApiConfig.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Common\ApiResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Common\HttpHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Common\FileDownloadHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Common\QiniuUploadHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Protobuf\Runtime\ProtocolTypes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Protobuf\Runtime\PositionStream.cs" />
@@ -42,6 +43,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Api\Message\MessageApi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Bot\BotModels.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Bot\BotApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Community\CommunityModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Community\CommunityApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Community\PostDetail\PostDetailModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Community\PostDetail\PostDetailApi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\YunhuApiClient.cs" />
   </ItemGroup>
 </Project>

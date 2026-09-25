@@ -5,7 +5,7 @@
 # 声明
 此项目（Yunhu4WP）是个人为了兴趣而开发, 仅用于学习和测试，请于下载后24小时内删除。 所用API皆从官方网站收集, 不提供任何破解内容。
 
-# Build Env.
+# Build Environment
 ```
 Devtools:Visual Studio 2013 with Update 5 (English,Version 12.0.40629.00 Update 5)
 Build tool:MSBuild 12.0

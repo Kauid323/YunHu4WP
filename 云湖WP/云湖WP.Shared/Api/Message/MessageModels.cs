@@ -67,9 +67,104 @@ namespace 云湖WP.Api.Message
         public string StickerUrl { get; set; }
         public string FileName { get; set; }
         public string FileUrl { get; set; }
+        public long FileSize { get; set; }
         public string QuoteMsgText { get; set; }
         public string QuoteMsgId { get; set; }
         public string Tip { get; set; }
+
+        public string FormattedFileSize
+        {
+            get
+            {
+                if (FileSize <= 0) return "";
+                if (FileSize < 1024) return FileSize + " B";
+                if (FileSize < 1024 * 1024) return (FileSize / 1024.0).ToString("F1") + " KB";
+                if (FileSize < 1024 * 1024 * 1024) return (FileSize / (1024.0 * 1024.0)).ToString("F2") + " MB";
+                return (FileSize / (1024.0 * 1024.0 * 1024.0)).ToString("F2") + " GB";
+            }
+        }
+
+        public string DisplayFileName
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(FileName)) return FileName;
+                if (!string.IsNullOrEmpty(FileUrl))
+                {
+                    try
+                    {
+                        var uri = new Uri(FileUrl);
+                        string seg = System.IO.Path.GetFileName(uri.LocalPath);
+                        if (!string.IsNullOrEmpty(seg)) return seg;
+                    }
+                    catch { }
+                }
+                return "文件";
+            }
+        }
+
+        // 下载状态与进度绑定
+        private bool _isDownloading;
+        public bool IsDownloading
+        {
+            get { return _isDownloading; }
+            set
+            {
+                if (_isDownloading != value)
+                {
+                    _isDownloading = value;
+                    OnPropertyChanged("IsDownloading");
+                    OnPropertyChanged("DownloadProgressVisibility");
+                }
+            }
+        }
+
+        private double _downloadProgress;
+        public double DownloadProgress
+        {
+            get { return _downloadProgress; }
+            set
+            {
+                if (Math.Abs(_downloadProgress - value) > 0.01)
+                {
+                    _downloadProgress = value;
+                    OnPropertyChanged("DownloadProgress");
+                }
+            }
+        }
+
+        private string _downloadStatusText = "点击下载";
+        public string DownloadStatusText
+        {
+            get { return string.IsNullOrEmpty(_downloadStatusText) ? "点击下载" : _downloadStatusText; }
+            set
+            {
+                if (_downloadStatusText != value)
+                {
+                    _downloadStatusText = value;
+                    OnPropertyChanged("DownloadStatusText");
+                }
+            }
+        }
+
+        private bool _isDownloaded;
+        public bool IsDownloaded
+        {
+            get { return _isDownloaded; }
+            set
+            {
+                if (_isDownloaded != value)
+                {
+                    _isDownloaded = value;
+                    OnPropertyChanged("IsDownloaded");
+                }
+            }
+        }
+
+        public Visibility DownloadProgressVisibility
+        {
+            get { return IsDownloading ? Visibility.Visible : Visibility.Collapsed; }
+        }
 
         // 发送者信息
         public string SenderId { get; set; }
@@ -179,14 +274,30 @@ namespace 云湖WP.Api.Message
             }
         }
 
+        /// <summary>
+        /// 是否为文件消息
+        /// </summary>
+        public bool IsFileMsg
+        {
+            get
+            {
+                return ContentType == 4 || (!string.IsNullOrEmpty(FileUrl) && !IsImageMsg);
+            }
+        }
+
         public Visibility ImageMsgVisibility
         {
             get { return IsImageMsg ? Visibility.Visible : Visibility.Collapsed; }
         }
 
+        public Visibility FileMsgVisibility
+        {
+            get { return IsFileMsg ? Visibility.Visible : Visibility.Collapsed; }
+        }
+
         public Visibility TextMsgVisibility
         {
-            get { return (!IsImageMsg && !string.IsNullOrEmpty(Text)) ? Visibility.Visible : Visibility.Collapsed; }
+            get { return (!IsImageMsg && !IsFileMsg && !string.IsNullOrEmpty(Text)) ? Visibility.Visible : Visibility.Collapsed; }
         }
 
         public long SendTime { get; set; }
