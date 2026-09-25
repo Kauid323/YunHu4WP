@@ -1,0 +1,120 @@
+<Page
+    x:Class="云湖WP.UserDetailPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:云湖WP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 1. 原生 Windows Phone 大标题顶栏 (经典 Metro 大标题风格) -->
+        <StackPanel Grid.Row="0" Margin="19,18,19,8">
+            <TextBlock Text="云湖" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Typography.Capitals="SmallCaps" />
+            <TextBlock Text="用户详情" FontSize="42" FontWeight="Light" Margin="0,-4,0,0" />
+        </StackPanel>
+
+        <!-- 2. 中间滚动内容区 (原生 WP 纯字形无卡片居左排版) -->
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="19,10,19,24">
+                <ProgressBar x:Name="UserProgressBar" IsIndeterminate="True" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,12" />
+
+                <!-- A. 用户基本信息 (纯居左排版，无背景卡片) -->
+                <Grid Margin="0,4,0,24" HorizontalAlignment="Left">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="76" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- 用户头像 (70x70 纯直角几何方块，点击进入图片预览器) -->
+                    <Grid Width="70" Height="70" VerticalAlignment="Top" HorizontalAlignment="Left" Background="Transparent" Tapped="Avatar_Tapped">
+                        <Border x:Name="BorderAvatarLetter" Background="{ThemeResource PhoneAccentBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <TextBlock x:Name="TxtAvatarLetter" Text="云" FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <Image x:Name="ImgAvatar" Stretch="UniformToFill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                    </Grid>
+
+                    <!-- 用户主要文本信息 (居左) -->
+                    <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Top">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtUserName" Text="加载中..." FontSize="22" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" MaxWidth="190" HorizontalAlignment="Left" />
+                            <Border x:Name="BorderVip" Background="{ThemeResource PhoneAccentBrush}" Padding="5,1" Margin="6,0,0,0" VerticalAlignment="Center" Visibility="Collapsed">
+                                <TextBlock Text="VIP" FontSize="10" FontWeight="Bold" Foreground="White" />
+                            </Border>
+                        </StackPanel>
+
+                        <TextBlock x:Name="TxtUserId" Text="ID: -" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,4,0,0" HorizontalAlignment="Left" />
+                        <TextBlock x:Name="TxtIpGeo" Text="IP属地: -" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- 分割线 -->
+                <Border Height="1" Background="#1FFFFFFF" Margin="0,0,0,16" />
+
+                <!-- B. 详细资料 (原生 WP 标签在上、数值在下、全居左排列) -->
+                <TextBlock Text="详细资料" FontSize="15" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,14" HorizontalAlignment="Left" />
+
+                <!-- 注册时间 -->
+                <StackPanel Margin="0,0,0,14" HorizontalAlignment="Left">
+                    <TextBlock Text="注册时间" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="TxtRegisterTime" Text="-" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                </StackPanel>
+
+                <!-- 在线天数 -->
+                <StackPanel Margin="0,0,0,14" HorizontalAlignment="Left">
+                    <TextBlock Text="在线天数" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="TxtOnlineDays" Text="0 天 (连续 0 天)" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                </StackPanel>
+
+                <!-- 性别 -->
+                <StackPanel Margin="0,0,0,14" HorizontalAlignment="Left">
+                    <TextBlock Text="性别" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="TxtGender" Text="保密" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                </StackPanel>
+
+                <!-- 生日 -->
+                <StackPanel Margin="0,0,0,14" HorizontalAlignment="Left">
+                    <TextBlock Text="生日" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="TxtBirthday" Text="未设置" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                </StackPanel>
+
+                <!-- 最后活跃 -->
+                <StackPanel Margin="0,0,0,14" HorizontalAlignment="Left">
+                    <TextBlock Text="最后活跃" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="TxtLastActive" Text="-" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                </StackPanel>
+
+                <!-- 分割线 -->
+                <Border Height="1" Background="#1FFFFFFF" Margin="0,6,0,16" />
+
+                <!-- C. 个性签名 -->
+                <TextBlock Text="个性签名" FontSize="15" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,6" HorizontalAlignment="Left" />
+                <TextBlock x:Name="TxtIntroduction" Text="暂无个性签名" FontSize="15" Foreground="{ThemeResource ApplicationForegroundThemeBrush}" TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,20" HorizontalAlignment="Left" />
+
+                <!-- 分割线 -->
+                <Border Height="1" Background="#1FFFFFFF" Margin="0,0,0,16" />
+
+                <!-- D. 荣誉勋章 -->
+                <TextBlock Text="荣誉勋章" FontSize="15" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,6" HorizontalAlignment="Left" />
+                <TextBlock x:Name="TxtMedals" Text="暂无勋章" FontSize="15" Foreground="{ThemeResource ApplicationForegroundThemeBrush}" TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,20" HorizontalAlignment="Left" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+
+    <!-- 3. 原生 Windows Phone 8.1 底部应用栏 CommandBar -->
+    <Page.BottomAppBar>
+        <CommandBar Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+            <CommandBar.PrimaryCommands>
+                <AppBarButton x:Name="AppBarBtnSendMessage" Icon="Message" Label="发送消息" Click="BtnSendMessage_Click" />
+                <AppBarButton x:Name="AppBarBtnCopyId" Icon="Copy" Label="复制 ID" Click="BtnCopyId_Click" />
+                <AppBarButton x:Name="AppBarBtnRefresh" Icon="Refresh" Label="刷新" Click="BtnRefresh_Click" />
+            </CommandBar.PrimaryCommands>
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>

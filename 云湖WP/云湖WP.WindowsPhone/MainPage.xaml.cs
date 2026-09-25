@@ -9,10 +9,12 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using 云湖WP.Api.Common;
 using 云湖WP.Api.Conversation;
 using 云湖WP.Api.Message;
+using 云湖WP.Api.User;
 using 云湖WP.Token;
 using 云湖WP.Utils;
 
@@ -30,21 +32,114 @@ namespace 云湖WP
         private string _userAccount = "";
         private string _userToken = "";
 
+        private ScrollViewer _convScrollViewer;
+        private DispatcherTimer _scrollDebounceTimer;
+
         public MainPage()
         {
             this.InitializeComponent();
             this.NavigationCacheMode = NavigationCacheMode.Required;
+            InitScrollDebounceTimer();
+        }
+
+        private void InitScrollDebounceTimer()
+        {
+            if (_scrollDebounceTimer == null)
+            {
+                _scrollDebounceTimer = new DispatcherTimer();
+                _scrollDebounceTimer.Interval = TimeSpan.FromMilliseconds(450);
+                _scrollDebounceTimer.Tick += (s, args) =>
+                {
+                    _scrollDebounceTimer.Stop();
+                    RestoreCommandBarOnScrollEnd();
+                };
+            }
+        }
+
+        private void HideCommandBarOnScroll()
+        {
+            if (this.BottomAppBar != null)
+            {
+                this.BottomAppBar.IsOpen = false;
+                this.BottomAppBar.ClosedDisplayMode = AppBarClosedDisplayMode.Minimal;
+            }
+            if (_scrollDebounceTimer != null)
+            {
+                _scrollDebounceTimer.Stop();
+                _scrollDebounceTimer.Start();
+            }
+        }
+
+        private void RestoreCommandBarOnScrollEnd()
+        {
+            if (this.BottomAppBar != null)
+            {
+                this.BottomAppBar.ClosedDisplayMode = AppBarClosedDisplayMode.Compact;
+            }
+        }
+
+        private void OnScrollViewerViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
+        {
+            if (e != null && e.IsIntermediate)
+            {
+                HideCommandBarOnScroll();
+            }
+            else
+            {
+                if (_scrollDebounceTimer != null)
+                {
+                    _scrollDebounceTimer.Stop();
+                    _scrollDebounceTimer.Start();
+                }
+            }
+        }
+
+        private void MainPivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            HideCommandBarOnScroll();
+        }
+
+        private void ConvListView_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (_convScrollViewer == null && ConvListView != null)
+            {
+                _convScrollViewer = FindVisualChild<ScrollViewer>(ConvListView);
+                if (_convScrollViewer != null)
+                {
+                    _convScrollViewer.ViewChanged -= OnScrollViewerViewChanged;
+                    _convScrollViewer.ViewChanged += OnScrollViewerViewChanged;
+                }
+            }
+        }
+
+        private T FindVisualChild<T>(DependencyObject obj) where T : DependencyObject
+        {
+            if (obj == null) return null;
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
+                if (child is T)
+                {
+                    return (T)child;
+                }
+                T childOfChild = FindVisualChild<T>(child);
+                if (childOfChild != null)
+                {
+                    return childOfChild;
+                }
+            }
+            return null;
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
 
+            // 恢复底栏默认 Compact 显示模式
+            RestoreCommandBarOnScrollEnd();
+
             // 注册硬件返回按键事件
             HardwareButtons.BackPressed += HardwareButtons_BackPressed;
-
-            // 初始化设置面板的线程并发数与无图模式显示
-            InitSettingsView();
 
             // 如果是从子页面（如聊天界面）返回，且会话列表已有数据，直接保持原状态，跳过重复拉取与刷新
             if (e.NavigationMode == NavigationMode.Back && ConvListView.ItemsSource != null)
@@ -113,10 +208,16 @@ namespace 云湖WP
             base.OnNavigatedFrom(e);
             HardwareButtons.BackPressed -= HardwareButtons_BackPressed;
 
-            // 进入子页面（如聊天界面）时自动收起底部 CommandBar 菜单
+            if (_scrollDebounceTimer != null)
+            {
+                _scrollDebounceTimer.Stop();
+            }
+
+            // 进入子页面（如聊天界面）时自动收起底部 CommandBar 菜单并复位
             if (this.BottomAppBar != null)
             {
                 this.BottomAppBar.IsOpen = false;
+                this.BottomAppBar.ClosedDisplayMode = AppBarClosedDisplayMode.Compact;
             }
         }
 
@@ -128,22 +229,6 @@ namespace 云湖WP
                 e.Handled = true;
                 MainPivot.SelectedIndex = 0;
             }
-        }
-
-        private void InitSettingsView()
-        {
-            try
-            {
-                int currentThreads = ImageLoader.MaxConcurrentLoads;
-                SliderThreads.Value = currentThreads;
-                TxtThreadCount.Text = string.Format("{0} 线程", currentThreads);
-
-                if (ToggleDisableImages != null)
-                {
-                    ToggleDisableImages.IsOn = ImageLoader.DisableAllImages;
-                }
-            }
-            catch { }
         }
 
         /// <summary>
@@ -171,33 +256,40 @@ namespace 云湖WP
 
             try
             {
-                var infoRes = await YunhuApiClient.GetUserInfoAsync(_userToken);
-                if (infoRes.IsSuccess)
+                AppLogger.Log("UserProfile", "开始加载个人资料...");
+                var selfRes = await UserApi.GetSelfInfoAsync(_userToken);
+                if (selfRes != null && selfRes.IsSuccess && selfRes.Data != null)
                 {
-                    if (!string.IsNullOrEmpty(infoRes.Name))
+                    var data = selfRes.Data;
+                    if (!string.IsNullOrEmpty(data.Name))
                     {
-                        TxtDisplayName.Text = infoRes.Name;
-                        TxtAvatarInitial.Text = infoRes.Name.Substring(0, 1);
+                        TxtDisplayName.Text = data.Name;
+                        TxtAvatarInitial.Text = data.AvatarLetter;
                     }
 
-                    if (!string.IsNullOrEmpty(infoRes.Id))
+                    if (!string.IsNullOrEmpty(data.Id))
                     {
-                        TxtAccount.Text = string.Format("UID: {0}", infoRes.Id);
+                        TxtAccount.Text = string.Format("UID: {0}", data.Id);
                     }
 
-                    TxtVipStatus.Text = infoRes.IsVip ? "VIP 会员" : "普通用户";
-                    TxtCoinCount.Text = string.Format("金币: {0}", infoRes.Coin);
+                    TxtVipStatus.Text = data.IsVip ? "VIP 会员" : "普通用户";
+                    TxtCoinCount.Text = string.Format("金币: {0}", data.Coin);
 
                     // 异步加载用户个人头像
-                    if (!string.IsNullOrEmpty(infoRes.AvatarUrl))
+                    if (!string.IsNullOrEmpty(data.AvatarUrl))
                     {
-                        LoadUserAvatarAsync(infoRes.AvatarUrl);
+                        LoadUserAvatarAsync(data.AvatarUrl);
                     }
+                    AppLogger.Log("UserProfile", "个人资料加载成功: " + data.DisplayName);
+                }
+                else
+                {
+                    AppLogger.Log("UserProfile", "获取个人资料返回未成功: " + (selfRes != null ? selfRes.Msg : "null"));
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("LoadUserProfile failed: " + ex.Message);
+                AppLogger.Log("UserProfile", "LoadUserProfile exception: " + ex.Message);
             }
         }
 
@@ -316,47 +408,6 @@ namespace 云湖WP
             await dialog.ShowAsync();
         }
 
-        #region 设置面板交互事件
-
-        private void ToggleDisableImages_Toggled(object sender, RoutedEventArgs e)
-        {
-            if (ToggleDisableImages == null) return;
-            ImageLoader.DisableAllImages = ToggleDisableImages.IsOn;
-        }
-
-        private void SliderThreads_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-        {
-            if (TxtThreadCount == null) return;
-
-            int val = (int)Math.Round(e.NewValue);
-            ImageLoader.MaxConcurrentLoads = val;
-            TxtThreadCount.Text = string.Format("{0} 线程", val);
-        }
-
-        private async void BtnClearCache_Click(object sender, RoutedEventArgs e)
-        {
-            string errorMsg = null;
-            try
-            {
-                await ImageLoader.ClearCacheAsync();
-            }
-            catch (Exception ex)
-            {
-                errorMsg = "清理缓存失败: " + ex.Message;
-            }
-
-            if (errorMsg != null)
-            {
-                await ShowToastAsync(errorMsg);
-            }
-            else
-            {
-                await ShowToastAsync("图片与头像本地缓存已成功清理！");
-            }
-        }
-
-        #endregion
-
         #region 底部 AppBar 按钮点击事件
 
         private async void AppBarBtnRefresh_Click(object sender, RoutedEventArgs e)
@@ -378,7 +429,7 @@ namespace 云湖WP
 
         private void AppBarBtnSettings_Click(object sender, RoutedEventArgs e)
         {
-            MainPivot.SelectedIndex = 3; // 切换到“我”标签
+            Frame.Navigate(typeof(SettingsPage));
         }
 
         private async void AppBarBtnLogout_Click(object sender, RoutedEventArgs e)
@@ -450,14 +501,24 @@ namespace 云湖WP
             await ShowToastAsync("联系人详情正在开发中...");
         }
 
+        private void UserProfileCard_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            Frame.Navigate(typeof(UserDetailPage), new 云湖WP.Api.User.Info.UserDetailNavArgs
+            {
+                UserId = "",
+                Name = TxtDisplayName.Text,
+                AvatarUrl = ""
+            });
+        }
+
         private async void ProfileMenu_Tapped(object sender, TappedRoutedEventArgs e)
         {
             await ShowToastAsync("该模块正在适配中...");
         }
 
-        private async void BtnAbout_Tapped(object sender, TappedRoutedEventArgs e)
+        private void SettingsMenu_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            await ShowToastAsync("云湖 Windows Phone 版 v1.0.0\n致敬经典 Metro 设计美学。");
+            Frame.Navigate(typeof(SettingsPage));
         }
 
         #endregion

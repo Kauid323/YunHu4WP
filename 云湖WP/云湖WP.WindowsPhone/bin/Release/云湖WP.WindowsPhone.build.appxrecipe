@@ -55,6 +55,18 @@
     <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\ChatPage.xbf">
       <PackagePath>ChatPage.xbf</PackagePath>
     </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\UserDetailPage.xbf">
+      <PackagePath>UserDetailPage.xbf</PackagePath>
+    </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\SettingsPage.xbf">
+      <PackagePath>SettingsPage.xbf</PackagePath>
+    </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\ImageViewerPage.xbf">
+      <PackagePath>ImageViewerPage.xbf</PackagePath>
+    </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\ProfileEditPage.xbf">
+      <PackagePath>ProfileEditPage.xbf</PackagePath>
+    </AppxPackagedFile>
     <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\云湖WP.WindowsPhone.xr.xml">
       <PackagePath>云湖WP.WindowsPhone.xr.xml</PackagePath>
     </AppxPackagedFile>

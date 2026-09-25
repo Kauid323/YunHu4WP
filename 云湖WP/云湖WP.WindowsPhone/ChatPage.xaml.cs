@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Phone.UI.Input;
 using Windows.System;
 using Windows.UI.Core;
@@ -11,6 +12,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using 云湖WP.Api.Common;
 using 云湖WP.Api.Message;
 using 云湖WP.Token;
 using 云湖WP.Utils;
@@ -18,9 +20,12 @@ using 云湖WP.Utils;
 namespace 云湖WP
 {
     /// <summary>
-    /// 云湖WP 聊天详情页面 (纯正 Metro 现代直角几何风格，支持划到顶部自动分页加载更早历史消息)
+    /// 云湖WP 聊天详情页面 (纯正 Metro 现代直角几何风格，支持抽拉式 CommandBar 与本地相册直传)
     /// </summary>
     public sealed partial class ChatPage : Page
+#if WINDOWS_PHONE_APP
+        , IFileOpenPickerContinuable
+#endif
     {
         private string _token = "";
         private string _chatId = "";
@@ -36,18 +41,28 @@ namespace 云湖WP
         public ChatPage()
         {
             this.InitializeComponent();
-            this.NavigationCacheMode = NavigationCacheMode.Disabled;
-            this.BottomAppBar = null;
+            this.NavigationCacheMode = NavigationCacheMode.Required;
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
 
-            this.BottomAppBar = null;
-
             // 注册硬件返回按键事件
             HardwareButtons.BackPressed += HardwareButtons_BackPressed;
+
+            // 如果是从子页面（如用户详情页、大图查看器）返回，且已有消息列表，直接保持原状态，不重复请求或刷新
+            if (e.NavigationMode == NavigationMode.Back && _messageList.Count > 0)
+            {
+                return;
+            }
+
+            // 每次新进入会话，先清空可能残留的消息列表并重置状态
+            _messageList.Clear();
+            if (EmptyMsgPanel != null)
+            {
+                EmptyMsgPanel.Visibility = Visibility.Collapsed;
+            }
 
             // 读取导航参数
             var args = e.Parameter as ChatNavigationArgs;
@@ -83,6 +98,28 @@ namespace 云湖WP
             {
                 _chatScrollViewer.ViewChanged -= ChatScrollViewer_ViewChanged;
                 _chatScrollViewer = null;
+            }
+
+            // 退出聊天界面返回主界面 (MainPage) 时清空消息列表与会话状态
+            // 确保下次进入其他会话时不会闪烁或显示上一会话的历史消息
+            // 注意：如果是跳转到用户详情 (UserDetailPage) 或大图查看器 (ImageViewerPage)，则保留消息不执行清空
+            if (e.SourcePageType == typeof(MainPage))
+            {
+                _messageList.Clear();
+                _chatId = "";
+                _chatType = 1;
+                _title = "";
+                _avatarUrl = "";
+                _hasMoreHistory = true;
+                _isLoadingHistory = false;
+                if (TxtChatTitle != null)
+                {
+                    TxtChatTitle.Text = "云湖聊天";
+                }
+                if (EmptyMsgPanel != null)
+                {
+                    EmptyMsgPanel.Visibility = Visibility.Collapsed;
+                }
             }
         }
 
@@ -421,6 +458,205 @@ namespace 云湖WP
             }
         }
 
+        private void AppBarBtnPickImage_Click(object sender, RoutedEventArgs e)
+        {
+#if WINDOWS_PHONE_APP
+            try
+            {
+                var picker = new Windows.Storage.Pickers.FileOpenPicker();
+                picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail;
+                picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
+                picker.FileTypeFilter.Add(".jpg");
+                picker.FileTypeFilter.Add(".jpeg");
+                picker.FileTypeFilter.Add(".png");
+                picker.FileTypeFilter.Add(".gif");
+                picker.FileTypeFilter.Add(".bmp");
+                picker.PickSingleFileAndContinue();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("PickImage failed: " + ex.Message);
+            }
+#endif
+        }
+
+#if WINDOWS_PHONE_APP
+        /// <summary>
+        /// 接收系统相册选图回调并直传七牛云发送图片
+        /// </summary>
+        public async void ContinueFileOpenPicker(Windows.ApplicationModel.Activation.FileOpenPickerContinuationEventArgs args)
+        {
+            if (args != null && args.Files != null && args.Files.Count > 0)
+            {
+                var file = args.Files[0];
+                await UploadAndSendLocalImageAsync(file);
+            }
+        }
+#endif
+
+        /// <summary>
+        /// 上传本地图片到七牛云并发送图片消息
+        /// </summary>
+        private async Task UploadAndSendLocalImageAsync(Windows.Storage.StorageFile file)
+        {
+            if (file == null || string.IsNullOrEmpty(_token)) return;
+
+            string errMsg = null;
+            MsgProgressBar.Visibility = Visibility.Visible;
+
+            try
+            {
+                // 调用系统七牛云直传组件
+                string publicUrl = await QiniuUploadHelper.UploadImageAsync(file, _token);
+                if (!string.IsNullOrEmpty(publicUrl))
+                {
+                    await DoSendImageAsync(publicUrl);
+                }
+                else
+                {
+                    errMsg = "上传图片未获取到访问地址";
+                }
+            }
+            catch (Exception ex)
+            {
+                errMsg = "图片上传失败: " + ex.Message;
+            }
+            finally
+            {
+                MsgProgressBar.Visibility = Visibility.Collapsed;
+            }
+
+            if (errMsg != null)
+            {
+                await ShowToastAsync(errMsg);
+            }
+        }
+
+        private async void AppBarBtnSendUrl_Click(object sender, RoutedEventArgs e)
+        {
+            string currentText = TxtInput.Text.Trim();
+            if (!string.IsNullOrEmpty(currentText) && (currentText.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || currentText.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
+            {
+                TxtInput.Text = "";
+                await DoSendImageAsync(currentText);
+            }
+            else
+            {
+                await ShowToastAsync("请先在输入框中输入或粘贴图片 URL (http/https)，然后点击此项发送");
+            }
+        }
+
+        private void AppBarBtnClearInput_Click(object sender, RoutedEventArgs e)
+        {
+            TxtInput.Text = "";
+        }
+
+        private void AppBarBtnScrollBottom_Click(object sender, RoutedEventArgs e)
+        {
+            ScrollToBottom();
+        }
+
+        private async void AppBarBtnViewLogs_Click(object sender, RoutedEventArgs e)
+        {
+            string logs = AppLogger.GetAllLogs();
+            if (string.IsNullOrEmpty(logs)) logs = "暂无诊断日志";
+            var dialog = new Windows.UI.Popups.MessageDialog(logs, "运行与上传诊断日志");
+            await dialog.ShowAsync();
+        }
+
+        #region XAML 兼容事件处理器 (确保 VS2013 任意缓存版本均能 100% 编译通过)
+
+        private void BtnAttach_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.BottomAppBar != null)
+            {
+                this.BottomAppBar.IsOpen = !this.BottomAppBar.IsOpen;
+            }
+        }
+
+        private void TxtInput_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (this.BottomAppBar != null && this.BottomAppBar.IsOpen)
+            {
+                this.BottomAppBar.IsOpen = false;
+            }
+        }
+
+        private void BtnClearUrl_Click(object sender, RoutedEventArgs e)
+        {
+            TxtInput.Text = "";
+        }
+
+        private async void BtnSendImage_Click(object sender, RoutedEventArgs e)
+        {
+            string text = TxtInput.Text.Trim();
+            if (!string.IsNullOrEmpty(text))
+            {
+                TxtInput.Text = "";
+                await DoSendImageAsync(text);
+            }
+        }
+
+        private async void QuickImage_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            var element = sender as FrameworkElement;
+            if (element != null && element.Tag != null)
+            {
+                string tagUrl = element.Tag.ToString();
+                if (!string.IsNullOrEmpty(tagUrl))
+                {
+                    await DoSendImageAsync(tagUrl);
+                }
+            }
+        }
+
+        #endregion
+
+        private async Task DoSendImageAsync(string imageUrl)
+        {
+            if (string.IsNullOrWhiteSpace(imageUrl)) return;
+
+            string cleanUrl = imageUrl.Trim();
+            string msgText = string.Format("![图片]({0})", cleanUrl);
+
+            // 本地乐观添加图片消息
+            var localMsg = new ChatMessageItem
+            {
+                MsgId = Guid.NewGuid().ToString("N"),
+                ChatId = _chatId,
+                ChatType = _chatType,
+                Direction = "right",
+                ContentType = 2,
+                ImageUrl = cleanUrl,
+                Text = msgText,
+                SendTime = DateTime.UtcNow.Ticks / 10000 - 62135596800000L, // UTC ms
+                SenderName = "我"
+            };
+
+            _messageList.Add(localMsg);
+            EmptyMsgPanel.Visibility = Visibility.Collapsed;
+            ScrollToBottom();
+
+            string sendErr = null;
+            try
+            {
+                var res = await MessageApi.SendImageMessageAsync(_token, _chatId, _chatType, cleanUrl, msgText);
+                if (!res.IsSuccess)
+                {
+                    sendErr = "发送图片失败: " + res.Msg;
+                }
+            }
+            catch (Exception ex)
+            {
+                sendErr = "发送图片异常: " + ex.Message;
+            }
+
+            if (sendErr != null)
+            {
+                await ShowToastAsync(sendErr);
+            }
+        }
+
         private async void BtnSend_Click(object sender, RoutedEventArgs e)
         {
             await DoSendMessageAsync();
@@ -477,6 +713,151 @@ namespace 云湖WP
             {
                 await ShowToastAsync(sendErr);
             }
+        }
+
+        /// <summary>
+        /// 消息单击弹出操作菜单 (复制、引用回复、撤回、删除)
+        /// </summary>
+        private void MessageBubble_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            var element = sender as FrameworkElement;
+            if (element == null) return;
+
+            var msg = element.DataContext as ChatMessageItem;
+            if (msg == null) return;
+
+            var flyout = new MenuFlyout();
+
+            // 1. 复制文本 (填入输入框并自动全选，触发系统剪贴板复制栏)
+            if (!string.IsNullOrEmpty(msg.Text))
+            {
+                var itemCopy = new MenuFlyoutItem { Text = "复制/填入输入框" };
+                itemCopy.Click += (s, args) =>
+                {
+                    TxtInput.Text = msg.Text ?? "";
+                    TxtInput.Focus(FocusState.Programmatic);
+                    TxtInput.SelectAll();
+                };
+                flyout.Items.Add(itemCopy);
+            }
+
+            // 2. 引用回复 (Reply)
+            var itemReply = new MenuFlyoutItem { Text = "引用回复" };
+            itemReply.Click += (s, args) =>
+            {
+                string senderName = msg.IsSelf ? "我" : msg.DisplaySenderName;
+                string quotePrefix = "「" + senderName + ": " + (msg.Text ?? "") + "」\n";
+                TxtInput.Text = quotePrefix + TxtInput.Text;
+                TxtInput.Focus(FocusState.Programmatic);
+                TxtInput.SelectionStart = TxtInput.Text.Length;
+            };
+            flyout.Items.Add(itemReply);
+
+            // 3. 撤回消息 (Recall) - 仅限自己发送的消息
+            if (msg.IsSelf && !string.IsNullOrEmpty(msg.MsgId))
+            {
+                var itemRecall = new MenuFlyoutItem { Text = "撤回消息" };
+                itemRecall.Click += async (s, args) =>
+                {
+                    await RecallChatMessageAsync(msg);
+                };
+                flyout.Items.Add(itemRecall);
+            }
+
+            // 4. 删除 (Delete) - 本地移除
+            var itemDelete = new MenuFlyoutItem { Text = "删除消息" };
+            itemDelete.Click += (s, args) =>
+            {
+                _messageList.Remove(msg);
+                if (_messageList.Count == 0)
+                {
+                    EmptyMsgPanel.Visibility = Visibility.Visible;
+                }
+            };
+            flyout.Items.Add(itemDelete);
+
+            flyout.ShowAt(element);
+        }
+
+        /// <summary>
+        /// 撤回指定的聊天消息
+        /// </summary>
+        private async Task RecallChatMessageAsync(ChatMessageItem msg)
+        {
+            if (msg == null || string.IsNullOrEmpty(msg.MsgId)) return;
+
+            string errMsg = null;
+            try
+            {
+                MsgProgressBar.Visibility = Visibility.Visible;
+                var res = await MessageApi.RecallMessageAsync(_token, msg.MsgId, _chatId, _chatType);
+                MsgProgressBar.Visibility = Visibility.Collapsed;
+
+                if (res.IsSuccess)
+                {
+                    msg.Text = "你撤回了一条消息";
+                }
+                else
+                {
+                    errMsg = "撤回失败: " + (res.Msg ?? "未知错误");
+                }
+            }
+            catch (Exception ex)
+            {
+                MsgProgressBar.Visibility = Visibility.Collapsed;
+                errMsg = "撤回异常: " + ex.Message;
+            }
+
+            if (errMsg != null)
+            {
+                await ShowToastAsync(errMsg);
+            }
+        }
+
+        /// <summary>
+        /// 点击图片消息预览块，进入全屏图片预览器
+        /// </summary>
+        private void ImageBubble_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            e.Handled = true;
+            var element = sender as FrameworkElement;
+            if (element == null) return;
+
+            var msg = element.DataContext as ChatMessageItem;
+            if (msg == null) return;
+
+            string url = msg.ExtractedImageUrl;
+            if (!string.IsNullOrEmpty(url))
+            {
+                Frame.Navigate(typeof(ImageViewerPage), new ImageViewerNavArgs
+                {
+                    ImageUrl = url,
+                    Title = string.Format("{0} 的图片", msg.DisplaySenderName)
+                });
+            }
+        }
+
+        /// <summary>
+        /// 点击用户头像进入用户详情页
+        /// </summary>
+        private void Avatar_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            var element = sender as FrameworkElement;
+            if (element == null) return;
+
+            var msg = element.DataContext as ChatMessageItem;
+            if (msg == null) return;
+
+            string targetUserId = msg.IsSelf ? "" : (msg.SenderId ?? _chatId);
+            string targetName = msg.IsSelf ? "我" : msg.DisplaySenderName;
+            string targetAvatar = msg.IsSelf ? "" : msg.SenderAvatarUrl;
+
+            Frame.Navigate(typeof(UserDetailPage), new 云湖WP.Api.User.Info.UserDetailNavArgs
+            {
+                UserId = targetUserId,
+                Name = targetName,
+                AvatarUrl = targetAvatar
+            });
         }
 
         private void BtnBack_Click(object sender, RoutedEventArgs e)

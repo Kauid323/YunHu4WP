@@ -125,7 +125,7 @@ namespace 云湖WP.Api.Message
                 string msgId = Guid.NewGuid().ToString("N");
                 result.MsgId = msgId;
 
-                byte[] reqBody = EncodeSendMsgRequest(msgId, chatId, chatType, text, 1);
+                byte[] reqBody = EncodeSendMsgRequest(msgId, chatId, chatType, text, 1, null);
                 byte[] respBytes = await HttpHelper.PostProtobufAsync("/v1/msg/send-message", reqBody, token);
 
                 if (respBytes == null || respBytes.Length == 0)
@@ -142,6 +142,82 @@ namespace 云湖WP.Api.Message
             {
                 result.Code = -1;
                 result.Msg = "发送消息异常: " + ex.Message;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 发送单条图片/附件消息 (POST /v1/msg/send-message, ContentType = 2)
+        /// </summary>
+        public static async Task<SendMessageResult> SendImageMessageAsync(string token, string chatId, int chatType, string imageUrl, string text = null)
+        {
+            var result = new SendMessageResult();
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(chatId) || string.IsNullOrEmpty(imageUrl))
+            {
+                result.Code = -1;
+                result.Msg = "参数不能为空";
+                return result;
+            }
+
+            try
+            {
+                string msgId = Guid.NewGuid().ToString("N");
+                result.MsgId = msgId;
+
+                string msgText = !string.IsNullOrEmpty(text) ? text : string.Format("![图片]({0})", imageUrl);
+                byte[] reqBody = EncodeSendMsgRequest(msgId, chatId, chatType, msgText, 2, imageUrl);
+                byte[] respBytes = await HttpHelper.PostProtobufAsync("/v1/msg/send-message", reqBody, token);
+
+                if (respBytes == null || respBytes.Length == 0)
+                {
+                    result.Code = -1;
+                    result.Msg = "发送未收到响应";
+                    return result;
+                }
+
+                DecodeStatusResponse(respBytes, result);
+            }
+            catch (Exception ex)
+            {
+                result.Code = -1;
+                result.Msg = "发送图片异常: " + ex.Message;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 撤回单条消息 (POST /v1/msg/recall-msg)
+        /// </summary>
+        public static async Task<ApiResult> RecallMessageAsync(string token, string msgId, string chatId, int chatType)
+        {
+            var result = new ApiResult();
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(msgId) || string.IsNullOrEmpty(chatId))
+            {
+                result.Code = -1;
+                result.Msg = "参数不能为空";
+                return result;
+            }
+
+            try
+            {
+                byte[] reqBody = EncodeRecallMsgRequest(msgId, chatId, chatType);
+                byte[] respBytes = await HttpHelper.PostProtobufAsync("/v1/msg/recall-msg", reqBody, token);
+
+                if (respBytes == null || respBytes.Length == 0)
+                {
+                    result.Code = -1;
+                    result.Msg = "撤回未收到响应";
+                    return result;
+                }
+
+                DecodeStatusResponse(respBytes, result);
+            }
+            catch (Exception ex)
+            {
+                result.Code = -1;
+                result.Msg = "撤回消息异常: " + ex.Message;
             }
 
             return result;
@@ -216,7 +292,7 @@ namespace 云湖WP.Api.Message
         /// <summary>
         /// 编码 send_message_send
         /// </summary>
-        private static byte[] EncodeSendMsgRequest(string msgId, string chatId, int chatType, string text, int contentType = 1)
+        private static byte[] EncodeSendMsgRequest(string msgId, string chatId, int chatType, string text, int contentType = 1, string imageUrl = null)
         {
             using (var ms = new MemoryStream())
             {
@@ -247,6 +323,12 @@ namespace 云湖WP.Api.Message
                         ProtocolParser.WriteString(contentMs, text);
                     }
 
+                    if (!string.IsNullOrEmpty(imageUrl))
+                    {
+                        ProtocolParser.WriteKey(contentMs, new Key(3, Wire.LengthDelimited));
+                        ProtocolParser.WriteString(contentMs, imageUrl);
+                    }
+
                     byte[] contentBytes = contentMs.ToArray();
                     ProtocolParser.WriteKey(ms, new Key(5, Wire.LengthDelimited));
                     ProtocolParser.WriteBytes(ms, contentBytes);
@@ -256,6 +338,35 @@ namespace 云湖WP.Api.Message
                 {
                     ProtocolParser.WriteKey(ms, new Key(6, Wire.Varint));
                     ProtocolParser.WriteUInt64(ms, (ulong)contentType);
+                }
+
+                return ms.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// 编码 recall_msg_send
+        /// </summary>
+        private static byte[] EncodeRecallMsgRequest(string msgId, string chatId, int chatType)
+        {
+            using (var ms = new MemoryStream())
+            {
+                if (!string.IsNullOrEmpty(msgId))
+                {
+                    ProtocolParser.WriteKey(ms, new Key(2, Wire.LengthDelimited));
+                    ProtocolParser.WriteString(ms, msgId);
+                }
+
+                if (!string.IsNullOrEmpty(chatId))
+                {
+                    ProtocolParser.WriteKey(ms, new Key(3, Wire.LengthDelimited));
+                    ProtocolParser.WriteString(ms, chatId);
+                }
+
+                if (chatType != 0)
+                {
+                    ProtocolParser.WriteKey(ms, new Key(4, Wire.Varint));
+                    ProtocolParser.WriteUInt64(ms, (ulong)chatType);
                 }
 
                 return ms.ToArray();

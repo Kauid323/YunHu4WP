@@ -50,7 +50,19 @@ namespace 云湖WP.Api.Message
         }
 
         public int ContentType { get; set; } // 1-文本, 2-图片, 3-Markdown, 4-文件, 7-表情, 8-HTML, 11-语音
-        public string Text { get; set; }
+        private string _text;
+        public string Text
+        {
+            get { return _text; }
+            set
+            {
+                if (_text != value)
+                {
+                    _text = value;
+                    OnPropertyChanged("Text");
+                }
+            }
+        }
         public string ImageUrl { get; set; }
         public string StickerUrl { get; set; }
         public string FileName { get; set; }
@@ -115,6 +127,68 @@ namespace 云湖WP.Api.Message
             }
         }
 
+        /// <summary>
+        /// 提取出的图片实际 URL
+        /// </summary>
+        public string ExtractedImageUrl
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(ImageUrl)) return ImageUrl.Trim();
+                if (!string.IsNullOrEmpty(StickerUrl)) return StickerUrl.Trim();
+                if (!string.IsNullOrEmpty(Text))
+                {
+                    string t = Text.Trim();
+                    // Markdown: ![alt](url)
+                    if (t.StartsWith("![") && t.Contains("](") && t.EndsWith(")"))
+                    {
+                        int start = t.IndexOf("](") + 2;
+                        int end = t.LastIndexOf(")");
+                        if (end > start)
+                        {
+                            return t.Substring(start, end - start).Trim();
+                        }
+                    }
+                    // [image:url]
+                    if (t.StartsWith("[image:") && t.EndsWith("]"))
+                    {
+                        return t.Substring(7, t.Length - 8).Trim();
+                    }
+                    // http url that ends with image extensions
+                    if (t.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || t.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string lower = t.ToLower();
+                        if (lower.EndsWith(".jpg") || lower.EndsWith(".jpeg") || lower.EndsWith(".png") || lower.EndsWith(".gif") || lower.EndsWith(".webp") || lower.EndsWith(".bmp") || lower.Contains("/image/"))
+                        {
+                            return t;
+                        }
+                    }
+                }
+                return "";
+            }
+        }
+
+        /// <summary>
+        /// 是否为图片消息
+        /// </summary>
+        public bool IsImageMsg
+        {
+            get
+            {
+                return ContentType == 2 || ContentType == 7 || !string.IsNullOrEmpty(ExtractedImageUrl);
+            }
+        }
+
+        public Visibility ImageMsgVisibility
+        {
+            get { return IsImageMsg ? Visibility.Visible : Visibility.Collapsed; }
+        }
+
+        public Visibility TextMsgVisibility
+        {
+            get { return (!IsImageMsg && !string.IsNullOrEmpty(Text)) ? Visibility.Visible : Visibility.Collapsed; }
+        }
+
         public long SendTime { get; set; }
 
         public string FormattedTime
@@ -148,6 +222,15 @@ namespace 云湖WP.Api.Message
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// 图片预览页面导航参数
+    /// </summary>
+    public class ImageViewerNavArgs
+    {
+        public string ImageUrl { get; set; }
+        public string Title { get; set; }
     }
 
     /// <summary>

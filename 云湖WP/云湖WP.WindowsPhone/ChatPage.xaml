@@ -84,7 +84,7 @@
                                 </Grid.ColumnDefinitions>
 
                                 <!-- 对方头像 (Metro 直角 34x34) -->
-                                <Grid Width="34" Height="34" VerticalAlignment="Top" Margin="0,2,6,0">
+                                <Grid Width="34" Height="34" VerticalAlignment="Top" Margin="0,2,6,0" Tapped="Avatar_Tapped">
                                     <Border Background="#FF555555" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                                         <TextBlock Text="{Binding SenderAvatarLetter}" FontSize="15" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
@@ -96,10 +96,33 @@
                                     <TextBlock Text="{Binding DisplaySenderName}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="2,0,0,3" Visibility="{Binding ShowSenderNameVisibility}" TextTrimming="CharacterEllipsis" MaxWidth="240" />
 
                                     <!-- 消息气泡 (半透明深色背景，无圆角) -->
-                                    <Border Background="#20FFFFFF" BorderThickness="1" BorderBrush="#33FFFFFF" Padding="10,8">
+                                    <Border Background="#20FFFFFF" BorderThickness="1" BorderBrush="#33FFFFFF" Padding="8,6" Tapped="MessageBubble_Tapped">
                                         <StackPanel>
-                                            <TextBlock Text="{Binding Text}" FontSize="15" Foreground="White" TextWrapping="Wrap" LineHeight="20" />
-                                            <TextBlock Text="{Binding FormattedTime}" FontSize="10" Foreground="#88FFFFFF" HorizontalAlignment="Right" Margin="0,4,0,0" />
+                                            <!-- 图片消息预览块 (紧凑单行，把时间压进去) -->
+                                            <Border Visibility="{Binding ImageMsgVisibility}" 
+                                                    Background="#25FFFFFF" 
+                                                    BorderThickness="1" 
+                                                    BorderBrush="#40FFFFFF" 
+                                                    Padding="8,5" 
+                                                    Tapped="ImageBubble_Tapped">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <SymbolIcon Symbol="Pictures" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                    <TextBlock Grid.Column="1" Text="[图片] 点击查看" FontSize="13" Foreground="White" VerticalAlignment="Center" />
+                                                    <TextBlock Grid.Column="3" Text="{Binding FormattedTime}" FontSize="10" Foreground="#88FFFFFF" VerticalAlignment="Center" Margin="12,0,0,0" />
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- 纯文本消息内容 -->
+                                            <StackPanel Visibility="{Binding TextMsgVisibility}">
+                                                <TextBlock Text="{Binding Text}" FontSize="15" Foreground="White" TextWrapping="Wrap" LineHeight="20" />
+                                                <TextBlock Text="{Binding FormattedTime}" FontSize="10" Foreground="#88FFFFFF" HorizontalAlignment="Right" Margin="0,3,0,0" />
+                                            </StackPanel>
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>
@@ -114,16 +137,39 @@
 
                                 <StackPanel Grid.Column="0" HorizontalAlignment="Right">
                                     <!-- 消息气泡 (主题色实色背景，无圆角) -->
-                                    <Border Background="{ThemeResource PhoneAccentBrush}" Padding="10,8">
+                                    <Border Background="{ThemeResource PhoneAccentBrush}" Padding="8,6" Tapped="MessageBubble_Tapped">
                                         <StackPanel>
-                                            <TextBlock Text="{Binding Text}" FontSize="15" Foreground="White" TextWrapping="Wrap" LineHeight="20" />
-                                            <TextBlock Text="{Binding FormattedTime}" FontSize="10" Foreground="#CCFFFFFF" HorizontalAlignment="Right" Margin="0,4,0,0" />
+                                            <!-- 图片消息预览块 (紧凑单行，把时间压进去) -->
+                                            <Border Visibility="{Binding ImageMsgVisibility}" 
+                                                    Background="#20000000" 
+                                                    BorderThickness="1" 
+                                                    BorderBrush="#33FFFFFF" 
+                                                    Padding="8,5" 
+                                                    Tapped="ImageBubble_Tapped">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <SymbolIcon Symbol="Pictures" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                    <TextBlock Grid.Column="1" Text="[图片] 点击查看" FontSize="13" Foreground="White" VerticalAlignment="Center" />
+                                                    <TextBlock Grid.Column="3" Text="{Binding FormattedTime}" FontSize="10" Foreground="#CCFFFFFF" VerticalAlignment="Center" Margin="12,0,0,0" />
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- 纯文本消息内容 -->
+                                            <StackPanel Visibility="{Binding TextMsgVisibility}">
+                                                <TextBlock Text="{Binding Text}" FontSize="15" Foreground="White" TextWrapping="Wrap" LineHeight="20" />
+                                                <TextBlock Text="{Binding FormattedTime}" FontSize="10" Foreground="#CCFFFFFF" HorizontalAlignment="Right" Margin="0,3,0,0" />
+                                            </StackPanel>
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>
 
                                 <!-- 我方头像 (Metro 直角 34x34) -->
-                                <Grid Grid.Column="1" Width="34" Height="34" VerticalAlignment="Top" Margin="6,2,0,0">
+                                <Grid Grid.Column="1" Width="34" Height="34" VerticalAlignment="Top" Margin="6,2,0,0" Tapped="Avatar_Tapped">
                                     <Border Background="{ThemeResource PhoneAccentBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                                         <TextBlock Text="{Binding SenderAvatarLetter}" FontSize="15" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
@@ -137,7 +183,7 @@
             </ListView>
         </Grid>
 
-        <!-- 3. 底部 Metro 消息输入栏 (纯几何直角) -->
+        <!-- 3. 底部 Metro 消息输入栏 (纯几何直角，紧凑利落) -->
         <Border Grid.Row="2" BorderThickness="0,1,0,0" BorderBrush="#22FFFFFF" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="10,6">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -145,25 +191,56 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <!-- 输入框 (无圆角) -->
+                <!-- 消息输入框 (无圆角) -->
                 <TextBox x:Name="TxtInput"
                          PlaceholderText="输入消息..."
                          Margin="0,0,8,0"
                          BorderThickness="1"
                          KeyDown="TxtInput_KeyDown"
+                         GotFocus="TxtInput_GotFocus"
                          VerticalAlignment="Center" />
 
-                <!-- 发送按钮 (无圆角) -->
+                <!-- 发送按钮 (紧凑 38x38 方块，明确使用 Segoe UI Symbol &#xE122; 纸飞机/发送图标) -->
                 <Button x:Name="BtnSend"
                         Grid.Column="1"
-                        Content="发送"
-                        Width="72"
-                        BorderThickness="1"
+                        MinWidth="0"
+                        MinHeight="0"
+                        Width="38"
+                        Height="38"
+                        Padding="0"
+                        Margin="0"
+                        BorderThickness="0"
                         Background="{ThemeResource PhoneAccentBrush}"
-                        Foreground="White"
                         Click="BtnSend_Click"
-                        VerticalAlignment="Center" />
+                        VerticalAlignment="Center">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Grid Background="{TemplateBinding Background}">
+                                <FontIcon FontFamily="Segoe UI Symbol" Glyph="&#xE122;" FontSize="18" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Grid>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
             </Grid>
         </Border>
     </Grid>
+
+    <!-- 原生 Windows Phone 8.1 底部可抽拉 CommandBar (默认极简收回只留三个点，点击或上滑即可抽拉展开) -->
+    <Page.BottomAppBar>
+        <CommandBar x:Name="ChatCommandBar" 
+                    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" 
+                    ClosedDisplayMode="Minimal"
+                    IsSticky="False">
+            <CommandBar.PrimaryCommands>
+                <AppBarButton x:Name="AppBarBtnPickImage" Icon="Pictures" Label="发送图片" Click="AppBarBtnPickImage_Click" />
+                <AppBarButton x:Name="AppBarBtnSendUrl" Icon="World" Label="图片链接" Click="AppBarBtnSendUrl_Click" />
+                <AppBarButton x:Name="AppBarBtnRefresh" Icon="Refresh" Label="刷新" Click="BtnRefresh_Click" />
+            </CommandBar.PrimaryCommands>
+            <CommandBar.SecondaryCommands>
+                <AppBarButton x:Name="AppBarBtnClearInput" Label="清空输入框" Click="AppBarBtnClearInput_Click" />
+                <AppBarButton x:Name="AppBarBtnScrollBottom" Label="滚动到底部" Click="AppBarBtnScrollBottom_Click" />
+                <AppBarButton x:Name="AppBarBtnViewLogs" Label="查看诊断日志" Click="AppBarBtnViewLogs_Click" />
+            </CommandBar.SecondaryCommands>
+        </CommandBar>
+    </Page.BottomAppBar>
 </Page>

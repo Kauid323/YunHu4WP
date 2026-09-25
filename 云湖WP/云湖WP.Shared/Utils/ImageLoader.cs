@@ -204,9 +204,11 @@ namespace 云湖WP.Utils
         /// <summary>
         /// 获取图片字节数据 (优先读取内存，其次独立随机文件磁盘缓存，最后网络并发请求)
         /// </summary>
-        public static async Task<byte[]> GetImageBytesAsync(string finalUrl)
+        /// <param name="finalUrl">图片链接</param>
+        /// <param name="force">是否强制下载（忽略省流无图模式，例如大图预览器点击查看）</param>
+        public static async Task<byte[]> GetImageBytesAsync(string finalUrl, bool force = false)
         {
-            if (_disableAllImages) return null;
+            if (_disableAllImages && !force) return null;
             if (string.IsNullOrEmpty(finalUrl)) return null;
 
             // 1. 检查内存缓存

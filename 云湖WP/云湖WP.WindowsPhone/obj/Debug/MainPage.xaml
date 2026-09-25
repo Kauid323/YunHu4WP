@@ -10,7 +10,7 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <!-- 原生 Windows Phone Metro Pivot 容器：左上角小标题“云湖”，原生水平滑动 -->
-        <Pivot Title="云湖" x:Name="MainPivot" Margin="0">
+        <Pivot x:ConnectionId='1' Title="云湖" x:Name="MainPivot" Margin="0"                                              >
             
             <!-- 1. 消息列表 (对接 Protobuf /v1/conversation/list) -->
             <PivotItem Header="消息" Margin="0">
@@ -24,10 +24,11 @@
                     </StackPanel>
 
                     <!-- 会话列表视图 (原生 Windows Phone 虚拟化列表) -->
-                    <ListView x:ConnectionId='13' x:Name="ConvListView" 
+                    <ListView x:ConnectionId='14' x:Name="ConvListView" 
                               SelectionMode="None" 
                               IsItemClickEnabled="True" 
                                                                 
+                                                          
                               HorizontalAlignment="Stretch"
                               VerticalAlignment="Stretch">
                         <ListView.ItemContainerStyle>
@@ -42,7 +43,7 @@
                                 <Border BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="16,12" Background="Transparent" HorizontalAlignment="Stretch">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="52" />
+                                             <ColumnDefinition Width="52" />
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
@@ -73,13 +74,15 @@
 
             <!-- 2. 联系人与群组 -->
             <PivotItem Header="联系人" Margin="0">
-                <ScrollViewer HorizontalScrollMode="Disabled" 
+                <ScrollViewer x:ConnectionId='8' x:Name="ContactsScrollViewer"
+                              HorizontalScrollMode="Disabled" 
                               HorizontalScrollBarVisibility="Disabled" 
                               VerticalScrollMode="Auto" 
-                              VerticalScrollBarVisibility="Auto">
+                              VerticalScrollBarVisibility="Auto"
+                                                                     >
                     <StackPanel Margin="16,10,16,24">
                         <!-- 分类导航 -->
-                        <Border x:ConnectionId='8' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                                >
+                        <Border x:ConnectionId='9' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                                >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="40" />
@@ -94,7 +97,7 @@
                             </Grid>
                         </Border>
 
-                        <Border x:ConnectionId='9' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                                >
+                        <Border x:ConnectionId='10' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                                >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="40" />
@@ -109,7 +112,7 @@
                             </Grid>
                         </Border>
 
-                        <Border x:ConnectionId='10' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                                >
+                        <Border x:ConnectionId='11' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                                >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="40" />
@@ -128,7 +131,7 @@
                         <TextBlock Text="常用联系" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,20,0,8" />
 
                         <!-- 联系人条目 -->
-                        <Border x:ConnectionId='11' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                            >
+                        <Border x:ConnectionId='12' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                            >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="46" />
@@ -144,7 +147,7 @@
                             </Grid>
                         </Border>
 
-                        <Border x:ConnectionId='12' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                            >
+                        <Border x:ConnectionId='13' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                            >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="46" />
@@ -165,10 +168,12 @@
 
             <!-- 3. 动态广场 -->
             <PivotItem Header="动态" Margin="0">
-                <ScrollViewer HorizontalScrollMode="Disabled" 
+                <ScrollViewer x:ConnectionId='7' x:Name="MomentsScrollViewer"
+                              HorizontalScrollMode="Disabled" 
                               HorizontalScrollBarVisibility="Disabled" 
                               VerticalScrollMode="Auto" 
-                              VerticalScrollBarVisibility="Auto">
+                              VerticalScrollBarVisibility="Auto"
+                                                                     >
                     <StackPanel Margin="16,10,16,24">
                         <!-- 动态卡片 1（Metro 无圆角） -->
                         <Border BorderThickness="1" BorderBrush="#22FFFFFF" Background="#0AFFFFFF" Padding="14" Margin="0,0,0,14">
@@ -253,13 +258,15 @@
 
             <!-- 4. 我的信息 -->
             <PivotItem Header="我" Margin="0">
-                <ScrollViewer HorizontalScrollMode="Disabled" 
+                <ScrollViewer x:ConnectionId='2' x:Name="MeScrollViewer"
+                              HorizontalScrollMode="Disabled" 
                               HorizontalScrollBarVisibility="Disabled" 
                               VerticalScrollMode="Auto" 
-                              VerticalScrollBarVisibility="Auto">
+                              VerticalScrollBarVisibility="Auto"
+                                                                     >
                     <StackPanel Margin="16,10,16,24">
                         <!-- 用户名片（Metro 锐角纯净磁贴风格） -->
-                        <Border BorderThickness="1" BorderBrush="#22FFFFFF" Background="#0AFFFFFF" Padding="16" Margin="0,0,0,20">
+                        <Border x:ConnectionId='3' BorderThickness="1" BorderBrush="#22FFFFFF" Background="#0AFFFFFF" Padding="16" Margin="0,0,0,20"                                >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="68" />
@@ -290,37 +297,10 @@
                             </Grid>
                         </Border>
 
-                        <!-- 设置与性能 -->
-                        <TextBlock Text="设置与性能" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,8" />
-
-                        <!-- 图片加载与性能设置面板（Metro 锐角纯净磁贴风格） -->
-                        <Border BorderThickness="1" BorderBrush="#22FFFFFF" Background="#0AFFFFFF" Padding="14" Margin="0,0,0,16">
-                            <StackPanel>
-                                <TextBlock Text="图片/头像性能设置" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                <TextBlock Text="可开启无图省流模式或调整后台并发下载线程数" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-
-                                <!-- 完全不加载任何图片开关 -->
-                                <ToggleSwitch x:ConnectionId='5' x:Name="ToggleDisableImages" Header="完全不加载任何图片 (极速省流)"                                       Margin="0,0,0,10" />
-
-                                <Grid Margin="0,0,0,4">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="并发下载线程数" FontSize="14" VerticalAlignment="Center" />
-                                    <TextBlock x:Name="TxtThreadCount" Grid.Column="1" Text="4 线程" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" VerticalAlignment="Center" />
-                                </Grid>
-
-                                <Slider x:ConnectionId='6' x:Name="SliderThreads" Minimum="1" Maximum="16" StepFrequency="1" SmallChange="1" LargeChange="2" Value="4"                                           Margin="0,0,0,10"/>
-
-                                <Button x:ConnectionId='7' x:Name="BtnClearCache" Content="清除头像与图片缓存" HorizontalAlignment="Stretch" BorderThickness="1"                            />
-                            </StackPanel>
-                        </Border>
-
                         <!-- 功能菜单列表 -->
                         <TextBlock Text="个人服务" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,8" />
 
-                        <Border x:ConnectionId='1' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,12" Background="Transparent"                            >
+                        <Border x:ConnectionId='4' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,12" Background="Transparent"                                >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -331,7 +311,7 @@
                             </Grid>
                         </Border>
 
-                        <Border x:ConnectionId='2' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,12" Background="Transparent"                            >
+                        <Border x:ConnectionId='5' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,12" Background="Transparent"                            >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -342,25 +322,14 @@
                             </Grid>
                         </Border>
 
-                        <Border x:ConnectionId='3' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,12" Background="Transparent"                            >
+                        <Border x:ConnectionId='6' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,12" Background="Transparent"                             >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="云盘网盘空间" FontSize="16" VerticalAlignment="Center" />
+                                <TextBlock Text="设置" FontSize="16" VerticalAlignment="Center" />
                                 <TextBlock Grid.Column="1" Text=">" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
-                            </Grid>
-                        </Border>
-
-                        <Border x:ConnectionId='4' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,12" Background="Transparent"                         >
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="关于云湖 WP" FontSize="16" VerticalAlignment="Center" />
-                                <TextBlock Grid.Column="1" Text="v1.0 >" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
                             </Grid>
                         </Border>
                     </StackPanel>
@@ -369,17 +338,17 @@
         </Pivot>
     </Grid>
 
-    <!-- 原生 Windows Phone 8.1 底部应用栏 CommandBar -->
+    <!-- 原生 Windows Phone 8.1 底部应用栏 CommandBar (支持滑动自动折叠收回与停止滑动自动展开) -->
     <Page.BottomAppBar>
-        <CommandBar Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <CommandBar x:Name="MainCommandBar" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" ClosedDisplayMode="Compact">
             <CommandBar.PrimaryCommands>
-                <AppBarButton x:ConnectionId='14' x:Name="AppBarBtnRefresh" Icon="Refresh" Label="刷新"                                />
-                <AppBarButton x:ConnectionId='15' x:Name="AppBarBtnNewChat" Icon="Add" Label="发起聊天"                                />
-                <AppBarButton x:ConnectionId='16' x:Name="AppBarBtnSearch" Icon="Find" Label="搜索"                               />
+                <AppBarButton x:ConnectionId='15' x:Name="AppBarBtnRefresh" Icon="Refresh" Label="刷新"                                />
+                <AppBarButton x:ConnectionId='16' x:Name="AppBarBtnNewChat" Icon="Add" Label="发起聊天"                                />
+                <AppBarButton x:ConnectionId='17' x:Name="AppBarBtnSearch" Icon="Find" Label="搜索"                               />
             </CommandBar.PrimaryCommands>
             <CommandBar.SecondaryCommands>
-                <AppBarButton x:ConnectionId='17' x:Name="AppBarBtnSettings" Label="设置"                                 />
-                <AppBarButton x:ConnectionId='18' x:Name="AppBarBtnLogout" Label="退出登录"                               />
+                <AppBarButton x:ConnectionId='18' x:Name="AppBarBtnSettings" Label="设置"                                 />
+                <AppBarButton x:ConnectionId='19' x:Name="AppBarBtnLogout" Label="退出登录"                               />
             </CommandBar.SecondaryCommands>
         </CommandBar>
     </Page.BottomAppBar>

@@ -1,0 +1,91 @@
+<Page
+    x:Class="云湖WP.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:云湖WP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 1. 原生 Windows Phone 大标题顶栏 -->
+        <StackPanel Grid.Row="0" Margin="19,18,19,8">
+            <TextBlock Text="云湖" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Typography.Capitals="SmallCaps" />
+            <TextBlock Text="设置" FontSize="42" FontWeight="Light" Margin="0,-4,0,0" />
+        </StackPanel>
+
+        <!-- 2. 设置内容区 (原生 WP 纯居左排版) -->
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="19,10,19,24">
+                
+                <!-- 图片与性能设置 -->
+                <TextBlock Text="图片与性能" FontSize="15" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,12" HorizontalAlignment="Left" />
+
+                <!-- 完全不加载任何图片开关 -->
+                <ToggleSwitch x:Name="ToggleDisableImages" 
+                              Header="完全不加载任何图片 (极速省流)" 
+                              Toggled="ToggleDisableImages_Toggled" 
+                              Margin="0,0,0,6" 
+                              HorizontalAlignment="Left" />
+                <TextBlock Text="开启后将完全禁用头像与图片下载，在低配或弱网环境下达到最高流畅度与省流效果。" 
+                           FontSize="12" 
+                           Foreground="{ThemeResource PhoneMidBrush}" 
+                           TextWrapping="Wrap" 
+                           LineHeight="16" 
+                           Margin="0,0,0,18" 
+                           HorizontalAlignment="Left" />
+
+                <!-- 并发下载线程数 -->
+                <Grid Margin="0,0,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="并发下载线程数" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="TxtThreadCount" Grid.Column="1" Text="4 线程" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" VerticalAlignment="Center" />
+                </Grid>
+
+                <Slider x:Name="SliderThreads" 
+                        Minimum="1" 
+                        Maximum="16" 
+                        StepFrequency="1" 
+                        SmallChange="1" 
+                        LargeChange="2" 
+                        Value="4" 
+                        ValueChanged="SliderThreads_ValueChanged" 
+                        Margin="0,0,0,16"/>
+
+                <!-- 清除缓存按钮 -->
+                <Button x:Name="BtnClearCache" 
+                        Content="清除头像与图片缓存" 
+                        HorizontalAlignment="Stretch" 
+                        BorderThickness="1" 
+                        Click="BtnClearCache_Click" 
+                        Margin="0,0,0,24" />
+
+                <!-- 分割线 -->
+                <Border Height="1" Background="#1FFFFFFF" Margin="0,0,0,18" />
+
+                <!-- 关于云湖 WP -->
+                <TextBlock Text="关于" FontSize="15" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,10" HorizontalAlignment="Left" />
+                
+                <TextBlock Text="云湖 Windows Phone 客户端" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,2" HorizontalAlignment="Left" />
+                <TextBlock Text="版本 1.0.0 (WinRT Universal)" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,0,8" HorizontalAlignment="Left" />
+                <TextBlock Text="基于原生 Windows Phone 8.1 现代设计语言（Metro UI）打造，致敬纯粹几何直角与字阶排版美学，提供纯净专注的即时沟通体验。" 
+                           FontSize="13" 
+                           Foreground="{ThemeResource PhoneMidBrush}" 
+                           TextWrapping="Wrap" 
+                           LineHeight="18" 
+                           Margin="0,0,0,16" 
+                           HorizontalAlignment="Left" />
+                
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

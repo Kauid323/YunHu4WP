@@ -150,5 +150,44 @@ namespace 云湖WP
             // TODO: Save application state and stop any background activity
             deferral.Complete();
         }
+
+#if WINDOWS_PHONE_APP
+        /// <summary>
+        /// 处理 Windows Phone 8.1 文件选择器 Continuation 激活事件
+        /// </summary>
+        protected override void OnActivated(IActivatedEventArgs args)
+        {
+            base.OnActivated(args);
+
+            if (args.Kind == ActivationKind.PickFileContinuation)
+            {
+                var fileArgs = args as FileOpenPickerContinuationEventArgs;
+                if (fileArgs != null)
+                {
+                    var rootFrame = Window.Current.Content as Frame;
+                    if (rootFrame != null)
+                    {
+                        var continuablePage = rootFrame.Content as IFileOpenPickerContinuable;
+                        if (continuablePage != null)
+                        {
+                            continuablePage.ContinueFileOpenPicker(fileArgs);
+                        }
+                    }
+                }
+            }
+
+            Window.Current.Activate();
+        }
+#endif
     }
+
+#if WINDOWS_PHONE_APP
+    /// <summary>
+    /// Windows Phone 8.1 FileOpenPicker Continuation 接口
+    /// </summary>
+    public interface IFileOpenPickerContinuable
+    {
+        void ContinueFileOpenPicker(FileOpenPickerContinuationEventArgs args);
+    }
+#endif
 }

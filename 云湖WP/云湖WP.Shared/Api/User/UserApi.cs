@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Windows.Data.Json;
 using 云湖WP.Api.Common;
+using 云湖WP.Utils;
 
 namespace 云湖WP.Api.User
 {
@@ -174,6 +175,48 @@ namespace 云湖WP.Api.User
         }
 
         /// <summary>
+        /// 获取用户自身完整信息 (GET /v1/user/info，位于 Api/User/Self，支持 Protobuf 与 JSON 自动适配)
+        /// </summary>
+        public static async Task<云湖WP.Api.User.Self.UserSelfInfoResult> GetSelfInfoAsync(string token)
+        {
+            var result = new 云湖WP.Api.User.Self.UserSelfInfoResult();
+            if (string.IsNullOrEmpty(token))
+            {
+                result.Code = -1;
+                result.Msg = "Token 为空";
+                return result;
+            }
+
+            try
+            {
+                // 1. 尝试获取 Protobuf / JSON 原始二进制流 (支持自动识别 JSON 与 Protobuf)
+                byte[] bytes = await HttpHelper.GetProtobufAsync("/v1/user/info", token);
+                if (bytes != null && bytes.Length > 0)
+                {
+                    result = 云湖WP.Api.User.Self.UserSelfProtobufCodec.DecodeSelfInfoResponse(bytes);
+                    if (result != null && result.IsSuccess && !string.IsNullOrEmpty(result.Name))
+                    {
+                        return result;
+                    }
+                }
+
+                // 2. 降级尝试标准 GET 文本
+                string jsonStr = await HttpHelper.GetAsync("/v1/user/info", token);
+                if (!string.IsNullOrEmpty(jsonStr))
+                {
+                    result = 云湖WP.Api.User.Self.UserSelfProtobufCodec.DecodeSelfInfoJson(jsonStr);
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Code = -1;
+                result.Msg = "获取用户自身信息失败: " + ex.Message;
+                AppLogger.Log("UserApi", "GetSelfInfoAsync exception: " + ex.Message);
+            }
+            return result;
+        }
+
+        /// <summary>
         /// 获取用户自身简要信息 (GET /v1/user/info)
         /// </summary>
         public static async Task<UserInfoResult> GetUserInfoAsync(string token)
@@ -188,23 +231,19 @@ namespace 云湖WP.Api.User
 
             try
             {
-                string jsonStr = await HttpHelper.GetAsync("/v1/user/info", token);
-                JsonObject root;
-                if (JsonObject.TryParse(jsonStr, out root))
+                var selfRes = await GetSelfInfoAsync(token);
+                if (selfRes != null && selfRes.Data != null)
                 {
-                    if (root.ContainsKey("code")) result.Code = (int)root.GetNamedNumber("code");
-                    if (root.ContainsKey("msg")) result.Msg = root.GetNamedString("msg");
-                    if (root.ContainsKey("data") && root.GetNamedValue("data").ValueType == JsonValueType.Object)
-                    {
-                        var data = root.GetNamedObject("data");
-                        if (data.ContainsKey("id")) result.Id = data.GetNamedString("id");
-                        if (data.ContainsKey("name")) result.Name = data.GetNamedString("name");
-                        if (data.ContainsKey("avatar_url")) result.AvatarUrl = data.GetNamedString("avatar_url");
-                        if (data.ContainsKey("phone")) result.Phone = data.GetNamedString("phone");
-                        if (data.ContainsKey("email")) result.Email = data.GetNamedString("email");
-                        if (data.ContainsKey("coin")) result.Coin = data.GetNamedNumber("coin");
-                        if (data.ContainsKey("is_vip")) result.IsVip = data.GetNamedNumber("is_vip") == 1;
-                    }
+                    result.Code = selfRes.Code;
+                    result.Msg = selfRes.Msg;
+                    result.Id = selfRes.Data.Id;
+                    result.Name = selfRes.Data.Name;
+                    result.AvatarUrl = selfRes.Data.AvatarUrl;
+                    result.Phone = selfRes.Data.Phone;
+                    result.Email = selfRes.Data.Email;
+                    result.Coin = selfRes.Data.Coin;
+                    result.IsVip = selfRes.Data.IsVip;
+                    return result;
                 }
             }
             catch (Exception ex)
@@ -212,6 +251,42 @@ namespace 云湖WP.Api.User
                 result.Code = -1;
                 result.Msg = "获取用户信息失败: " + ex.Message;
             }
+            return result;
+        }
+
+        /// <summary>
+        /// 获取指定用户的详细资料 (POST /v1/user/get-user)
+        /// </summary>
+        public static async Task<云湖WP.Api.User.Info.UserDetailResult> GetUserDetailAsync(string token, string userId)
+        {
+            var result = new 云湖WP.Api.User.Info.UserDetailResult();
+            if (string.IsNullOrEmpty(userId))
+            {
+                result.Code = -1;
+                result.Msg = "用户ID不能为空";
+                return result;
+            }
+
+            try
+            {
+                byte[] reqBytes = 云湖WP.Api.User.Info.UserInfoProtobufCodec.EncodeGetUserRequest(userId);
+                byte[] respBytes = await HttpHelper.PostProtobufAsync("/v1/user/get-user", reqBytes, token);
+
+                if (respBytes == null || respBytes.Length == 0)
+                {
+                    result.Code = -1;
+                    result.Msg = "服务器返回空响应";
+                    return result;
+                }
+
+                result = 云湖WP.Api.User.Info.UserInfoProtobufCodec.DecodeGetUserResponse(respBytes);
+            }
+            catch (Exception ex)
+            {
+                result.Code = -1;
+                result.Msg = "获取用户资料异常: " + ex.Message;
+            }
+
             return result;
         }
 
@@ -256,6 +331,37 @@ namespace 云湖WP.Api.User
             {
                 result.Code = -1;
                 result.Msg = "获取详细资料失败: " + ex.Message;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// 修改自身个人资料 (POST /v1/user/save-user-data，位于 Api/User/Edit)
+        /// </summary>
+        public static async Task<云湖WP.Api.User.Edit.UserEditResult> EditUserProfileAsync(string token, 云湖WP.Api.User.Edit.UserEditRequest req)
+        {
+            var result = new 云湖WP.Api.User.Edit.UserEditResult();
+            if (req == null || string.IsNullOrEmpty(token))
+            {
+                result.Code = -1;
+                result.Msg = "参数不能为空";
+                return result;
+            }
+
+            try
+            {
+                string jsonStr = await HttpHelper.PostJsonAsync("/v1/user/save-user-data", req.ToJson(), token);
+                JsonObject root;
+                if (JsonObject.TryParse(jsonStr, out root))
+                {
+                    if (root.ContainsKey("code")) result.Code = (int)root.GetNamedNumber("code");
+                    if (root.ContainsKey("msg")) result.Msg = root.GetNamedString("msg");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Code = -1;
+                result.Msg = "保存个人资料失败: " + ex.Message;
             }
             return result;
         }
