@@ -503,12 +503,7 @@ namespace 云湖WP
 
         private void UserProfileCard_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            Frame.Navigate(typeof(UserDetailPage), new 云湖WP.Api.User.Info.UserDetailNavArgs
-            {
-                UserId = "",
-                Name = TxtDisplayName.Text,
-                AvatarUrl = ""
-            });
+            Frame.Navigate(typeof(MyProfilePage));
         }
 
         private async void ProfileMenu_Tapped(object sender, TappedRoutedEventArgs e)

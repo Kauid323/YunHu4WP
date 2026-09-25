@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Windows.ApplicationModel;
 using Windows.Phone.UI.Input;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
@@ -25,10 +26,26 @@ namespace 云湖WP
             base.OnNavigatedTo(e);
             HardwareButtons.BackPressed += HardwareButtons_BackPressed;
 
+            // 动态读取 Package.appxmanifest 中的 Identity Version
+            LoadAppVersion();
+
             // 初始化当前设置状态
             ToggleDisableImages.IsOn = ImageLoader.DisableAllImages;
             SliderThreads.Value = ImageLoader.MaxConcurrentLoads;
             TxtThreadCount.Text = string.Format("{0} 线程", ImageLoader.MaxConcurrentLoads);
+        }
+
+        private void LoadAppVersion()
+        {
+            try
+            {
+                var version = Package.Current.Id.Version;
+                TxtAppVersion.Text = string.Format("版本 {0}.{1}.{2}.{3} (WinRT Universal)", version.Major, version.Minor, version.Build, version.Revision);
+            }
+            catch
+            {
+                TxtAppVersion.Text = "版本 1.0.0.0 (WinRT Universal)";
+            }
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)

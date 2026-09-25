@@ -54,6 +54,8 @@
       <RootProperty Name="Margin" />
       <RootProperty Name="Orientation" />
       <RootProperty Name="Visibility" />
+      <RootProperty Name="Background" />
+      <RootEvent Name="Tapped" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.ProgressRing">
       <RootProperty Name="Width" />
@@ -283,5 +285,6 @@
       <RootProperty Name="IsSelected" />
     </RootType>
     <RootType FullName="云湖WP.ProfileEditPage" />
+    <RootType FullName="云湖WP.MyProfilePage" />
   </Roots.RootTypes>
 </Roots>

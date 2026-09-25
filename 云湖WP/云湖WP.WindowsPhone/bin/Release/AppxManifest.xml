@@ -7,10 +7,10 @@
 
     For more information on package manifest files, see http://go.microsoft.com/fwlink/?LinkID=241727
   -->
-  <Identity Name="44af12a4-c011-430b-8305-bdd33a350c5b" Publisher="CN=admin" Version="1.0.0.0" ProcessorArchitecture="neutral" />
+  <Identity Name="44af12a4-c011-430b-8305-bdd33a350c5b" Publisher="CN=Nago8" Version="1.0.0.1-Beta" ProcessorArchitecture="neutral" />
   <mp:PhoneIdentity PhoneProductId="44af12a4-c011-430b-8305-bdd33a350c5b" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
-    <DisplayName>云湖WP.WindowsPhone</DisplayName>
+    <DisplayName>云湖WP</DisplayName>
     <PublisherDisplayName>admin</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -23,7 +23,7 @@
   </Resources>
   <Applications>
     <Application Id="App" Executable="云湖WP.WindowsPhone.exe" EntryPoint="云湖WP.WindowsPhone.App">
-      <m3:VisualElements DisplayName="云湖WP.WindowsPhone" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" Description="云湖WP.WindowsPhone" ForegroundText="light" BackgroundColor="transparent">
+      <m3:VisualElements DisplayName="云湖WP" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" Description="云湖WP.WindowsPhone" ForegroundText="light" BackgroundColor="transparent">
         <m3:DefaultTile Wide310x150Logo="Assets\WideLogo.png" Square71x71Logo="Assets\Square71x71Logo.png" />
         <m3:SplashScreen Image="Assets\SplashScreen.png" />
       </m3:VisualElements>

@@ -76,7 +76,7 @@
                 <TextBlock Text="关于" FontSize="15" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,10" HorizontalAlignment="Left" />
                 
                 <TextBlock Text="云湖 Windows Phone 客户端" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,2" HorizontalAlignment="Left" />
-                <TextBlock Text="版本 1.0.0 (WinRT Universal)" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,0,8" HorizontalAlignment="Left" />
+                <TextBlock x:Name="TxtAppVersion" Text="版本 1.0.0.0 (WinRT Universal)" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,0,8" HorizontalAlignment="Left" />
                 <TextBlock Text="基于原生 Windows Phone 8.1 现代设计语言（Metro UI）打造，致敬纯粹几何直角与字阶排版美学，提供纯净专注的即时沟通体验。" 
                            FontSize="13" 
                            Foreground="{ThemeResource PhoneMidBrush}" 

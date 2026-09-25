@@ -1,0 +1,126 @@
+<Page
+    x:Class="云湖WP.MyProfilePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:云湖WP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 1. 原生 Windows Phone 大标题顶栏 (经典 Metro 大标题风格) -->
+        <StackPanel Grid.Row="0" Margin="19,18,19,8">
+            <TextBlock Text="云湖" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Typography.Capitals="SmallCaps" />
+            <TextBlock Text="个人信息" FontSize="42" FontWeight="Light" Margin="0,-4,0,0" />
+        </StackPanel>
+
+        <!-- 2. 中间滚动内容区 (原生 WP 纯字阶排版，无多余卡片，全居左) -->
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="19,10,19,24">
+                <ProgressBar x:Name="ProfileProgressBar" IsIndeterminate="True" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,12" />
+
+                <!-- A. 用户基本信息栏 -->
+                <Grid Margin="0,4,0,24" HorizontalAlignment="Left">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="76" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- 用户头像 (70x70 纯直角几何方块，点击进入图片预览器) -->
+                    <Grid Width="70" Height="70" VerticalAlignment="Top" HorizontalAlignment="Left" Background="Transparent" Tapped="Avatar_Tapped">
+                        <Border x:Name="BorderAvatarLetter" Background="{ThemeResource PhoneAccentBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <TextBlock x:Name="TxtAvatarLetter" Text="云" FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <Image x:Name="ImgAvatar" Stretch="UniformToFill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                    </Grid>
+
+                    <!-- 用户主要文本信息 (居左) -->
+                    <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Top">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtUserName" Text="加载中..." FontSize="22" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" MaxWidth="190" HorizontalAlignment="Left" />
+                            <Border x:Name="BorderVip" Background="{ThemeResource PhoneAccentBrush}" Padding="5,1" Margin="6,0,0,0" VerticalAlignment="Center" Visibility="Collapsed">
+                                <TextBlock Text="VIP" FontSize="10" FontWeight="Bold" Foreground="White" />
+                            </Border>
+                        </StackPanel>
+
+                        <TextBlock x:Name="TxtUserIdHeader" Text="ID: -" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,4,0,0" HorizontalAlignment="Left" />
+                        <TextBlock x:Name="TxtVipBadgeText" Text="普通用户" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- 分割线 -->
+                <Border Height="1" Background="#1FFFFFFF" Margin="0,0,0,16" />
+
+                <!-- B. 详细资料 (根据 GET /v1/user/info 返回内容完整呈现) -->
+                <TextBlock Text="账号详情" FontSize="15" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,14" HorizontalAlignment="Left" />
+
+                <!-- 用户 ID (可点击复制) -->
+                <StackPanel Margin="0,0,0,14" HorizontalAlignment="Left" Background="Transparent" Tapped="BtnCopyId_Tapped">
+                    <TextBlock Text="用户 ID (UID) (点击复制)" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="TxtUserId" Text="-" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                </StackPanel>
+
+                <!-- 用户昵称 -->
+                <StackPanel Margin="0,0,0,14" HorizontalAlignment="Left">
+                    <TextBlock Text="昵称" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="TxtNickName" Text="-" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                </StackPanel>
+
+                <!-- 绑定手机 -->
+                <StackPanel Margin="0,0,0,14" HorizontalAlignment="Left">
+                    <TextBlock Text="绑定手机" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="TxtPhone" Text="未绑定" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                </StackPanel>
+
+                <!-- 绑定邮箱 -->
+                <StackPanel Margin="0,0,0,14" HorizontalAlignment="Left">
+                    <TextBlock Text="绑定邮箱" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="TxtEmail" Text="未绑定" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                </StackPanel>
+
+                <!-- 金币资产 -->
+                <StackPanel Margin="0,0,0,14" HorizontalAlignment="Left">
+                    <TextBlock Text="金币数量" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="TxtCoin" Text="0" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                </StackPanel>
+
+                <!-- 会员状态 -->
+                <StackPanel Margin="0,0,0,14" HorizontalAlignment="Left">
+                    <TextBlock Text="会员状态" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="TxtVipStatus" Text="普通用户" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                </StackPanel>
+
+                <!-- VIP 到期时间 -->
+                <StackPanel x:Name="PanelVipExpired" Margin="0,0,0,14" HorizontalAlignment="Left" Visibility="Collapsed">
+                    <TextBlock Text="VIP 过期时间" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="TxtVipExpired" Text="-" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                </StackPanel>
+
+                <!-- 我的邀请码 (可点击复制) -->
+                <StackPanel Margin="0,0,0,14" HorizontalAlignment="Left" Background="Transparent" Tapped="BtnCopyInviteCode_Tapped">
+                    <TextBlock Text="我的邀请码 (点击复制)" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="TxtInviteCode" Text="暂无" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+
+    <!-- 3. 原生 Windows Phone 8.1 底部应用栏 CommandBar -->
+    <Page.BottomAppBar>
+        <CommandBar Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+            <CommandBar.PrimaryCommands>
+                <AppBarButton x:Name="AppBarBtnCopyId" Icon="Copy" Label="复制 UID" Click="BtnCopyId_Click" />
+                <AppBarButton x:Name="AppBarBtnCopyInvite" Icon="Tag" Label="复制邀请码" Click="BtnCopyInviteCode_Click" />
+                <AppBarButton x:Name="AppBarBtnEditProfile" Icon="Edit" Label="编辑资料" Click="BtnEditProfile_Click" />
+                <AppBarButton x:Name="AppBarBtnRefresh" Icon="Refresh" Label="刷新" Click="BtnRefresh_Click" />
+            </CommandBar.PrimaryCommands>
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>

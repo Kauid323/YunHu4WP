@@ -60,3 +60,8 @@ e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.
 e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\ProfileEditPage.xaml
 e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\ProfileEditPage.xbf
 e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Debug\ProfileEditPage.xbf
+e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Debug\MyProfilePage.xbf
+e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\MyProfilePage.g.i.cs
+e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\MyProfilePage.g.cs
+e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\MyProfilePage.xaml
+e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\obj\Debug\MyProfilePage.xbf
