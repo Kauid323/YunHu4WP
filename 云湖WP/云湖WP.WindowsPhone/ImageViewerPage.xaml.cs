@@ -19,6 +19,7 @@ namespace 云湖WP
     {
         private string _imageUrl = "";
         private string _title = "图片预览";
+        private string _fallbackLetter = "";
         private byte[] _imageBytes = null;
         private bool _isSaving = false;
 
@@ -39,6 +40,10 @@ namespace 云湖WP
                 if (!string.IsNullOrEmpty(args.Title))
                 {
                     _title = args.Title;
+                }
+                if (!string.IsNullOrEmpty(args.FallbackLetter))
+                {
+                    _fallbackLetter = args.FallbackLetter;
                 }
             }
             else if (e.Parameter is string)
@@ -68,14 +73,27 @@ namespace 云湖WP
         {
             if (string.IsNullOrEmpty(_imageUrl))
             {
-                PanelError.Visibility = Visibility.Visible;
+                ImgProgressBar.Visibility = Visibility.Collapsed;
+                PanelError.Visibility = Visibility.Collapsed;
                 BtnSave.Visibility = Visibility.Collapsed;
+                ImgFull.Source = null;
+
+                if (!string.IsNullOrEmpty(_fallbackLetter))
+                {
+                    TxtAvatarLetter.Text = _fallbackLetter;
+                    BorderAvatarLetter.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    PanelError.Visibility = Visibility.Visible;
+                }
                 return;
             }
 
             ImgProgressBar.Visibility = Visibility.Visible;
             PanelError.Visibility = Visibility.Collapsed;
             BtnSave.Visibility = Visibility.Collapsed;
+            BorderAvatarLetter.Visibility = Visibility.Collapsed;
 
             string finalUrl = _imageUrl;
             bool success = false;
@@ -105,11 +123,21 @@ namespace 云湖WP
 
             if (success)
             {
+                BorderAvatarLetter.Visibility = Visibility.Collapsed;
                 BtnSave.Visibility = Visibility.Visible;
             }
             else
             {
-                PanelError.Visibility = Visibility.Visible;
+                if (!string.IsNullOrEmpty(_fallbackLetter))
+                {
+                    TxtAvatarLetter.Text = _fallbackLetter;
+                    BorderAvatarLetter.Visibility = Visibility.Visible;
+                    PanelError.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    PanelError.Visibility = Visibility.Visible;
+                }
                 BtnSave.Visibility = Visibility.Collapsed;
             }
         }

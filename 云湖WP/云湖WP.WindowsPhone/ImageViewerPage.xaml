@@ -25,6 +25,10 @@
                       HorizontalAlignment="Stretch"
                       VerticalAlignment="Stretch">
             <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                <!-- 纯字形默认头像块 (当无头像图片或未设置头像时在中心大尺寸展示) -->
+                <Border x:Name="BorderAvatarLetter" Width="180" Height="180" Background="{ThemeResource PhoneAccentBrush}" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock x:Name="TxtAvatarLetter" Text="云" FontSize="72" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
                 <Image x:Name="ImgFull" 
                        Stretch="Uniform" 
                        HorizontalAlignment="Center" 

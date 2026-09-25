@@ -231,6 +231,7 @@ namespace 云湖WP.Api.Message
     {
         public string ImageUrl { get; set; }
         public string Title { get; set; }
+        public string FallbackLetter { get; set; }
     }
 
     /// <summary>

@@ -5,6 +5,7 @@ using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using 云湖WP.Api.Message;
 using 云湖WP.Api.User;
@@ -240,6 +241,18 @@ namespace 云湖WP
             {
                 Frame.GoBack();
             }
+        }
+
+        private void Avatar_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            string letter = !string.IsNullOrEmpty(_userName) ? _userName.Substring(0, 1).ToUpper() : "云";
+            var navArgs = new ImageViewerNavArgs
+            {
+                ImageUrl = _avatarUrl ?? "",
+                Title = (!string.IsNullOrEmpty(_userName) ? _userName : "用户") + " 头像",
+                FallbackLetter = letter
+            };
+            Frame.Navigate(typeof(ImageViewerPage), navArgs);
         }
 
         private void BtnRefresh_Click(object sender, RoutedEventArgs e)
