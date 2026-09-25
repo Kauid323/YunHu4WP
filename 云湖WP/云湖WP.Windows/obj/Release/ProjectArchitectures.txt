@@ -1,1 +1,1 @@
-e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.Windows\云湖WP.Windows.csproj;neutral
+e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.Windows\云湖WP.Windows.csproj;neutral

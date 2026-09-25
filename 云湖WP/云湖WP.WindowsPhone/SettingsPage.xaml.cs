@@ -48,6 +48,11 @@ namespace 云湖WP
             }
         }
 
+        private async void BtnGithub_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            await Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/Kauid323/Yhchat_MD3"));
+        }
+
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);

@@ -82,8 +82,23 @@
                            Foreground="{ThemeResource PhoneMidBrush}" 
                            TextWrapping="Wrap" 
                            LineHeight="18" 
-                           Margin="0,0,0,16" 
+                           Margin="0,0,0,14" 
                            HorizontalAlignment="Left" />
+
+                <!-- GitHub 开源仓库入口 -->
+                <Border BorderThickness="1" BorderBrush="#33FFFFFF" Padding="14,12" Background="Transparent" Margin="0,0,0,6" Tapped="BtnGithub_Tapped">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="开源地址 / GitHub" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                            <TextBlock Text="github.com/Kauid323/Yhchat_MD3" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" Text=">" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                    </Grid>
+                </Border>
                 
             </StackPanel>
         </ScrollViewer>

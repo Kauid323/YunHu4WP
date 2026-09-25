@@ -15,5 +15,6 @@
 "e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\SettingsPage.xbf" "SettingsPage.xbf"
 "e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\ImageViewerPage.xbf" "ImageViewerPage.xbf"
 "e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\ProfileEditPage.xbf" "ProfileEditPage.xbf"
+"e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\MyProfilePage.xbf" "MyProfilePage.xbf"
 "e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\云湖WP.WindowsPhone.xr.xml" "云湖WP.WindowsPhone.xr.xml"
 "e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\resources.pri" "resources.pri"

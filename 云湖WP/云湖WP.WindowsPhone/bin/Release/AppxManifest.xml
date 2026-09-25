@@ -7,7 +7,7 @@
 
     For more information on package manifest files, see http://go.microsoft.com/fwlink/?LinkID=241727
   -->
-  <Identity Name="44af12a4-c011-430b-8305-bdd33a350c5b" Publisher="CN=Nago8" Version="1.0.0.1-Beta" ProcessorArchitecture="neutral" />
+  <Identity Name="44af12a4-c011-430b-8305-bdd33a350c5b" Publisher="CN=Nago8" Version="1.0.0.1" ProcessorArchitecture="neutral" />
   <mp:PhoneIdentity PhoneProductId="44af12a4-c011-430b-8305-bdd33a350c5b" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>云湖WP</DisplayName>
