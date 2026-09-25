@@ -108,37 +108,29 @@ namespace 云湖WP
                 }
                 else
                 {
-                    // 查询自身资料
-                    var selfRes = await UserApi.GetUserInfoAsync(_token);
-                    if (selfRes.IsSuccess)
+                    // 查询自身资料 (GET /v1/user/info)
+                    var selfRes = await UserApi.GetSelfInfoAsync(_token);
+                    if (selfRes != null && selfRes.IsSuccess && selfRes.Data != null)
                     {
-                        _userId = selfRes.Id;
-                        _userName = selfRes.Name;
-                        _avatarUrl = selfRes.AvatarUrl;
+                        var data = selfRes.Data;
+                        _userId = data.Id;
+                        _userName = data.Name;
+                        _avatarUrl = data.AvatarUrl;
 
                         var detailModel = new UserDetailModel
                         {
-                            Id = selfRes.Id,
-                            Name = selfRes.Name,
-                            AvatarUrl = selfRes.AvatarUrl,
-                            IsVip = selfRes.IsVip,
-                            Coin = selfRes.Coin
+                            Id = data.Id,
+                            Name = data.Name,
+                            AvatarUrl = data.AvatarUrl,
+                            IsVip = data.IsVip,
+                            Coin = data.Coin,
+                            InvitationCode = data.InvitationCode
                         };
                         BindUserDetail(detailModel);
-
-                        // 再拉取自身详细资料补充字段
-                        if (!string.IsNullOrEmpty(selfRes.Id))
-                        {
-                            var fullRes = await UserApi.GetUserDetailAsync(_token, selfRes.Id);
-                            if (fullRes.IsSuccess && fullRes.Data != null)
-                            {
-                                BindUserDetail(fullRes.Data);
-                            }
-                        }
                     }
                     else
                     {
-                        errMsg = "获取自身资料失败: " + selfRes.Msg;
+                        errMsg = "获取自身资料失败: " + (selfRes != null ? selfRes.Msg : "未知错误");
                     }
                 }
             }

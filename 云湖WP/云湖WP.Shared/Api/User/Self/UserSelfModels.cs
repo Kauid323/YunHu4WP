@@ -15,10 +15,14 @@ namespace 云湖WP.Api.User.Self
         public string Id { get; set; }
         public string Name { get; set; }
         public string AvatarUrl { get; set; }
+        public long AvatarId { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }
         public double Coin { get; set; }
         public bool IsVip { get; set; }
+        public long VipExpiredTimestamp { get; set; }
+        public int VipStatus { get; set; }
+        public string InvitationCode { get; set; }
         public string RegisterTime { get; set; }
         public string IpGeo { get; set; }
         public int Gender { get; set; }
@@ -334,35 +338,67 @@ namespace 云湖WP.Api.User.Self
 
                 switch (key.Field)
                 {
-                    case 1: // id
+                    case 1: // id (string)
                         model.Id = ProtocolParser.ReadString(stream);
                         break;
-                    case 2: // name
+                    case 2: // name (string)
                         model.Name = ProtocolParser.ReadString(stream);
                         break;
-                    case 3: // avatar_url
+                    case 3: // field3 (int32)
+                        ProtocolParser.ReadUInt32(stream);
+                        break;
+                    case 4: // avatar_url (string)
                         model.AvatarUrl = ProtocolParser.ReadString(stream);
                         break;
-                    case 4: // phone
+                    case 5: // avatar_id (int64)
+                        model.AvatarId = (long)ProtocolParser.ReadUInt64(stream);
+                        break;
+                    case 6: // phone (string)
                         model.Phone = ProtocolParser.ReadString(stream);
                         break;
-                    case 5: // email
+                    case 7: // email (string)
                         model.Email = ProtocolParser.ReadString(stream);
                         break;
-                    case 6: // coin
-                        model.Coin = ProtocolParser.ReadUInt32(stream);
+                    case 8: // coin (double)
+                        if (key.WireType == Wire.Fixed64)
+                        {
+                            byte[] b = new byte[8];
+                            stream.Read(b, 0, 8);
+                            model.Coin = BitConverter.ToDouble(b, 0);
+                        }
+                        else if (key.WireType == Wire.Fixed32)
+                        {
+                            byte[] b = new byte[4];
+                            stream.Read(b, 0, 4);
+                            model.Coin = BitConverter.ToSingle(b, 0);
+                        }
+                        else if (key.WireType == Wire.Varint)
+                        {
+                            model.Coin = ProtocolParser.ReadUInt64(stream);
+                        }
+                        else if (key.WireType == Wire.LengthDelimited)
+                        {
+                            string s = ProtocolParser.ReadString(stream);
+                            double c;
+                            if (double.TryParse(s, out c)) model.Coin = c;
+                        }
+                        else
+                        {
+                            ProtocolParser.SkipKey(stream, key);
+                        }
                         break;
-                    case 7: // is_vip
-                        model.IsVip = ProtocolParser.ReadUInt32(stream) == 1;
+                    case 9: // is_vip (bool)
+                        model.IsVip = ProtocolParser.ReadBool(stream);
                         break;
-                    case 8: // ipGeo
-                        model.IpGeo = ProtocolParser.ReadString(stream);
+                    case 10: // vip_expired_timestamp (int64)
+                        model.VipExpiredTimestamp = (long)ProtocolParser.ReadUInt64(stream);
                         break;
-                    case 9: // register_time
-                        model.RegisterTime = ProtocolParser.ReadString(stream);
+                    case 11: // vip_status (VipStatus enum / int32)
+                        model.VipStatus = (int)ProtocolParser.ReadUInt32(stream);
+                        if (model.VipStatus == 1) model.IsVip = true;
                         break;
-                    case 10: // introduction
-                        model.Introduction = ProtocolParser.ReadString(stream);
+                    case 12: // invitation_code (string)
+                        model.InvitationCode = ProtocolParser.ReadString(stream);
                         break;
                     default:
                         ProtocolParser.SkipKey(stream, key);

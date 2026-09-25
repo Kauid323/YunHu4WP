@@ -189,22 +189,18 @@ namespace 云湖WP.Api.User
 
             try
             {
-                // 1. 尝试获取 Protobuf / JSON 原始二进制流 (支持自动识别 JSON 与 Protobuf)
+                // GET /v1/user/info (Protobuf 协议)
                 byte[] bytes = await HttpHelper.GetProtobufAsync("/v1/user/info", token);
                 if (bytes != null && bytes.Length > 0)
                 {
                     result = 云湖WP.Api.User.Self.UserSelfProtobufCodec.DecodeSelfInfoResponse(bytes);
-                    if (result != null && result.IsSuccess && !string.IsNullOrEmpty(result.Name))
-                    {
-                        return result;
-                    }
+                    AppLogger.Log("UserApi", string.Format("GetSelfInfoAsync decoded: Code={0}, Name={1}, Id={2}, AvatarUrl={3}", result.Code, result.Name, result.Id, result.AvatarUrl));
+                    return result;
                 }
-
-                // 2. 降级尝试标准 GET 文本
-                string jsonStr = await HttpHelper.GetAsync("/v1/user/info", token);
-                if (!string.IsNullOrEmpty(jsonStr))
+                else
                 {
-                    result = 云湖WP.Api.User.Self.UserSelfProtobufCodec.DecodeSelfInfoJson(jsonStr);
+                    result.Code = -1;
+                    result.Msg = "服务器返回空响应";
                 }
             }
             catch (Exception ex)
