@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>031490cc-5699-4b16-88ef-861a620305e3</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>云湖WP</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="$(MSBuildThisFileDirectory)App.xaml">
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="$(MSBuildThisFileDirectory)App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Token\SecurityHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Token\TokenManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\ImageHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\ImageLoader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Common\YunhuApiConfig.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Common\ApiResult.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Common\HttpHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Protobuf\Runtime\ProtocolTypes.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Protobuf\Runtime\PositionStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Protobuf\Runtime\ProtocolParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Protobuf\YhProtobufMessages.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Protobuf\ProtobufReader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Protobuf\ProtobufWriter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Protobuf\ConversationProtobufCodec.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\User\UserModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\User\UserApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Conversation\ConversationModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Conversation\ConversationApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Message\MessageModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Message\MessageApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Bot\BotModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Bot\BotApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\YunhuApiClient.cs" />
+  </ItemGroup>
+</Project>

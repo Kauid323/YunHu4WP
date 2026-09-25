@@ -1,0 +1,169 @@
+<Page
+    x:Class="云湖WP.ChatPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:云湖WP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 1. 顶部 Metro 标题栏 (纯几何直角风格，适中高度) -->
+        <Border Grid.Row="0" BorderThickness="0,0,0,1" BorderBrush="#22FFFFFF" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="10,6" Height="52">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="42" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 返回按钮 (原生 WinRT SymbolIcon) -->
+                <Button x:Name="BtnBack" Width="40" Height="40" Padding="0" Margin="0" BorderThickness="0" Background="Transparent" Click="BtnBack_Click" VerticalAlignment="Center" HorizontalAlignment="Left">
+                    <SymbolIcon Symbol="Back" />
+                </Button>
+
+                <!-- 会话名称 (居中单行排版) -->
+                <TextBlock x:Name="TxtChatTitle" Grid.Column="1" Text="云湖聊天" FontSize="19" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="8,0,8,0" />
+
+                <!-- 右上角刷新/选项按钮 (原生 WinRT SymbolIcon) -->
+                <Button x:Name="BtnRefresh" Grid.Column="2" Width="40" Height="40" Padding="0" Margin="0" BorderThickness="0" Background="Transparent" Click="BtnRefresh_Click" VerticalAlignment="Center" HorizontalAlignment="Right">
+                    <SymbolIcon Symbol="Refresh" />
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- 2. 中间消息列表容器 -->
+        <Grid Grid.Row="1">
+            <ProgressBar x:Name="MsgProgressBar" IsIndeterminate="True" VerticalAlignment="Top" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}" Canvas.ZIndex="20" />
+
+            <!-- 空消息状态提示 -->
+            <StackPanel x:Name="EmptyMsgPanel" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20,0">
+                <TextBlock Text="暂无历史消息记录" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                <TextBlock Text="在下方输入框发送消息开始畅聊吧" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Center" />
+            </StackPanel>
+
+            <!-- 消息虚拟化列表 -->
+            <ListView x:Name="ChatListView"
+                      SelectionMode="None"
+                      IsItemClickEnabled="False"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch"
+                      Loaded="ChatListView_Loaded"
+                      Padding="12,8">
+                <ListView.Header>
+                    <Border x:Name="TopLoadMoreBorder" HorizontalAlignment="Stretch" Padding="8,8" Margin="0,0,0,8" Background="Transparent" Tapped="TopLoadMoreBorder_Tapped" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <SymbolIcon Symbol="Refresh" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock x:Name="TxtTopLoadMore" Text="点击或继续上滑加载更早消息..." FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                </ListView.Header>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0,4" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid HorizontalAlignment="Stretch" Margin="0,3">
+                            
+                            <!-- A. 对方发送的消息 (左侧气泡，无圆角) -->
+                            <Grid HorizontalAlignment="Left" Visibility="{Binding OtherBubbleVisibility}" Margin="0,0,40,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="38" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- 对方头像 (Metro 直角 34x34) -->
+                                <Grid Width="34" Height="34" VerticalAlignment="Top" Margin="0,2,6,0">
+                                    <Border Background="#FF555555" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                        <TextBlock Text="{Binding SenderAvatarLetter}" FontSize="15" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Image Source="{Binding SenderAvatarBitmap}" Stretch="UniformToFill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                                </Grid>
+
+                                <StackPanel Grid.Column="1" HorizontalAlignment="Left">
+                                    <!-- 发送者昵称 (群聊显示) -->
+                                    <TextBlock Text="{Binding DisplaySenderName}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="2,0,0,3" Visibility="{Binding ShowSenderNameVisibility}" TextTrimming="CharacterEllipsis" MaxWidth="240" />
+
+                                    <!-- 消息气泡 (半透明深色背景，无圆角) -->
+                                    <Border Background="#20FFFFFF" BorderThickness="1" BorderBrush="#33FFFFFF" Padding="10,8">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Text}" FontSize="15" Foreground="White" TextWrapping="Wrap" LineHeight="20" />
+                                            <TextBlock Text="{Binding FormattedTime}" FontSize="10" Foreground="#88FFFFFF" HorizontalAlignment="Right" Margin="0,4,0,0" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- B. 我方发送的消息 (右侧气泡，无圆角) -->
+                            <Grid HorizontalAlignment="Right" Visibility="{Binding SelfBubbleVisibility}" Margin="40,0,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="38" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" HorizontalAlignment="Right">
+                                    <!-- 消息气泡 (主题色实色背景，无圆角) -->
+                                    <Border Background="{ThemeResource PhoneAccentBrush}" Padding="10,8">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Text}" FontSize="15" Foreground="White" TextWrapping="Wrap" LineHeight="20" />
+                                            <TextBlock Text="{Binding FormattedTime}" FontSize="10" Foreground="#CCFFFFFF" HorizontalAlignment="Right" Margin="0,4,0,0" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- 我方头像 (Metro 直角 34x34) -->
+                                <Grid Grid.Column="1" Width="34" Height="34" VerticalAlignment="Top" Margin="6,2,0,0">
+                                    <Border Background="{ThemeResource PhoneAccentBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                        <TextBlock Text="{Binding SenderAvatarLetter}" FontSize="15" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Image Source="{Binding SenderAvatarBitmap}" Stretch="UniformToFill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                                </Grid>
+                            </Grid>
+
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Grid>
+
+        <!-- 3. 底部 Metro 消息输入栏 (纯几何直角) -->
+        <Border Grid.Row="2" BorderThickness="0,1,0,0" BorderBrush="#22FFFFFF" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="10,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 输入框 (无圆角) -->
+                <TextBox x:Name="TxtInput"
+                         PlaceholderText="输入消息..."
+                         Margin="0,0,8,0"
+                         BorderThickness="1"
+                         KeyDown="TxtInput_KeyDown"
+                         VerticalAlignment="Center" />
+
+                <!-- 发送按钮 (无圆角) -->
+                <Button x:Name="BtnSend"
+                        Grid.Column="1"
+                        Content="发送"
+                        Width="72"
+                        BorderThickness="1"
+                        Background="{ThemeResource PhoneAccentBrush}"
+                        Foreground="White"
+                        Click="BtnSend_Click"
+                        VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+    </Grid>
+</Page>
