@@ -10,11 +10,13 @@ BoardDetailPage.xbf
 BotsPage.xbf
 ChatPage.xbf
 CreatePostPage.xbf
+EditBoardPage.xbf
 FriendsPage.xbf
 GroupsPage.xbf
 ImageViewerPage.xbf
 LoginPage.xbf
 MainPage.xbf
+MyActivityPage.xbf
 MyProfilePage.xbf
 PostDetailPage.xbf
 ProfileEditPage.xbf

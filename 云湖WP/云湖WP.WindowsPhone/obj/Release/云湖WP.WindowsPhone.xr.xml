@@ -43,6 +43,11 @@
     <RootPropertyPathName Name="UserId" />
     <RootPropertyPathName Name="Subtitle" />
     <RootPropertyPathName Name="RoleTag" />
+    <RootPropertyPathName Name="StatsText" />
+    <RootPropertyPathName Name="Name" />
+    <RootPropertyPathName Name="NameLetter" />
+    <RootPropertyPathName Name="IdText" />
+    <RootPropertyPathName Name="DraftBadgeVisibility" />
   </Roots.PropertyPathNames>
   <Roots.RootTypes>
     <RootType FullName="Windows.UI.Xaml.Application" />
@@ -248,6 +253,7 @@
       <RootProperty Name="ItemsPanel" />
       <RootProperty Name="ItemContainerTransitions" />
       <RootProperty Name="Header" />
+      <RootProperty Name="Footer" />
       <RootEvent Name="ItemClick" />
       <RootEvent Name="Loaded" />
     </RootType>
@@ -394,5 +400,7 @@
     <RootType FullName="云湖WP.GroupsPage" />
     <RootType FullName="云湖WP.BotsPage" />
     <RootType FullName="云湖WP.AuthorRecommendPage" />
+    <RootType FullName="云湖WP.MyActivityPage" />
+    <RootType FullName="云湖WP.EditBoardPage" />
   </Roots.RootTypes>
 </Roots>

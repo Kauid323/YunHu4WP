@@ -124,7 +124,7 @@ namespace 云湖WP.云湖WP_WindowsPhone_XamlTypeInfo
 
         private void InitTypeTables()
         {
-            _typeNameTable = new string[19];
+            _typeNameTable = new string[21];
             _typeNameTable[0] = "云湖WP.LoginPage";
             _typeNameTable[1] = "Windows.UI.Xaml.Controls.Page";
             _typeNameTable[2] = "Windows.UI.Xaml.Controls.UserControl";
@@ -144,8 +144,10 @@ namespace 云湖WP.云湖WP_WindowsPhone_XamlTypeInfo
             _typeNameTable[16] = "云湖WP.GroupsPage";
             _typeNameTable[17] = "云湖WP.BotsPage";
             _typeNameTable[18] = "云湖WP.AuthorRecommendPage";
+            _typeNameTable[19] = "云湖WP.MyActivityPage";
+            _typeNameTable[20] = "云湖WP.EditBoardPage";
 
-            _typeTable = new global::System.Type[19];
+            _typeTable = new global::System.Type[21];
             _typeTable[0] = typeof(global::云湖WP.LoginPage);
             _typeTable[1] = typeof(global::Windows.UI.Xaml.Controls.Page);
             _typeTable[2] = typeof(global::Windows.UI.Xaml.Controls.UserControl);
@@ -165,6 +167,8 @@ namespace 云湖WP.云湖WP_WindowsPhone_XamlTypeInfo
             _typeTable[16] = typeof(global::云湖WP.GroupsPage);
             _typeTable[17] = typeof(global::云湖WP.BotsPage);
             _typeTable[18] = typeof(global::云湖WP.AuthorRecommendPage);
+            _typeTable[19] = typeof(global::云湖WP.MyActivityPage);
+            _typeTable[20] = typeof(global::云湖WP.EditBoardPage);
         }
 
         private int LookupTypeIndexByName(string typeName)
@@ -216,6 +220,8 @@ namespace 云湖WP.云湖WP_WindowsPhone_XamlTypeInfo
         private object Activate_16_GroupsPage() { return new global::云湖WP.GroupsPage(); }
         private object Activate_17_BotsPage() { return new global::云湖WP.BotsPage(); }
         private object Activate_18_AuthorRecommendPage() { return new global::云湖WP.AuthorRecommendPage(); }
+        private object Activate_19_MyActivityPage() { return new global::云湖WP.MyActivityPage(); }
+        private object Activate_20_EditBoardPage() { return new global::云湖WP.EditBoardPage(); }
 
         private global::Windows.UI.Xaml.Markup.IXamlType CreateXamlType(int typeIndex)
         {
@@ -350,6 +356,20 @@ namespace 云湖WP.云湖WP_WindowsPhone_XamlTypeInfo
             case 18:   //  云湖WP.AuthorRecommendPage
                 userType = new global::云湖WP.云湖WP_WindowsPhone_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Windows.UI.Xaml.Controls.Page"));
                 userType.Activator = Activate_18_AuthorRecommendPage;
+                userType.SetIsLocalType();
+                xamlType = userType;
+                break;
+
+            case 19:   //  云湖WP.MyActivityPage
+                userType = new global::云湖WP.云湖WP_WindowsPhone_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Windows.UI.Xaml.Controls.Page"));
+                userType.Activator = Activate_19_MyActivityPage;
+                userType.SetIsLocalType();
+                xamlType = userType;
+                break;
+
+            case 20:   //  云湖WP.EditBoardPage
+                userType = new global::云湖WP.云湖WP_WindowsPhone_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Windows.UI.Xaml.Controls.Page"));
+                userType.Activator = Activate_20_EditBoardPage;
                 userType.SetIsLocalType();
                 xamlType = userType;
                 break;

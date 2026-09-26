@@ -1,2 +1,2 @@
-MainPackage=e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\云湖WP.WindowsPhone_1.0.0.2_Bundle\云湖WP.WindowsPhone_1.0.0.2_AnyCPU.appx
-SymbolPackage=e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\AppPackages\云湖WP.WindowsPhone_1.0.0.2_Test\云湖WP.WindowsPhone_1.0.0.2_AnyCPU.appxsym
+MainPackage=e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\云湖WP.WindowsPhone_1.0.0.3_Bundle\云湖WP.WindowsPhone_1.0.0.3_AnyCPU.appx
+SymbolPackage=e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\AppPackages\云湖WP.WindowsPhone_1.0.0.3_Test\云湖WP.WindowsPhone_1.0.0.3_AnyCPU.appxsym

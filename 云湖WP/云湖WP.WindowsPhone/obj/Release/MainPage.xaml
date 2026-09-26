@@ -24,7 +24,7 @@
                     </StackPanel>
 
                     <!-- 会话列表视图 (原生 Windows Phone 虚拟化列表) -->
-                    <ListView x:ConnectionId='13' x:Name="ConvListView" 
+                    <ListView x:ConnectionId='14' x:Name="ConvListView" 
                               SelectionMode="None" 
                               IsItemClickEnabled="True" 
                                                                 
@@ -77,7 +77,7 @@
 
             <!-- 2. 联系人与群组 -->
             <PivotItem Header="联系人" Margin="0">
-                <ScrollViewer x:ConnectionId='8' x:Name="ContactsScrollViewer"
+                <ScrollViewer x:ConnectionId='9' x:Name="ContactsScrollViewer"
                               HorizontalScrollMode="Disabled" 
                               HorizontalScrollBarVisibility="Disabled" 
                               VerticalScrollMode="Auto" 
@@ -85,7 +85,7 @@
                                                                      >
                     <StackPanel Margin="16,10,16,24">
                         <!-- 分类导航 -->
-                        <Border x:ConnectionId='9' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent" Tag="Friends"                                >
+                        <Border x:ConnectionId='10' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent" Tag="Friends"                                >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="40" />
@@ -100,7 +100,7 @@
                             </Grid>
                         </Border>
 
-                        <Border x:ConnectionId='10' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent" Tag="Groups"                                >
+                        <Border x:ConnectionId='11' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent" Tag="Groups"                                >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="40" />
@@ -115,7 +115,7 @@
                             </Grid>
                         </Border>
 
-                        <Border x:ConnectionId='11' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent" Tag="Bots"                                >
+                        <Border x:ConnectionId='12' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent" Tag="Bots"                                >
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="40" />
@@ -140,7 +140,7 @@
                         <ItemsControl x:Name="StickyItemsControl">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border x:ConnectionId='12' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                           >
+                                    <Border x:ConnectionId='13' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent"                           >
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="46" />
@@ -182,7 +182,7 @@
                     </StackPanel>
 
                     <!-- 动态列表视图 (Metro 纯几何卡片) -->
-                    <ListView x:ConnectionId='7' x:Name="CommunityListView"
+                    <ListView x:ConnectionId='8' x:Name="CommunityListView"
                               SelectionMode="None"
                               IsItemClickEnabled="True"
                                                                      
@@ -341,6 +341,17 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
+                                <TextBlock Text="动态管理" FontSize="16" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text=">" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+
+                        <Border x:ConnectionId='7' BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,12" Background="Transparent"                             >
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
                                 <TextBlock Text="设置" FontSize="16" VerticalAlignment="Center" />
                                 <TextBlock Grid.Column="1" Text=">" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
                             </Grid>
@@ -355,21 +366,21 @@
     <Page.BottomAppBar>
         <CommandBar x:Name="MainCommandBar" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" ClosedDisplayMode="Compact">
             <CommandBar.PrimaryCommands>
-                <AppBarButton x:ConnectionId='14' x:Name="AppBarBtnRefresh" Icon="Refresh" Label="刷新"                                />
+                <AppBarButton x:ConnectionId='15' x:Name="AppBarBtnRefresh" Icon="Refresh" Label="刷新"                                />
                 <AppBarButton x:Name="AppBarBtnFilter" Icon="Filter" Label="筛选" Visibility="Collapsed">
                     <AppBarButton.Flyout>
                         <MenuFlyout>
-                            <MenuFlyoutItem x:ConnectionId='17' x:Name="FlyoutItemLatest" Text="最新文章 (当前)"                            />
-                            <MenuFlyoutItem x:ConnectionId='18' x:Name="FlyoutItemHot" Text="热门推荐"                         />
+                            <MenuFlyoutItem x:ConnectionId='18' x:Name="FlyoutItemLatest" Text="最新文章 (当前)"                            />
+                            <MenuFlyoutItem x:ConnectionId='19' x:Name="FlyoutItemHot" Text="热门推荐"                         />
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
-                <AppBarButton x:ConnectionId='15' x:Name="AppBarBtnNewChat" Icon="Add" Label="发起聊天"                                />
-                <AppBarButton x:ConnectionId='16' x:Name="AppBarBtnSearch" Icon="Find" Label="搜索"                               />
+                <AppBarButton x:ConnectionId='16' x:Name="AppBarBtnNewChat" Icon="Add" Label="发起聊天"                                />
+                <AppBarButton x:ConnectionId='17' x:Name="AppBarBtnSearch" Icon="Find" Label="搜索"                               />
             </CommandBar.PrimaryCommands>
             <CommandBar.SecondaryCommands>
-                <AppBarButton x:ConnectionId='19' x:Name="AppBarBtnSettings" Label="设置"                                 />
-                <AppBarButton x:ConnectionId='20' x:Name="AppBarBtnLogout" Label="退出登录"                               />
+                <AppBarButton x:ConnectionId='20' x:Name="AppBarBtnSettings" Label="设置"                                 />
+                <AppBarButton x:ConnectionId='21' x:Name="AppBarBtnLogout" Label="退出登录"                               />
             </CommandBar.SecondaryCommands>
         </CommandBar>
     </Page.BottomAppBar>
