@@ -36,6 +36,12 @@ namespace 云湖WP
             ToggleDisableImages.IsOn = ImageLoader.DisableAllImages;
             SliderThreads.Value = ImageLoader.MaxConcurrentLoads;
             TxtThreadCount.Text = string.Format("{0} 线程", ImageLoader.MaxConcurrentLoads);
+
+            int defaultPageIdx = AppSettings.DefaultStartupPageIndex;
+            if (defaultPageIdx >= 0 && defaultPageIdx <= 3)
+            {
+                CmbDefaultStartupPage.SelectedIndex = defaultPageIdx;
+            }
         }
 
         private void LoadAppVersion()
@@ -48,6 +54,16 @@ namespace 云湖WP
             catch
             {
                 TxtAppVersion.Text = "版本 1.0.0.0 (WinRT Universal)";
+            }
+        }
+
+        private void CmbDefaultStartupPage_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CmbDefaultStartupPage == null) return;
+            int idx = CmbDefaultStartupPage.SelectedIndex;
+            if (idx >= 0 && idx <= 3)
+            {
+                AppSettings.DefaultStartupPageIndex = idx;
             }
         }
 

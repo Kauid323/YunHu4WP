@@ -59,6 +59,18 @@
                                 HorizontalAlignment="Stretch" 
                                 Margin="0,0,0,24"/>
 
+                        <!-- 默认启动页面选择器 -->
+                        <ComboBox x:Name="CmbDefaultStartupPage" 
+                                  Header="默认启动页面" 
+                                  SelectionChanged="CmbDefaultStartupPage_SelectionChanged" 
+                                  HorizontalAlignment="Stretch" 
+                                  Margin="0,0,0,24">
+                            <ComboBoxItem Content="消息" Tag="0" />
+                            <ComboBoxItem Content="联系人" Tag="1" />
+                            <ComboBoxItem Content="动态" Tag="2" />
+                            <ComboBoxItem Content="我" Tag="3" />
+                        </ComboBox>
+
                         <!-- 清除缓存按钮 -->
                         <Button x:Name="BtnClearCache" 
                                 Content="清除图片与头像缓存" 

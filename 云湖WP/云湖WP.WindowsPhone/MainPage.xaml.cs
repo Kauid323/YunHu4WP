@@ -272,10 +272,22 @@ namespace 云湖WP
                 }
 
                 UpdateAccountDisplay();
-                await LoadUserProfileAsync();
-                await LoadConversationsAsync();
-                await LoadStickyListAsync();
+                var taskProfile = LoadUserProfileAsync();
+                var taskConv = LoadConversationsAsync();
+                var taskSticky = LoadStickyListAsync();
                 PreloadAddressBookTitlesAsync();
+
+                // 首次进入主页时，根据设置切换到默认启动页面 (0: 消息, 1: 联系人, 2: 动态, 3: 我)
+                if (e.NavigationMode != NavigationMode.Back)
+                {
+                    int defaultPageIdx = AppSettings.DefaultStartupPageIndex;
+                    if (defaultPageIdx >= 0 && defaultPageIdx <= 3 && MainPivot.SelectedIndex != defaultPageIdx)
+                    {
+                        MainPivot.SelectedIndex = defaultPageIdx;
+                    }
+                }
+
+                await Task.WhenAll(taskProfile, taskConv, taskSticky);
             }
             catch (Exception ex)
             {
@@ -308,11 +320,12 @@ namespace 云湖WP
 
         private void HardwareButtons_BackPressed(object sender, BackPressedEventArgs e)
         {
-            // 如果 Pivot 不是第一项，则返回到第一项“消息”
-            if (MainPivot.SelectedIndex > 0)
+            int defaultPageIdx = AppSettings.DefaultStartupPageIndex;
+            // 如果 Pivot 不是默认启动项，则返回到默认启动项
+            if (MainPivot.SelectedIndex != defaultPageIdx)
             {
                 e.Handled = true;
-                MainPivot.SelectedIndex = 0;
+                MainPivot.SelectedIndex = defaultPageIdx;
             }
         }
 

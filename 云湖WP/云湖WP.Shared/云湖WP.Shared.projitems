@@ -23,6 +23,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utils\DiffUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\NotificationHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\ShareHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\AppSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Common\YunhuApiConfig.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Common\ApiResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Common\HttpHelper.cs" />

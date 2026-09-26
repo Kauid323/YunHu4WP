@@ -98,6 +98,9 @@ namespace 云湖WP
                 Window.Current.Content = rootFrame;
             }
 
+            // 尽早激活 Window 窗口，最速关闭系统 Splash 画面过渡
+            Window.Current.Activate();
+
             var chatArgs = 云湖WP.Utils.NotificationHelper.ParseChatLaunchArgs(e.Arguments);
 
             if (rootFrame.Content == null)

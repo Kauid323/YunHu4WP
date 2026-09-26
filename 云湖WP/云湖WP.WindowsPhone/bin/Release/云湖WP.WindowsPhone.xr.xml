@@ -346,19 +346,21 @@
       <RootEvent Name="ManipulationStarted" />
       <RootEvent Name="ManipulationCompleted" />
     </RootType>
-    <RootType FullName="云湖WP.SettingsPage" />
-    <RootType FullName="云湖WP.ImageViewerPage" />
     <RootType FullName="Windows.UI.Xaml.Controls.ComboBox">
       <RootProperty Name="Header" />
-      <RootProperty Name="FontSize" />
-      <RootProperty Name="Margin" />
       <RootProperty Name="HorizontalAlignment" />
+      <RootProperty Name="Margin" />
       <RootProperty Name="Items" />
+      <RootProperty Name="FontSize" />
+      <RootEvent Name="SelectionChanged" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.ComboBoxItem">
       <RootProperty Name="Content" />
+      <RootProperty Name="Tag" />
       <RootProperty Name="IsSelected" />
     </RootType>
+    <RootType FullName="云湖WP.SettingsPage" />
+    <RootType FullName="云湖WP.ImageViewerPage" />
     <RootType FullName="云湖WP.ProfileEditPage" />
     <RootType FullName="云湖WP.MyProfilePage" />
     <RootType FullName="云湖WP.PostDetailPage" />
