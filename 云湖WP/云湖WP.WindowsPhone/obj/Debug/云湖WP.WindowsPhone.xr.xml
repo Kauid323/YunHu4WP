@@ -11,15 +11,21 @@
     <RootPropertyPathName Name="DisplayAuthor" />
     <RootPropertyPathName Name="AvatarBitmap" />
     <RootPropertyPathName Name="DisplayAvatarLetter" />
+    <RootPropertyPathName Name="TypeTag" />
+    <RootPropertyPathName Name="DisplayName" />
+    <RootPropertyPathName Name="AvatarLetterVisibility" />
+    <RootPropertyPathName Name="AvatarLetter" />
+    <RootPropertyPathName Name="UnreadBadgeVisibility" />
+    <RootPropertyPathName Name="FormattedUnreadCount" />
     <RootPropertyPathName Name="FormattedTime" />
     <RootPropertyPathName Name="ChatContent" />
     <RootPropertyPathName Name="DisplayTitle" />
-    <RootPropertyPathName Name="AvatarLetter" />
     <RootPropertyPathName Name="SelfBubbleVisibility" />
     <RootPropertyPathName Name="SenderAvatarBitmap" />
     <RootPropertyPathName Name="SenderAvatarLetter" />
     <RootPropertyPathName Name="TextMsgVisibility" />
-    <RootPropertyPathName Name="Text" />
+    <RootPropertyPathName Name="DisplayText" />
+    <RootPropertyPathName Name="HtmlMsgVisibility" />
     <RootPropertyPathName Name="FileMsgVisibility" />
     <RootPropertyPathName Name="DownloadStatusText" />
     <RootPropertyPathName Name="DownloadProgress" />
@@ -27,9 +33,13 @@
     <RootPropertyPathName Name="FormattedFileSize" />
     <RootPropertyPathName Name="DisplayFileName" />
     <RootPropertyPathName Name="ImageMsgVisibility" />
+    <RootPropertyPathName Name="VideoMsgVisibility" />
+    <RootPropertyPathName Name="FormattedVideoDuration" />
     <RootPropertyPathName Name="OtherBubbleVisibility" />
     <RootPropertyPathName Name="DisplaySenderName" />
     <RootPropertyPathName Name="ShowSenderNameVisibility" />
+    <RootPropertyPathName Name="Subtitle" />
+    <RootPropertyPathName Name="RoleTag" />
   </Roots.PropertyPathNames>
   <Roots.RootTypes>
     <RootType FullName="Windows.UI.Xaml.Application" />
@@ -37,7 +47,6 @@
       <RootProperty Name="Background" />
       <RootProperty Name="Content" />
       <RootProperty Name="BottomAppBar" />
-      <RootProperty Name="Resources" />
     </RootType>
     <RootType FullName="Microsoft.Xaml.Tools.DirectUI.ProxyTypes.ThemeResourceExtension" />
     <RootType FullName="Windows.UI.Xaml.Controls.Grid">
@@ -78,6 +87,10 @@
       <RootProperty Name="Height" />
       <RootProperty Name="IsActive" />
       <RootProperty Name="Foreground" />
+      <RootProperty Name="Margin" />
+      <RootProperty Name="VerticalAlignment" />
+      <RootProperty Name="Visibility" />
+      <RootProperty Name="HorizontalAlignment" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.TextBlock">
       <RootProperty Name="Text" />
@@ -91,8 +104,9 @@
       <RootProperty Name="TextWrapping" />
       <RootProperty Name="LineHeight" />
       <RootProperty Name="MaxHeight" />
-      <RootProperty Name="MaxWidth" />
       <RootProperty Name="Visibility" />
+      <RootProperty Name="MaxWidth" />
+      <RootProperty Name="TextAlignment" />
       <RootProperty Name="IsTextSelectionEnabled" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.PivotItem">
@@ -112,10 +126,7 @@
       <RootProperty Name="Background" />
       <RootProperty Name="HorizontalAlignment" />
       <RootProperty Name="VerticalAlignment" />
-      <RootProperty Name="IsDeferredScrollingEnabled" />
       <RootProperty Name="Margin" />
-      <RootProperty Name="Padding" />
-      <RootProperty Name="Foreground" />
       <RootEvent Name="ViewChanged" />
       <RootEvent Name="DoubleTapped" />
       <RootEvent Name="SizeChanged" />
@@ -131,10 +142,7 @@
       <RootProperty Name="VerticalAlignment" />
       <RootProperty Name="AcceptsReturn" />
       <RootProperty Name="Height" />
-      <RootProperty Name="SelectionHighlightColor" />
       <RootProperty Name="TextWrapping" />
-      <RootProperty Name="Style" />
-      <RootProperty Name="Foreground" />
       <RootEvent Name="KeyDown" />
       <RootEvent Name="GotFocus" />
     </RootType>
@@ -173,8 +181,9 @@
       <RootProperty Name="Child" />
       <RootProperty Name="Padding" />
       <RootProperty Name="HorizontalAlignment" />
-      <RootProperty Name="Width" />
+      <RootProperty Name="Tag" />
       <RootProperty Name="Visibility" />
+      <RootProperty Name="Width" />
       <RootProperty Name="MinWidth" />
       <RootProperty Name="MaxWidth" />
       <RootEvent Name="Tapped" />
@@ -216,6 +225,7 @@
       <RootProperty Name="Maximum" />
       <RootProperty Name="Height" />
       <RootProperty Name="Margin" />
+      <RootProperty Name="Width" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.Canvas">
       <RootMethod Name="GetZIndex" />
@@ -230,6 +240,7 @@
       <RootProperty Name="ItemContainerStyle" />
       <RootProperty Name="ItemTemplate" />
       <RootProperty Name="ItemsPanel" />
+      <RootProperty Name="ItemContainerTransitions" />
       <RootProperty Name="Header" />
       <RootEvent Name="ItemClick" />
       <RootEvent Name="Loaded" />
@@ -238,17 +249,9 @@
     <RootType FullName="Windows.UI.Xaml.Controls.Control">
       <RootProperty Name="HorizontalContentAlignment" />
       <RootProperty Name="Padding" />
-      <RootProperty Name="Foreground" />
-      <RootProperty Name="Background" />
-      <RootProperty Name="BorderBrush" />
-      <RootProperty Name="BorderThickness" />
-      <RootProperty Name="FontFamily" />
-      <RootProperty Name="FontSize" />
-      <RootProperty Name="Template" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.FrameworkElement">
       <RootProperty Name="Margin" />
-      <RootProperty Name="MinWidth" />
       <RootProperty Name="MinHeight" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Setter">
@@ -274,11 +277,15 @@
       <RootProperty Name="VerticalAlignment" />
       <RootProperty Name="HorizontalAlignment" />
     </RootType>
+    <RootType FullName="Windows.UI.Xaml.Controls.ItemsControl">
+      <RootProperty Name="ItemTemplate" />
+    </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.CommandBar">
       <RootProperty Name="Background" />
       <RootProperty Name="ClosedDisplayMode" />
       <RootProperty Name="PrimaryCommands" />
       <RootProperty Name="SecondaryCommands" />
+      <RootProperty Name="IsOpen" />
       <RootProperty Name="IsSticky" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.AppBarButton">
@@ -309,7 +316,9 @@
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.ItemsStackPanel">
       <RootProperty Name="ItemsUpdatingScrollMode" />
+      <RootProperty Name="CacheLength" />
     </RootType>
+    <RootType FullName="Windows.UI.Xaml.Media.Animation.TransitionCollection" />
     <RootType FullName="云湖WP.ChatPage" />
     <RootType FullName="Windows.UI.Xaml.Documents.Typography">
       <RootMethod Name="GetCapitals" />
@@ -318,8 +327,8 @@
     <RootType FullName="云湖WP.UserDetailPage" />
     <RootType FullName="Windows.UI.Xaml.Controls.ToggleSwitch">
       <RootProperty Name="Header" />
-      <RootProperty Name="Margin" />
       <RootProperty Name="HorizontalAlignment" />
+      <RootProperty Name="Margin" />
       <RootEvent Name="Toggled" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.Slider">
@@ -329,8 +338,13 @@
       <RootProperty Name="SmallChange" />
       <RootProperty Name="LargeChange" />
       <RootProperty Name="Value" />
+      <RootProperty Name="HorizontalAlignment" />
       <RootProperty Name="Margin" />
+      <RootProperty Name="Height" />
+      <RootProperty Name="Foreground" />
       <RootEvent Name="ValueChanged" />
+      <RootEvent Name="ManipulationStarted" />
+      <RootEvent Name="ManipulationCompleted" />
     </RootType>
     <RootType FullName="云湖WP.SettingsPage" />
     <RootType FullName="云湖WP.ImageViewerPage" />
@@ -348,11 +362,26 @@
     <RootType FullName="云湖WP.ProfileEditPage" />
     <RootType FullName="云湖WP.MyProfilePage" />
     <RootType FullName="云湖WP.PostDetailPage" />
-    <RootType FullName="Windows.UI.Xaml.Automation.AutomationProperties">
-      <RootMethod Name="GetAccessibilityView" />
-      <RootMethod Name="SetAccessibilityView" />
+    <RootType FullName="Windows.UI.Xaml.Controls.WebView">
+      <RootProperty Name="HorizontalAlignment" />
+      <RootProperty Name="VerticalAlignment" />
+      <RootProperty Name="Visibility" />
     </RootType>
-    <RootType FullName="Microsoft.Xaml.Tools.DirectUI.ProxyTypes.StaticResourceExtension" />
     <RootType FullName="云湖WP.TextViewerPage" />
+    <RootType FullName="Windows.UI.Xaml.Controls.MediaElement">
+      <RootProperty Name="HorizontalAlignment" />
+      <RootProperty Name="VerticalAlignment" />
+      <RootProperty Name="AutoPlay" />
+      <RootProperty Name="AreTransportControlsEnabled" />
+      <RootEvent Name="MediaOpened" />
+      <RootEvent Name="MediaEnded" />
+      <RootEvent Name="MediaFailed" />
+      <RootEvent Name="CurrentStateChanged" />
+    </RootType>
+    <RootType FullName="云湖WP.VideoPlayerPage" />
+    <RootType FullName="云湖WP.FriendsPage" />
+    <RootType FullName="云湖WP.GroupsPage" />
+    <RootType FullName="云湖WP.BotsPage" />
+    <RootType FullName="云湖WP.AuthorRecommendPage" />
   </Roots.RootTypes>
 </Roots>

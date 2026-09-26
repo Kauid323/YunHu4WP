@@ -30,6 +30,3 @@ e:\users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.
 e:\users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.Windows\obj\Debug\qualifiers.txt.intermediate
 e:\users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.Windows\obj\Debug\MultipleQualifiersPerDimensionFound.txt
 e:\users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.Windows\obj\Debug\ProjectArchitectures.txt
-e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.Windows\obj\Debug\package.map.txt
-e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.Windows\obj\Debug\_pkginfo.txt
-e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.Windows\obj\Debug\Stripped\云湖WP.Windows.pdb

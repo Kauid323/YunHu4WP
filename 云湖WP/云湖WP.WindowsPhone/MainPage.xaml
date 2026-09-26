@@ -50,7 +50,7 @@
 
                                         <!-- 正方形头像（Metro 几何直角，无圆角） -->
                                         <Grid Width="48" Height="48" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                            <Border Background="{ThemeResource PhoneAccentBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                            <Border Background="{ThemeResource PhoneAccentBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="{Binding AvatarLetterVisibility}">
                                                 <TextBlock Text="{Binding AvatarLetter}" FontSize="20" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Border>
                                             <Image Source="{Binding AvatarBitmap}" Stretch="UniformToFill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
@@ -63,6 +63,9 @@
 
                                         <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
                                             <TextBlock Text="{Binding FormattedTime}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Right" />
+                                            <Border Background="{ThemeResource PhoneAccentBrush}" MinWidth="18" Height="18" Padding="4,0" Margin="0,4,0,0" HorizontalAlignment="Right" Visibility="{Binding UnreadBadgeVisibility}">
+                                                <TextBlock Text="{Binding FormattedUnreadCount}" FontSize="10" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -82,7 +85,7 @@
                               ViewChanged="OnScrollViewerViewChanged">
                     <StackPanel Margin="16,10,16,24">
                         <!-- 分类导航 -->
-                        <Border BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent" Tapped="ContactCategory_Tapped">
+                        <Border BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent" Tag="Friends" Tapped="ContactCategory_Tapped">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="40" />
@@ -97,7 +100,7 @@
                             </Grid>
                         </Border>
 
-                        <Border BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent" Tapped="ContactCategory_Tapped">
+                        <Border BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent" Tag="Groups" Tapped="ContactCategory_Tapped">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="40" />
@@ -112,7 +115,7 @@
                             </Grid>
                         </Border>
 
-                        <Border BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent" Tapped="ContactCategory_Tapped">
+                        <Border BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent" Tag="Bots" Tapped="ContactCategory_Tapped">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="40" />
@@ -122,46 +125,46 @@
                                 <Border Width="32" Height="32" Background="#FF009688">
                                     <SymbolIcon Symbol="Repair" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Border>
-                                <TextBlock Grid.Column="1" Text="官方机器人" FontSize="16" VerticalAlignment="Center" Margin="10,0,0,0" />
+                                <TextBlock Grid.Column="1" Text="机器人" FontSize="16" VerticalAlignment="Center" Margin="10,0,0,0" />
                                 <TextBlock Grid.Column="2" Text=">" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
                             </Grid>
                         </Border>
 
-                        <!-- 最近联系人小标题 -->
-                        <TextBlock Text="常用联系" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,20,0,8" />
+                        <!-- 置顶会话小标题 -->
+                        <TextBlock Text="置顶" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,20,0,8" />
 
-                        <!-- 联系人条目 -->
-                        <Border BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent" Tapped="ContactItem_Tapped">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="46" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Border Width="40" Height="40" Background="{ThemeResource PhoneAccentBrush}">
-                                    <TextBlock Text="小" FontSize="16" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </Border>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
-                                    <TextBlock Text="小湖同学" FontSize="15" FontWeight="SemiBold" />
-                                    <TextBlock Text="[在线] 智能 AI 助手" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,2,0,0" />
-                                </StackPanel>
-                            </Grid>
-                        </Border>
+                        <!-- 置顶为空提示 -->
+                        <TextBlock x:Name="EmptyStickyText" Text="暂无置顶会话" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Visibility="Collapsed" Margin="0,4,0,8" />
 
-                        <Border BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent" Tapped="ContactItem_Tapped">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="46" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Border Width="40" Height="40" Background="#FF0288D1">
-                                    <TextBlock Text="湖" FontSize="16" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </Border>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
-                                    <TextBlock Text="湖友会 (频道)" FontSize="15" FontWeight="SemiBold" />
-                                    <TextBlock Text="活跃成员 256 人" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,2,0,0" />
-                                </StackPanel>
-                            </Grid>
-                        </Border>
+                        <!-- 置顶会话列表 -->
+                        <ItemsControl x:Name="StickyItemsControl">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,10" Background="Transparent" Tapped="StickyItem_Tapped">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="46" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <!-- 直角头像 -->
+                                            <Grid Width="40" Height="40" VerticalAlignment="Center">
+                                                <Border Background="{ThemeResource PhoneAccentBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="{Binding AvatarLetterVisibility}">
+                                                    <TextBlock Text="{Binding AvatarLetter}" FontSize="16" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                </Border>
+                                                <Image Source="{Binding AvatarBitmap}" Stretch="UniformToFill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                                            </Grid>
+                                            <!-- 名称与类型标签 -->
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                                                <TextBlock Text="{Binding DisplayName}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding TypeTag}" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,2,0,0" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2" Text="置顶" FontSize="11" Foreground="{ThemeResource PhoneAccentBrush}" VerticalAlignment="Center" Margin="6,0,0,0" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
                 </ScrollViewer>
             </PivotItem>

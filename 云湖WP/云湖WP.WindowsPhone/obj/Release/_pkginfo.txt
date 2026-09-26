@@ -1,1 +1,1 @@
-e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\AppPackages\云湖WP.WindowsPhone_1.0.0.1_AnyCPU_Test\云湖WP.WindowsPhone_1.0.0.1_AnyCPU.appx
+e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\AppPackages\云湖WP.WindowsPhone_1.0.0.2_Test\云湖WP.WindowsPhone_1.0.0.2_AnyCPU.appxbundle

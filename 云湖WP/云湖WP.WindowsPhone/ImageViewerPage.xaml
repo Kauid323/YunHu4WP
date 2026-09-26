@@ -9,8 +9,9 @@
     Background="Black">
 
     <Grid Background="Black">
-        <!-- 顶部加载进度条 -->
+        <!-- 顶部加载进度条与中心旋转圈 -->
         <ProgressBar x:Name="ImgProgressBar" IsIndeterminate="True" VerticalAlignment="Top" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}" Canvas.ZIndex="30" />
+        <ProgressRing x:Name="ImgProgressRing" IsActive="False" Visibility="Collapsed" Width="50" Height="50" Foreground="{ThemeResource PhoneAccentBrush}" VerticalAlignment="Center" HorizontalAlignment="Center" Canvas.ZIndex="35" />
 
         <!-- 纯全屏手势缩放与查看区 -->
         <ScrollViewer x:Name="ImgScrollViewer" 
@@ -39,10 +40,10 @@
         </ScrollViewer>
 
         <!-- 加载失败提示 -->
-        <StackPanel x:Name="PanelError" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20,0" Canvas.ZIndex="20">
-            <SymbolIcon Symbol="Cancel" Foreground="#FFAAAAAA" Margin="0,0,0,8" HorizontalAlignment="Center" />
-            <TextBlock Text="图片加载失败" FontSize="16" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,6" />
-            <Button Content="点击重试" BorderThickness="1" Click="BtnReload_Click" HorizontalAlignment="Center" />
+        <StackPanel x:Name="PanelError" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="24,0" Canvas.ZIndex="20">
+            <SymbolIcon Symbol="Cancel" Foreground="#FFAAAAAA" Margin="0,0,0,12" HorizontalAlignment="Center" />
+            <TextBlock x:Name="TxtErrorReason" Text="图片加载失败" FontSize="15" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,14" TextWrapping="Wrap" TextAlignment="Center" />
+            <Button x:Name="BtnReload" Content="重新加载图片" BorderThickness="1" Click="BtnReload_Click" HorizontalAlignment="Center" Padding="20,8" />
         </StackPanel>
 
         <!-- 右下角 Metro 悬浮保存按钮 (纯几何直角半透明) -->

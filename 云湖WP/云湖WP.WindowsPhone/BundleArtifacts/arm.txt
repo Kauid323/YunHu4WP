@@ -1,0 +1,2 @@
+MainPackage=e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\ARM\Release\云湖WP.WindowsPhone_1.0.0.2_Bundle\云湖WP.WindowsPhone_1.0.0.2_ARM.appx
+SymbolPackage=e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\AppPackages\云湖WP.WindowsPhone_1.0.0.2_Test\云湖WP.WindowsPhone_1.0.0.2_ARM.appxsym

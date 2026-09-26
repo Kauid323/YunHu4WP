@@ -43,17 +43,21 @@
         <Grid Grid.Row="1">
             <ProgressBar x:Name="MsgProgressBar" IsIndeterminate="True" VerticalAlignment="Top" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}" Canvas.ZIndex="20" />
 
-            <!-- 上传进度条面板 (图片上传实时进度) -->
+            <!-- 上传进度条面板 (媒体上传实时进度，带关闭/取消按钮) -->
             <Border x:Name="UploadProgressPanel" Visibility="Collapsed" Background="#E6000000" BorderThickness="0,0,0,1" BorderBrush="#33FFFFFF" Padding="14,8" VerticalAlignment="Top" Canvas.ZIndex="30">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="TxtUploadStatus" Text="正在上传图片..." FontSize="13" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <TextBlock x:Name="TxtUploadStatus" Text="正在上传..." FontSize="13" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0" />
                     <ProgressBar x:Name="UploadProgressBar" Grid.Column="1" Minimum="0" Maximum="100" Value="0" IsIndeterminate="False" Height="4" Foreground="{ThemeResource PhoneAccentBrush}" VerticalAlignment="Center" />
                     <TextBlock x:Name="TxtUploadPercentage" Grid.Column="2" Text="0%" FontSize="13" Foreground="{ThemeResource PhoneAccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0,0,0" />
+                    <Button x:Name="BtnCancelUpload" Grid.Column="3" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" Margin="10,0,0,0" Background="Transparent" BorderThickness="0" Click="BtnCancelUpload_Click" VerticalAlignment="Center">
+                        <SymbolIcon Symbol="Cancel" Foreground="#FFCCCCCC" />
+                    </Button>
                 </Grid>
             </Border>
 
@@ -73,14 +77,20 @@
                       Padding="12,8">
                 <ListView.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <ItemsStackPanel ItemsUpdatingScrollMode="KeepItemsInView" />
+                        <!-- KeepItemsInView: 插入历史消息时严格锁定当前视口中消息位置，彻底杜绝跳动与重复对齐 -->
+                        <ItemsStackPanel ItemsUpdatingScrollMode="KeepItemsInView" CacheLength="30.0" />
                     </ItemsPanelTemplate>
                 </ListView.ItemsPanel>
+                <!-- 彻底禁用条目滚动进入/离开时的渐变淡入动画，消除肉眼所见的跳动与闪烁感 -->
+                <ListView.ItemContainerTransitions>
+                    <TransitionCollection />
+                </ListView.ItemContainerTransitions>
                 <ListView.Header>
-                    <Border x:Name="TopLoadMoreBorder" HorizontalAlignment="Stretch" Padding="8,8" Margin="0,0,0,8" Background="Transparent" Tapped="TopLoadMoreBorder_Tapped" Visibility="Collapsed">
+                    <!-- 仅作视觉指示，自动滚到顶时由代码触发，无需手动点击 -->
+                    <Border x:Name="TopLoadMoreBorder" HorizontalAlignment="Stretch" Padding="8,8" Margin="0,0,0,8" Background="Transparent" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <SymbolIcon Symbol="Refresh" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock x:Name="TxtTopLoadMore" Text="点击加载更早历史消息" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                            <ProgressRing x:Name="TopLoadingRing" IsActive="False" Width="18" Height="18" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock x:Name="TxtTopLoadMore" Text="正在加载历史消息..." FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
                 </ListView.Header>
@@ -89,6 +99,7 @@
                         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                         <Setter Property="Padding" Value="0" />
                         <Setter Property="Margin" Value="0,4" />
+                        <Setter Property="MinHeight" Value="0" />
                     </Style>
                 </ListView.ItemContainerStyle>
                 <ListView.ItemTemplate>
@@ -104,7 +115,7 @@
 
                                 <!-- 对方头像 (Metro 直角 34x34) -->
                                 <Grid Width="34" Height="34" VerticalAlignment="Top" Margin="0,2,6,0" Tapped="Avatar_Tapped">
-                                    <Border Background="#FF555555" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                    <Border Background="#FF555555" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="{Binding AvatarLetterVisibility}">
                                         <TextBlock Text="{Binding SenderAvatarLetter}" FontSize="15" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
                                     <Image Source="{Binding SenderAvatarBitmap}" Stretch="UniformToFill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
@@ -117,6 +128,28 @@
                                     <!-- 消息气泡 (半透明深色背景，无圆角) -->
                                     <Border Background="#20FFFFFF" BorderThickness="1" BorderBrush="#33FFFFFF" Padding="8,6" Tapped="MessageBubble_Tapped">
                                         <StackPanel>
+                                            <!-- 视频消息预览块 (紧凑单行，带播放图标与时长提示) -->
+                                            <Border Visibility="{Binding VideoMsgVisibility}" 
+                                                    Background="#25FFFFFF" 
+                                                    BorderThickness="1" 
+                                                    BorderBrush="#40FFFFFF" 
+                                                    Padding="8,5" 
+                                                    Tapped="VideoBubble_Tapped">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                         <ColumnDefinition Width="Auto" />
+                                                         <ColumnDefinition Width="Auto" />
+                                                         <ColumnDefinition Width="Auto" />
+                                                         <ColumnDefinition Width="*" />
+                                                         <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <SymbolIcon Symbol="Video" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                    <TextBlock Grid.Column="1" Text="[视频] 点击播放" FontSize="13" Foreground="White" VerticalAlignment="Center" />
+                                                    <TextBlock Grid.Column="2" Text="{Binding FormattedVideoDuration}" FontSize="11" Foreground="#AAFFFFFF" VerticalAlignment="Center" Margin="6,0,0,0" />
+                                                    <TextBlock Grid.Column="4" Text="{Binding FormattedTime}" FontSize="10" Foreground="#88FFFFFF" VerticalAlignment="Center" Margin="12,0,0,0" />
+                                                </Grid>
+                                            </Border>
+
                                             <!-- 图片消息预览块 (紧凑单行) -->
                                             <Border Visibility="{Binding ImageMsgVisibility}" 
                                                     Background="#25FFFFFF" 
@@ -174,9 +207,29 @@
                                                 </StackPanel>
                                             </Border>
 
+                                            <!-- HTML 网页富文本消息预览卡片 (不渲染复杂 HTML，点击直接进入查看/复制页) -->
+                                            <Border Visibility="{Binding HtmlMsgVisibility}" 
+                                                    Background="#25FFFFFF" 
+                                                    BorderThickness="1" 
+                                                    BorderBrush="#40FFFFFF" 
+                                                    Padding="8,6" 
+                                                    MinWidth="180"
+                                                    Tapped="HtmlBubble_Tapped">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <SymbolIcon Symbol="Globe" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                    <TextBlock Grid.Column="1" Text="[网页HTML] 点击查看全文/复制" FontSize="13" Foreground="White" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Grid.Column="2" Text="{Binding FormattedTime}" FontSize="10" Foreground="#88FFFFFF" VerticalAlignment="Center" Margin="10,0,0,0" />
+                                                </Grid>
+                                            </Border>
+
                                             <!-- 纯文本消息内容 -->
                                             <StackPanel Visibility="{Binding TextMsgVisibility}">
-                                                <TextBlock Text="{Binding Text}" FontSize="15" Foreground="White" TextWrapping="Wrap" LineHeight="20" />
+                                                <TextBlock Text="{Binding DisplayText}" FontSize="15" Foreground="White" TextWrapping="Wrap" LineHeight="20" />
                                                 <TextBlock Text="{Binding FormattedTime}" FontSize="10" Foreground="#88FFFFFF" HorizontalAlignment="Right" Margin="0,3,0,0" />
                                             </StackPanel>
                                         </StackPanel>
@@ -195,6 +248,28 @@
                                     <!-- 消息气泡 (主题色实色背景，无圆角) -->
                                     <Border Background="{ThemeResource PhoneAccentBrush}" Padding="8,6" Tapped="MessageBubble_Tapped">
                                         <StackPanel>
+                                            <!-- 视频消息预览块 (紧凑单行，带播放图标与时长提示) -->
+                                            <Border Visibility="{Binding VideoMsgVisibility}" 
+                                                    Background="#20000000" 
+                                                    BorderThickness="1" 
+                                                    BorderBrush="#33FFFFFF" 
+                                                    Padding="8,5" 
+                                                    Tapped="VideoBubble_Tapped">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                         <ColumnDefinition Width="Auto" />
+                                                         <ColumnDefinition Width="Auto" />
+                                                         <ColumnDefinition Width="Auto" />
+                                                         <ColumnDefinition Width="*" />
+                                                         <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <SymbolIcon Symbol="Video" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                    <TextBlock Grid.Column="1" Text="[视频] 点击播放" FontSize="13" Foreground="White" VerticalAlignment="Center" />
+                                                    <TextBlock Grid.Column="2" Text="{Binding FormattedVideoDuration}" FontSize="11" Foreground="#DDFFFFFF" VerticalAlignment="Center" Margin="6,0,0,0" />
+                                                    <TextBlock Grid.Column="4" Text="{Binding FormattedTime}" FontSize="10" Foreground="#CCFFFFFF" VerticalAlignment="Center" Margin="12,0,0,0" />
+                                                </Grid>
+                                            </Border>
+
                                             <!-- 图片消息预览块 (紧凑单行) -->
                                             <Border Visibility="{Binding ImageMsgVisibility}" 
                                                     Background="#20000000" 
@@ -252,9 +327,29 @@
                                                 </StackPanel>
                                             </Border>
 
+                                            <!-- HTML 网页富文本消息预览卡片 (不渲染复杂 HTML，点击直接进入查看/复制页) -->
+                                            <Border Visibility="{Binding HtmlMsgVisibility}" 
+                                                    Background="#20000000" 
+                                                    BorderThickness="1" 
+                                                    BorderBrush="#33FFFFFF" 
+                                                    Padding="8,6" 
+                                                    MinWidth="180"
+                                                    Tapped="HtmlBubble_Tapped">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <SymbolIcon Symbol="Globe" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                    <TextBlock Grid.Column="1" Text="[网页HTML] 点击查看全文/复制" FontSize="13" Foreground="White" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Grid.Column="2" Text="{Binding FormattedTime}" FontSize="10" Foreground="#CCFFFFFF" VerticalAlignment="Center" Margin="10,0,0,0" />
+                                                </Grid>
+                                            </Border>
+
                                             <!-- 纯文本消息内容 -->
                                             <StackPanel Visibility="{Binding TextMsgVisibility}">
-                                                <TextBlock Text="{Binding Text}" FontSize="15" Foreground="White" TextWrapping="Wrap" LineHeight="20" />
+                                                <TextBlock Text="{Binding DisplayText}" FontSize="15" Foreground="White" TextWrapping="Wrap" LineHeight="20" />
                                                 <TextBlock Text="{Binding FormattedTime}" FontSize="10" Foreground="#CCFFFFFF" HorizontalAlignment="Right" Margin="0,3,0,0" />
                                             </StackPanel>
                                         </StackPanel>
@@ -263,7 +358,7 @@
 
                                 <!-- 我方头像 (Metro 直角 34x34) -->
                                 <Grid Grid.Column="1" Width="34" Height="34" VerticalAlignment="Top" Margin="6,2,0,0" Tapped="Avatar_Tapped">
-                                    <Border Background="{ThemeResource PhoneAccentBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                    <Border Background="{ThemeResource PhoneAccentBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="{Binding AvatarLetterVisibility}">
                                         <TextBlock Text="{Binding SenderAvatarLetter}" FontSize="15" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
                                     <Image Source="{Binding SenderAvatarBitmap}" Stretch="UniformToFill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
@@ -325,10 +420,12 @@
         <CommandBar x:Name="ChatCommandBar" 
                     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" 
                     ClosedDisplayMode="Minimal"
+                    IsOpen="False"
                     IsSticky="False">
             <CommandBar.PrimaryCommands>
                 <AppBarButton x:Name="AppBarBtnPickImage" Icon="Pictures" Label="发送图片" Click="AppBarBtnPickImage_Click" />
-                <AppBarButton x:Name="AppBarBtnSendUrl" Icon="World" Label="图片链接" Click="AppBarBtnSendUrl_Click" />
+                <AppBarButton x:Name="AppBarBtnSendVideo" Icon="Video" Label="发送视频" Click="AppBarBtnSendVideo_Click" />
+                <AppBarButton x:Name="AppBarBtnSendUrl" Icon="World" Label="媒体链接" Click="AppBarBtnSendUrl_Click" />
                 <AppBarButton x:Name="AppBarBtnRefresh" Icon="Refresh" Label="刷新" Click="BtnRefresh_Click" />
             </CommandBar.PrimaryCommands>
             <CommandBar.SecondaryCommands>

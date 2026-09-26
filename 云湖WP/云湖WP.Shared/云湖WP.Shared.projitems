@@ -20,6 +20,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utils\ImageHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\ImageLoader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\AppLogger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\DiffUtil.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\NotificationHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\ShareHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Common\YunhuApiConfig.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Common\ApiResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Common\HttpHelper.cs" />
@@ -32,6 +35,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Api\Protobuf\ProtobufReader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Protobuf\ProtobufWriter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Protobuf\ConversationProtobufCodec.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Protobuf\WsProtobufCodec.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\WebSocket\YunhuWebSocketService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\User\UserModels.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\User\UserApi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\User\Info\UserInfoModels.cs" />
@@ -39,6 +44,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Api\User\Edit\UserEditModels.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Conversation\ConversationModels.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Conversation\ConversationApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Conversation\ConversationDiffUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Message\MessageModels.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Message\MessageApi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Bot\BotModels.cs" />
@@ -47,6 +53,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)Api\Community\CommunityApi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Community\PostDetail\PostDetailModels.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Community\PostDetail\PostDetailApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Sticky\StickyModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Sticky\StickyApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Friend\FriendModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Friend\FriendProtobufCodec.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Friend\FriendApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Share\ShareModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Share\ShareApi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\YunhuApiClient.cs" />
   </ItemGroup>
 </Project>

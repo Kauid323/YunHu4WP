@@ -37,7 +37,16 @@ namespace 云湖WP
         {
             this.InitializeComponent();
             this.Suspending += this.OnSuspending;
+            this.Resuming += (s, e) => { 云湖WP.Utils.NotificationHelper.IsAppInForeground = true; };
             this.UnhandledException += App_UnhandledException;
+            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+        }
+
+        private void TaskScheduler_UnobservedTaskException(object sender, System.Threading.Tasks.UnobservedTaskExceptionEventArgs e)
+        {
+            e.SetObserved();
+            string err = string.Format("异步任务未捕获异常: {0}", e.Exception != null ? e.Exception.ToString() : "未知错误");
+            云湖WP.Utils.AppLogger.Log("UnobservedTaskException", err);
         }
 
         private async void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -89,6 +98,8 @@ namespace 云湖WP
                 Window.Current.Content = rootFrame;
             }
 
+            var chatArgs = 云湖WP.Utils.NotificationHelper.ParseChatLaunchArgs(e.Arguments);
+
             if (rootFrame.Content == null)
             {
 #if WINDOWS_PHONE_APP
@@ -107,10 +118,26 @@ namespace 云湖WP
 #endif
 
 #if WINDOWS_PHONE_APP
-                Type startPage = 云湖WP.Token.TokenManager.HasToken() ? typeof(MainPage) : typeof(LoginPage);
-                if (!rootFrame.Navigate(startPage, e.Arguments))
+                if (云湖WP.Token.TokenManager.HasToken())
                 {
-                    throw new Exception("Failed to create initial page");
+                    // 正常登录状态：先进入 MainPage，保证返回键栈底正确
+                    if (!rootFrame.Navigate(typeof(MainPage)))
+                    {
+                        throw new Exception("Failed to create initial page");
+                    }
+
+                    // 若是通过 Toast 通知启动且包含会话参数，直接推入 ChatPage
+                    if (chatArgs != null)
+                    {
+                        rootFrame.Navigate(typeof(ChatPage), chatArgs);
+                    }
+                }
+                else
+                {
+                    if (!rootFrame.Navigate(typeof(LoginPage), e.Arguments))
+                    {
+                        throw new Exception("Failed to create initial page");
+                    }
                 }
 #else
                 if (!rootFrame.Navigate(typeof(MainPage), e.Arguments))
@@ -119,6 +146,33 @@ namespace 云湖WP
                 }
 #endif
             }
+            else
+            {
+                // App 已经在后台运行或恢复时点击了 Toast 通知
+                if (chatArgs != null && 云湖WP.Token.TokenManager.HasToken())
+                {
+#if WINDOWS_PHONE_APP
+                    if (rootFrame.Content is ChatPage)
+                    {
+                        if (云湖WP.Api.WebSocket.YunhuWebSocketService.Instance.CurrentActiveChatId != chatArgs.ChatId)
+                        {
+                            rootFrame.Navigate(typeof(ChatPage), chatArgs);
+                        }
+                    }
+                    else
+                    {
+                        rootFrame.Navigate(typeof(ChatPage), chatArgs);
+                    }
+#endif
+                }
+            }
+
+            // Register VisibilityChanged to accurately track app foreground/background lifecycle across all threads
+            Window.Current.VisibilityChanged += (s, ev) =>
+            {
+                云湖WP.Utils.NotificationHelper.IsAppInForeground = ev.Visible;
+            };
+            云湖WP.Utils.NotificationHelper.IsAppInForeground = true;
 
             // Ensure the current window is active
             Window.Current.Activate();
@@ -147,6 +201,7 @@ namespace 云湖WP
         /// <param name="e">Details about the suspend request.</param>
         private void OnSuspending(object sender, SuspendingEventArgs e)
         {
+            云湖WP.Utils.NotificationHelper.IsAppInForeground = false;
             var deferral = e.SuspendingOperation.GetDeferral();
 
             // TODO: Save application state and stop any background activity
@@ -155,11 +210,12 @@ namespace 云湖WP
 
 #if WINDOWS_PHONE_APP
         /// <summary>
-        /// 处理 Windows Phone 8.1 文件选择器 Continuation 激活事件
+        /// 处理 Windows Phone 8.1 文件选择器 Continuation 激活事件与通知激活
         /// </summary>
         protected override void OnActivated(IActivatedEventArgs args)
         {
             base.OnActivated(args);
+            云湖WP.Utils.NotificationHelper.IsAppInForeground = true;
 
             if (args.Kind == ActivationKind.PickFileContinuation)
             {

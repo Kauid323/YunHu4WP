@@ -74,16 +74,20 @@ namespace 云湖WP
 
         #endregion
 
-        #region Conversation 路由直接代理 (/v1/conversation & /v1/sticky)
+        #region Conversation 路由直接代理 (/v1/conversation)
 
         public static async Task<云湖WP.Api.Conversation.ConversationListResult> GetConversationListAsync(string token, string md5 = "")
         {
             return await ConversationApi.GetConversationListAsync(token, md5);
         }
 
-        public static async Task<云湖WP.Api.Conversation.StickyListResult> GetStickyListAsync(string token)
+        #endregion
+
+        #region Sticky 路由直接代理 (/v1/sticky)
+
+        public static async Task<云湖WP.Api.Sticky.StickyListResult> GetStickyListAsync(string token)
         {
-            return await ConversationApi.GetStickyListAsync(token);
+            return await 云湖WP.Api.Sticky.StickyApi.GetStickyListAsync(token);
         }
 
         #endregion

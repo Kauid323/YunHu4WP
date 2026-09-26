@@ -6,6 +6,7 @@ using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using 云湖WP.Utils;
 
@@ -30,6 +31,8 @@ namespace 云湖WP
             LoadAppVersion();
 
             // 初始化当前设置状态
+            ToggleNotification.IsOn = NotificationHelper.IsNotificationEnabled;
+            ToggleForegroundNotification.IsOn = NotificationHelper.NotifyInForeground;
             ToggleDisableImages.IsOn = ImageLoader.DisableAllImages;
             SliderThreads.Value = ImageLoader.MaxConcurrentLoads;
             TxtThreadCount.Text = string.Format("{0} 线程", ImageLoader.MaxConcurrentLoads);
@@ -48,9 +51,36 @@ namespace 云湖WP
             }
         }
 
-        private async void BtnGithub_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        private async void BtnCanaryGroup_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            await Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/Kauid323/Yhchat_MD3"));
+            await ShareHelper.HandleShareLinkAsync(
+                this.Frame,
+                "https://yhfx.jwznb.com/share?key=HVG4F1K2K3W3&ts=1790420280",
+                "325134750",
+                "云湖金丝雀最新构建(go8发电频道）",
+                2
+            );
+        }
+
+        private async void BtnFavoriteGroup_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            await ShareHelper.HandleShareLinkAsync(
+                this.Frame,
+                "https://yhfx.jwznb.com/share?key=klUt2IRmeLck&ts=1790420295",
+                "979377289",
+                "假的全员群",
+                2
+            );
+        }
+
+        private void BtnAuthorRecommend_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            this.Frame.Navigate(typeof(AuthorRecommendPage));
+        }
+
+        private async void BtnGithub_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            await Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/Kauid323/Yunhu4WP"));
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -66,6 +96,18 @@ namespace 云湖WP
             {
                 Frame.GoBack();
             }
+        }
+
+        private void ToggleNotification_Toggled(object sender, RoutedEventArgs e)
+        {
+            if (ToggleNotification == null) return;
+            NotificationHelper.IsNotificationEnabled = ToggleNotification.IsOn;
+        }
+
+        private void ToggleForegroundNotification_Toggled(object sender, RoutedEventArgs e)
+        {
+            if (ToggleForegroundNotification == null) return;
+            NotificationHelper.NotifyInForeground = ToggleForegroundNotification.IsOn;
         }
 
         private void ToggleDisableImages_Toggled(object sender, RoutedEventArgs e)

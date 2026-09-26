@@ -568,9 +568,12 @@ namespace 云湖WP
 
             var flyout = new MenuFlyout();
             var itemCopy = new MenuFlyoutItem { Text = "复制/查看评论" };
-            itemCopy.Click += (s, args) =>
+            itemCopy.Click += async (s, args) =>
             {
-                Frame.Navigate(typeof(TextViewerPage), comment.Content);
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    Frame.Navigate(typeof(TextViewerPage), comment.Content);
+                });
             };
             flyout.Items.Add(itemCopy);
             flyout.ShowAt(element);

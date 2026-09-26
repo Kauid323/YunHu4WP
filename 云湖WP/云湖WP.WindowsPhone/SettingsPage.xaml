@@ -15,13 +15,28 @@
             <!-- 1. 通用设置 -->
             <PivotItem Header="通用" Margin="19,0,19,0">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="0,10,0,24">
+                    <StackPanel Margin="0,10,0,30">
+                        
+                        <!-- 系统通知总开关 -->
+                        <ToggleSwitch x:Name="ToggleNotification" 
+                                      Header="新消息系统通知" 
+                                      Toggled="ToggleNotification_Toggled" 
+                                      HorizontalAlignment="Stretch" 
+                                      Margin="0,0,0,12" />
+
+                        <!-- 前台横幅通知开关 -->
+                        <ToggleSwitch x:Name="ToggleForegroundNotification" 
+                                      Header="前台运行时弹出横幅" 
+                                      Toggled="ToggleForegroundNotification_Toggled" 
+                                      HorizontalAlignment="Stretch" 
+                                      Margin="0,0,0,12" />
+
                         <!-- 极速省流开关 -->
                         <ToggleSwitch x:Name="ToggleDisableImages" 
                                       Header="禁用图片加载 (省流模式)" 
                                       Toggled="ToggleDisableImages_Toggled" 
-                                      Margin="0,0,0,14" 
-                                      HorizontalAlignment="Left" />
+                                      HorizontalAlignment="Stretch" 
+                                      Margin="0,0,0,16" />
 
                         <!-- 并发下载线程数 -->
                         <Grid Margin="0,0,0,4">
@@ -29,7 +44,7 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="图片并发下载数" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                            <TextBlock Text="图片并发下载线程数" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Left" />
                             <TextBlock x:Name="TxtThreadCount" Grid.Column="1" Text="4 线程" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" VerticalAlignment="Center" />
                         </Grid>
 
@@ -41,11 +56,12 @@
                                 LargeChange="2" 
                                 Value="4" 
                                 ValueChanged="SliderThreads_ValueChanged" 
-                                Margin="0,0,0,20"/>
+                                HorizontalAlignment="Stretch" 
+                                Margin="0,0,0,24"/>
 
                         <!-- 清除缓存按钮 -->
                         <Button x:Name="BtnClearCache" 
-                                Content="清除本地缓存" 
+                                Content="清除图片与头像缓存" 
                                 HorizontalAlignment="Stretch" 
                                 BorderThickness="1" 
                                 Click="BtnClearCache_Click" 
@@ -59,7 +75,52 @@
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="0,10,0,24">
                         <TextBlock Text="云湖 Windows Phone 客户端" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,4" HorizontalAlignment="Left" />
-                        <TextBlock x:Name="TxtAppVersion" Text="版本 1.0.0.1 (WinRT Universal)" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,0,20" HorizontalAlignment="Left" />
+                        <TextBlock x:Name="TxtAppVersion" Text="版本 1.0.0.2 (WinRT Universal)" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,0,16" HorizontalAlignment="Left" />
+
+                        <!-- 进入金丝雀群 -->
+                        <Border BorderThickness="1" BorderBrush="#33FFFFFF" Padding="14,12" Background="#0CFFFFFF" Margin="0,0,0,10" Tapped="BtnCanaryGroup_Tapped">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="进入金丝雀群" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                                    <TextBlock Text="【云湖金丝雀最新构建(go8发电频道）】 群ID: 325134750" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,3,0,0" TextWrapping="Wrap" HorizontalAlignment="Left" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text=">" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" Margin="8,0,0,0" />
+                            </Grid>
+                        </Border>
+
+                        <!-- 进入作者最爱的聊天群 -->
+                        <Border BorderThickness="1" BorderBrush="#33FFFFFF" Padding="14,12" Background="#0CFFFFFF" Margin="0,0,0,10" Tapped="BtnFavoriteGroup_Tapped">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="进入作者最爱的聊天群" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                                    <TextBlock Text="【假的全员群】 群ID: 979377289" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,3,0,0" TextWrapping="Wrap" HorizontalAlignment="Left" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text=">" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" Margin="8,0,0,0" />
+                            </Grid>
+                        </Border>
+
+                        <!-- 作者推荐 -->
+                        <Border BorderThickness="1" BorderBrush="#33FFFFFF" Padding="14,12" Background="#0CFFFFFF" Margin="0,0,0,10" Tapped="BtnAuthorRecommend_Tapped">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="作者推荐" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                                    <TextBlock Text="查看作者推荐的云湖精选群聊与频道" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,3,0,0" HorizontalAlignment="Left" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text=">" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" Margin="8,0,0,0" />
+                            </Grid>
+                        </Border>
 
                         <!-- GitHub 开源仓库入口 -->
                         <Border BorderThickness="1" BorderBrush="#33FFFFFF" Padding="14,12" Background="Transparent" Margin="0,0,0,6" Tapped="BtnGithub_Tapped">
@@ -70,9 +131,9 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="开源地址 / GitHub" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Left" />
-                                    <TextBlock Text="github.com/Kauid323/Yhchat_MD3" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                                    <TextBlock Text="github.com/Kauid323/Yunhu4WP" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,2,0,0" HorizontalAlignment="Left" />
                                 </StackPanel>
-                                <TextBlock Grid.Column="1" Text=">" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text=">" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" Margin="8,0,0,0" />
                             </Grid>
                         </Border>
                     </StackPanel>

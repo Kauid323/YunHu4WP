@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media.Imaging;
 using 云湖WP.Api.Common;
 
@@ -33,20 +34,97 @@ namespace 云湖WP.Api.Conversation
             }
         }
 
-        public string ChatId { get; set; }
-        public int ChatType { get; set; } // 1-用户，2-群聊，3-机器人
-        public string Remark { get; set; }
-        public string Name { get; set; }
-        public string ChatContent { get; set; }
-        public long TimestampMs { get; set; }
-        public int UnreadCount { get; set; }
-        public bool IsAt { get; set; }
+        private string _chatId = "";
+        public string ChatId
+        {
+            get { return _chatId; }
+            set { if (_chatId != value) { _chatId = value; OnPropertyChanged("ChatId"); OnPropertyChanged("DisplayTitle"); OnPropertyChanged("AvatarLetter"); } }
+        }
+
+        private int _chatType = 1;
+        public int ChatType
+        {
+            get { return _chatType; }
+            set { if (_chatType != value) { _chatType = value; OnPropertyChanged("ChatType"); } }
+        }
+
+        private string _remark = "";
+        public string Remark
+        {
+            get { return _remark; }
+            set { if (_remark != value) { _remark = value; OnPropertyChanged("Remark"); OnPropertyChanged("DisplayTitle"); OnPropertyChanged("AvatarLetter"); } }
+        }
+
+        private string _name = "";
+        public string Name
+        {
+            get { return _name; }
+            set { if (_name != value) { _name = value; OnPropertyChanged("Name"); OnPropertyChanged("DisplayTitle"); OnPropertyChanged("AvatarLetter"); } }
+        }
+
+        private string _chatContent = "";
+        public string ChatContent
+        {
+            get { return _chatContent; }
+            set { if (_chatContent != value) { _chatContent = value; OnPropertyChanged("ChatContent"); } }
+        }
+
+        private long _timestampMs = 0;
+        public long TimestampMs
+        {
+            get { return _timestampMs; }
+            set { if (_timestampMs != value) { _timestampMs = value; OnPropertyChanged("TimestampMs"); OnPropertyChanged("FormattedTime"); } }
+        }
+
+        private int _unreadCount = 0;
+        public int UnreadCount
+        {
+            get { return _unreadCount; }
+            set { if (_unreadCount != value) { _unreadCount = value; OnPropertyChanged("UnreadCount"); OnPropertyChanged("FormattedUnreadCount"); OnPropertyChanged("UnreadBadgeVisibility"); } }
+        }
+
+        private bool _isAt = false;
+        public bool IsAt
+        {
+            get { return _isAt; }
+            set { if (_isAt != value) { _isAt = value; OnPropertyChanged("IsAt"); } }
+        }
+
         public long AvatarId { get; set; }
-        public string AvatarUrl { get; set; }
+
+        private string _avatarUrl = "";
+        public string AvatarUrl
+        {
+            get { return _avatarUrl; }
+            set
+            {
+                if (_avatarUrl != value)
+                {
+                    _avatarUrl = value;
+                    OnPropertyChanged("AvatarUrl");
+                }
+            }
+        }
+
         public bool DoNotDisturb { get; set; }
         public long SendTimestamp { get; set; }
         public bool IsVip { get; set; }
         public int CertificationLevel { get; set; } // 1-官方，2-地区
+
+        public string FormattedUnreadCount
+        {
+            get
+            {
+                if (UnreadCount <= 0) return "";
+                if (UnreadCount > 99) return "99+";
+                return UnreadCount.ToString();
+            }
+        }
+
+        public Visibility UnreadBadgeVisibility
+        {
+            get { return UnreadCount > 0 ? Visibility.Visible : Visibility.Collapsed; }
+        }
 
         private BitmapImage _avatarBitmap;
         /// <summary>
@@ -62,6 +140,7 @@ namespace 云湖WP.Api.Conversation
                     _avatarBitmap = value;
                     OnPropertyChanged("AvatarBitmap");
                     OnPropertyChanged("HasAvatarBitmap");
+                    OnPropertyChanged("AvatarLetterVisibility");
                 }
             }
         }
@@ -69,6 +148,11 @@ namespace 云湖WP.Api.Conversation
         public bool HasAvatarBitmap
         {
             get { return _avatarBitmap != null; }
+        }
+
+        public Visibility AvatarLetterVisibility
+        {
+            get { return _avatarBitmap != null ? Visibility.Collapsed : Visibility.Visible; }
         }
 
         /// <summary>
@@ -136,6 +220,45 @@ namespace 云湖WP.Api.Conversation
                 }
             }
         }
+
+        /// <summary>
+        /// 原地复制更新数据（DiffUtil 刷新核心）
+        /// </summary>
+        public void UpdateFrom(ConversationItem other)
+        {
+            if (other == null) return;
+            Name = other.Name;
+            Remark = other.Remark;
+            ChatContent = other.ChatContent;
+            TimestampMs = other.TimestampMs;
+            SendTimestamp = other.SendTimestamp;
+            UnreadCount = other.UnreadCount;
+            IsAt = other.IsAt;
+            IsVip = other.IsVip;
+            CertificationLevel = other.CertificationLevel;
+            DoNotDisturb = other.DoNotDisturb;
+
+            if (AvatarUrl != other.AvatarUrl)
+            {
+                AvatarUrl = other.AvatarUrl;
+                AvatarBitmap = null;
+            }
+
+            NotifyAllChanged();
+        }
+
+        public void NotifyAllChanged()
+        {
+            OnPropertyChanged("DisplayTitle");
+            OnPropertyChanged("AvatarLetter");
+            OnPropertyChanged("FormattedTime");
+            OnPropertyChanged("ChatContent");
+            OnPropertyChanged("UnreadCount");
+            OnPropertyChanged("FormattedUnreadCount");
+            OnPropertyChanged("UnreadBadgeVisibility");
+            OnPropertyChanged("AvatarBitmap");
+            OnPropertyChanged("AvatarLetterVisibility");
+        }
     }
 
     /// <summary>
@@ -151,36 +274,6 @@ namespace 云湖WP.Api.Conversation
         {
             Conversations = new List<ConversationItem>();
             Code = 1; // 默认成功
-        }
-    }
-
-    /// <summary>
-    /// 置顶会话条目
-    /// </summary>
-    public class StickyItem
-    {
-        public int Id { get; set; }
-        public int ChatType { get; set; } // 1-用户，2-群聊，3-机器人
-        public string ChatId { get; set; }
-        public string ChatName { get; set; }
-        public long Sort { get; set; }
-        public string AvatarUrl { get; set; }
-        public long CreateTime { get; set; }
-        public int DelFlag { get; set; }
-        public string UserId { get; set; }
-        public int CertificationLevel { get; set; } // 0-非官方，1-官方，2-地区
-    }
-
-    /// <summary>
-    /// 置顶会话列表结果 (v1/sticky/list)
-    /// </summary>
-    public class StickyListResult : ApiResult
-    {
-        public List<StickyItem> StickyList { get; set; }
-
-        public StickyListResult()
-        {
-            StickyList = new List<StickyItem>();
         }
     }
 }

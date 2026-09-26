@@ -5,7 +5,11 @@ Assets\Square71x71Logo.scale-240.png
 Assets\StoreLogo.scale-240.png
 Assets\WideLogo.scale-240.png
 App.xbf
+AuthorRecommendPage.xbf
+BotsPage.xbf
 ChatPage.xbf
+FriendsPage.xbf
+GroupsPage.xbf
 ImageViewerPage.xbf
 LoginPage.xbf
 MainPage.xbf
@@ -15,4 +19,5 @@ ProfileEditPage.xbf
 SettingsPage.xbf
 TextViewerPage.xbf
 UserDetailPage.xbf
+VideoPlayerPage.xbf
 云湖WP.WindowsPhone.xr.xml

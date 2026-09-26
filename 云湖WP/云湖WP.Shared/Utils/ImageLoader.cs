@@ -50,6 +50,11 @@ namespace 云湖WP.Utils
         // 正在进行的下载任务缓存，避免相同 URL 并发重复下载
         private static readonly Dictionary<string, Task<byte[]>> _inFlightTasks = new Dictionary<string, Task<byte[]>>();
 
+        // 磁盘缓存文件索引 (避免调用 GetFileAsync 产生 FileNotFoundException 异常)
+        private static readonly HashSet<string> _knownCacheFiles = new HashSet<string>();
+        private static bool _cacheFolderScanned = false;
+        private static StorageFolder _cacheFolder;
+
         private static HttpClient _httpClient;
 
         static ImageLoader()
@@ -202,54 +207,57 @@ namespace 云湖WP.Utils
         }
 
         /// <summary>
-        /// 获取图片字节数据 (优先读取内存，其次独立随机文件磁盘缓存，最后网络并发请求)
+        /// 获取图片字节数据 (优先读取内存，其次独立随机文件磁盘缓存，最后网络并发请求，全流程后台线程池执行绝不阻塞 UI 主线程)
         /// </summary>
         /// <param name="finalUrl">图片链接</param>
         /// <param name="force">是否强制下载（忽略省流无图模式，例如大图预览器点击查看）</param>
-        public static async Task<byte[]> GetImageBytesAsync(string finalUrl, bool force = false)
+        public static Task<byte[]> GetImageBytesAsync(string finalUrl, bool force = false)
         {
-            if (_disableAllImages && !force) return null;
-            if (string.IsNullOrEmpty(finalUrl)) return null;
+            return Task.Run(async () =>
+            {
+                if (_disableAllImages && !force) return null;
+                if (string.IsNullOrEmpty(finalUrl)) return null;
 
-            // 1. 检查内存缓存
-            lock (_syncLock)
-            {
-                if (_memoryCache.ContainsKey(finalUrl))
+                // 1. 检查内存缓存
+                lock (_syncLock)
                 {
-                    return _memoryCache[finalUrl];
+                    if (_memoryCache.ContainsKey(finalUrl))
+                    {
+                        return _memoryCache[finalUrl];
+                    }
                 }
-            }
 
-            // 2. 检查是否有相同的请求正在飞行中
-            Task<byte[]> runningTask = null;
-            lock (_syncLock)
-            {
-                if (_inFlightTasks.ContainsKey(finalUrl))
-                {
-                    runningTask = _inFlightTasks[finalUrl];
-                }
-                else
-                {
-                    runningTask = InternalFetchImageAsync(finalUrl);
-                    _inFlightTasks[finalUrl] = runningTask;
-                }
-            }
-
-            try
-            {
-                byte[] data = await runningTask;
-                return data;
-            }
-            finally
-            {
+                // 2. 检查是否有相同的请求正在飞行中
+                Task<byte[]> runningTask = null;
                 lock (_syncLock)
                 {
                     if (_inFlightTasks.ContainsKey(finalUrl))
                     {
-                        _inFlightTasks.Remove(finalUrl);
+                        runningTask = _inFlightTasks[finalUrl];
+                    }
+                    else
+                    {
+                        runningTask = InternalFetchImageAsync(finalUrl);
+                        _inFlightTasks[finalUrl] = runningTask;
                     }
                 }
-            }
+
+                try
+                {
+                    byte[] data = await runningTask.ConfigureAwait(false);
+                    return data;
+                }
+                finally
+                {
+                    lock (_syncLock)
+                    {
+                        if (_inFlightTasks.ContainsKey(finalUrl))
+                        {
+                            _inFlightTasks.Remove(finalUrl);
+                        }
+                    }
+                }
+            });
         }
 
         private static async Task<byte[]> InternalFetchImageAsync(string finalUrl)
@@ -365,6 +373,43 @@ namespace 云湖WP.Utils
             }
             catch { }
 
+            // 降级尝试：若为 HTTPS，降级尝试 HTTP (避开 WP8.1 过期证书/TLS 握手故障)
+            if (uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var httpUri = new Uri("http://" + uri.Authority + uri.PathAndQuery);
+                    using (var req = new HttpRequestMessage(HttpMethod.Get, httpUri))
+                    {
+                        req.Headers.TryAppendWithoutValidation("Referer", RefererUrlHttp);
+                        req.Headers.TryAppendWithoutValidation("User-Agent", UserAgent);
+                        using (var response = await _httpClient.SendRequestAsync(req))
+                        {
+                            if (response.IsSuccessStatusCode)
+                            {
+                                var buffer = await response.Content.ReadAsBufferAsync();
+                                return buffer.ToArray();
+                            }
+                        }
+                    }
+                }
+                catch { }
+
+                try
+                {
+                    var httpUri = new Uri("http://" + uri.Authority + uri.PathAndQuery);
+                    using (var response = await _httpClient.GetAsync(httpUri))
+                    {
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var buffer = await response.Content.ReadAsBufferAsync();
+                            return buffer.ToArray();
+                        }
+                    }
+                }
+                catch { }
+            }
+
             return null;
         }
 
@@ -373,7 +418,22 @@ namespace 云湖WP.Utils
         /// </summary>
         public static async Task<BitmapImage> BytesToBitmapImageAsync(byte[] bytes, int decodeWidth = 96, int decodeHeight = 96)
         {
-            if (bytes == null || bytes.Length == 0) return null;
+            if (bytes == null || bytes.Length < 4) return null;
+
+            // 过滤文本/HTML/JSON 错误响应或非图片数据
+            if (bytes[0] == '<' || bytes[0] == '{' || bytes[0] == '[') return null;
+
+            // 检查 Windows Phone 8.1 WIC 原生解码器支持的图片格式魔数:
+            // JPEG (FF D8), PNG (89 50 4E 47), GIF (47 49 46), BMP (42 4D)
+            bool isSupported = (bytes[0] == 0xFF && bytes[1] == 0xD8) ||
+                               (bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47) ||
+                               (bytes[0] == 0x47 && bytes[1] == 0x49 && bytes[2] == 0x46) ||
+                               (bytes[0] == 0x42 && bytes[1] == 0x4D);
+            if (!isSupported)
+            {
+                // 非 WP8.1 硬件解码支持的格式 (如 WebP/SVG)，安全忽略避免 0x88982F50 崩溃
+                return null;
+            }
 
             try
             {
@@ -466,10 +526,12 @@ namespace 云湖WP.Utils
 
         private static async Task<StorageFolder> GetCacheFolderAsync()
         {
+            if (_cacheFolder != null) return _cacheFolder;
             try
             {
                 var localFolder = ApplicationData.Current.LocalFolder;
-                return await localFolder.CreateFolderAsync(CacheFolderName, CreationCollisionOption.OpenIfExists);
+                _cacheFolder = await localFolder.CreateFolderAsync(CacheFolderName, CreationCollisionOption.OpenIfExists);
+                return _cacheFolder;
             }
             catch
             {
@@ -483,6 +545,34 @@ namespace 云湖WP.Utils
             {
                 var folder = await GetCacheFolderAsync();
                 if (folder == null) return null;
+
+                // 首次拉取目录已知文件列表，避免逐个调用 GetFileAsync 产生 FileNotFoundException
+                if (!_cacheFolderScanned)
+                {
+                    var files = await folder.GetFilesAsync();
+                    lock (_syncLock)
+                    {
+                        if (!_cacheFolderScanned)
+                        {
+                            if (files != null)
+                            {
+                                foreach (var f in files)
+                                {
+                                    if (f != null) _knownCacheFiles.Add(f.Name);
+                                }
+                            }
+                            _cacheFolderScanned = true;
+                        }
+                    }
+                }
+
+                lock (_syncLock)
+                {
+                    if (!_knownCacheFiles.Contains(fileName))
+                    {
+                        return null;
+                    }
+                }
 
                 var file = await folder.GetFileAsync(fileName);
                 if (file != null)
@@ -500,12 +590,54 @@ namespace 云湖WP.Utils
             try
             {
                 var folder = await GetCacheFolderAsync();
-                if (folder == null) return;
+                if (folder == null || bytes == null || bytes.Length == 0) return;
 
                 var file = await folder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
                 await FileIO.WriteBytesAsync(file, bytes);
+
+                lock (_syncLock)
+                {
+                    _knownCacheFiles.Add(fileName);
+                }
             }
             catch { }
+        }
+
+        /// <summary>
+        /// 从内存和磁盘中移除指定 URL 的缓存项 (用于重试加载时强制刷新)
+        /// </summary>
+        public static async Task RemoveFromCacheAsync(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return;
+
+            string fileName = null;
+            lock (_syncLock)
+            {
+                if (_memoryCache.ContainsKey(url)) _memoryCache.Remove(url);
+                if (_bitmapCache.ContainsKey(url)) _bitmapCache.Remove(url);
+                if (_avatarFileMap.ContainsKey(url))
+                {
+                    fileName = _avatarFileMap[url];
+                    _avatarFileMap.Remove(url);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                try
+                {
+                    var folder = await GetCacheFolderAsync();
+                    if (folder != null)
+                    {
+                        var file = await folder.GetFileAsync(fileName);
+                        if (file != null)
+                        {
+                            await file.DeleteAsync(StorageDeleteOption.PermanentDelete);
+                        }
+                    }
+                }
+                catch { }
+            }
         }
 
         /// <summary>
@@ -518,6 +650,9 @@ namespace 云湖WP.Utils
                 _memoryCache.Clear();
                 _bitmapCache.Clear();
                 _avatarFileMap.Clear();
+                _knownCacheFiles.Clear();
+                _cacheFolderScanned = false;
+                _cacheFolder = null;
             }
 
             try

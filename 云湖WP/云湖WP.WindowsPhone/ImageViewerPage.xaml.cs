@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Windows.Phone.UI.Input;
 using Windows.Storage;
@@ -29,7 +30,7 @@ namespace 云湖WP
             this.InitializeComponent();
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
             HardwareButtons.BackPressed += HardwareButtons_BackPressed;
@@ -52,7 +53,7 @@ namespace 云湖WP
                 _imageUrl = (string)e.Parameter;
             }
 
-            LoadFullImageAsync();
+            await LoadFullImageAsync();
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -70,11 +71,13 @@ namespace 云湖WP
             }
         }
 
-        private async void LoadFullImageAsync()
+        private async Task LoadFullImageAsync(bool isRetry = false)
         {
             if (string.IsNullOrEmpty(_imageUrl))
             {
                 ImgProgressBar.Visibility = Visibility.Collapsed;
+                if (ImgProgressRing != null) ImgProgressRing.IsActive = false;
+                if (ImgProgressRing != null) ImgProgressRing.Visibility = Visibility.Collapsed;
                 PanelError.Visibility = Visibility.Collapsed;
                 BtnSave.Visibility = Visibility.Collapsed;
                 ImgFull.Source = null;
@@ -86,46 +89,100 @@ namespace 云湖WP
                 }
                 else
                 {
+                    if (TxtErrorReason != null) TxtErrorReason.Text = "图片地址为空";
                     PanelError.Visibility = Visibility.Visible;
                 }
                 return;
             }
 
+            // 1. 显示加载中动画 (顶部进度条与中心旋转圈)
             ImgProgressBar.Visibility = Visibility.Visible;
+            if (ImgProgressRing != null)
+            {
+                ImgProgressRing.IsActive = true;
+                ImgProgressRing.Visibility = Visibility.Visible;
+            }
             PanelError.Visibility = Visibility.Collapsed;
             BtnSave.Visibility = Visibility.Collapsed;
             BorderAvatarLetter.Visibility = Visibility.Collapsed;
 
-            string finalUrl = _imageUrl;
-            bool success = false;
-
-            try
+            // 2. 如果是重试，清除历史失败/损坏的内存和磁盘缓存
+            if (isRetry)
             {
-                byte[] bytes = await ImageLoader.GetImageBytesAsync(finalUrl, force: true);
-                if (bytes != null && bytes.Length > 0)
+                try
                 {
-                    _imageBytes = bytes;
-                    var bmp = await ImageLoader.BytesToBitmapImageAsync(bytes, 0, 0);
-                    if (bmp != null)
+                    await ImageLoader.RemoveFromCacheAsync(_imageUrl);
+                    string urlCandidate0 = ImageHelper.FormatFullImageUrl(_imageUrl);
+                    if (!string.IsNullOrEmpty(urlCandidate0)) await ImageLoader.RemoveFromCacheAsync(urlCandidate0);
+                    string urlCandidate1 = ImageHelper.FormatQiniuUrl(_imageUrl, 0, 0);
+                    if (!string.IsNullOrEmpty(urlCandidate1)) await ImageLoader.RemoveFromCacheAsync(urlCandidate1);
+                }
+                catch { }
+            }
+
+            bool success = false;
+            string lastError = "无法获取图片数据";
+
+            // 3. 构建候选下载 URL 列表 (依次尝试：高质转码 JPEG、原七牛直链、原始输入直链)
+            var candidateUrls = new List<string>();
+            string formattedFull = ImageHelper.FormatFullImageUrl(_imageUrl);
+            if (!string.IsNullOrEmpty(formattedFull) && !candidateUrls.Contains(formattedFull))
+            {
+                candidateUrls.Add(formattedFull);
+            }
+            string formattedRaw = ImageHelper.FormatQiniuUrl(_imageUrl, 0, 0);
+            if (!string.IsNullOrEmpty(formattedRaw) && !candidateUrls.Contains(formattedRaw))
+            {
+                candidateUrls.Add(formattedRaw);
+            }
+            if (!string.IsNullOrEmpty(_imageUrl) && !candidateUrls.Contains(_imageUrl))
+            {
+                candidateUrls.Add(_imageUrl);
+            }
+
+            foreach (var testUrl in candidateUrls)
+            {
+                try
+                {
+                    AppLogger.Log("ImageViewer", "正在加载大图: " + testUrl);
+                    byte[] bytes = await ImageLoader.GetImageBytesAsync(testUrl, force: true);
+                    if (bytes != null && bytes.Length > 0)
                     {
-                        ImgFull.Source = bmp;
-                        success = true;
+                        var bmp = await ImageLoader.BytesToBitmapImageAsync(bytes, 0, 0);
+                        if (bmp != null)
+                        {
+                            _imageBytes = bytes;
+                            ImgFull.Source = bmp;
+                            success = true;
+                            AppLogger.Log("ImageViewer", string.Format("大图加载成功: {0} 字节", bytes.Length));
+                            break;
+                        }
+                        else
+                        {
+                            lastError = "图片格式暂不支持或解码失败";
+                        }
                     }
                 }
+                catch (Exception ex)
+                {
+                    lastError = ex.Message;
+                    AppLogger.Log("ImageViewer", "尝试加载失败: " + testUrl + ", 错误: " + ex.Message);
+                }
             }
-            catch (Exception ex)
+
+            // 4. 隐藏加载器
+            ImgProgressBar.Visibility = Visibility.Collapsed;
+            if (ImgProgressRing != null)
             {
-                System.Diagnostics.Debug.WriteLine("LoadFullImage failed: " + ex.Message);
-            }
-            finally
-            {
-                ImgProgressBar.Visibility = Visibility.Collapsed;
+                ImgProgressRing.IsActive = false;
+                ImgProgressRing.Visibility = Visibility.Collapsed;
             }
 
             if (success)
             {
                 BorderAvatarLetter.Visibility = Visibility.Collapsed;
                 BtnSave.Visibility = Visibility.Visible;
+                PanelError.Visibility = Visibility.Collapsed;
                 UpdateImageContainerSize();
                 if (ImgScrollViewer != null)
                 {
@@ -142,6 +199,10 @@ namespace 云湖WP
                 }
                 else
                 {
+                    if (TxtErrorReason != null)
+                    {
+                        TxtErrorReason.Text = "图片加载失败 (" + lastError + ")，请点击重试";
+                    }
                     PanelError.Visibility = Visibility.Visible;
                 }
                 BtnSave.Visibility = Visibility.Collapsed;
@@ -250,9 +311,21 @@ namespace 云湖WP
             }
         }
 
-        private void BtnReload_Click(object sender, RoutedEventArgs e)
+        private async void BtnReload_Click(object sender, RoutedEventArgs e)
         {
-            LoadFullImageAsync();
+            if (BtnReload != null)
+            {
+                BtnReload.IsEnabled = false;
+                BtnReload.Content = "正在重试加载...";
+            }
+
+            await LoadFullImageAsync(isRetry: true);
+
+            if (BtnReload != null)
+            {
+                BtnReload.IsEnabled = true;
+                BtnReload.Content = "重新加载图片";
+            }
         }
 
         private async Task ShowToastAsync(string message)

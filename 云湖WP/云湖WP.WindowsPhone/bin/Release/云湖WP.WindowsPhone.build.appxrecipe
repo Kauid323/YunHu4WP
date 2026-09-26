@@ -70,6 +70,27 @@
     <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\MyProfilePage.xbf">
       <PackagePath>MyProfilePage.xbf</PackagePath>
     </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\PostDetailPage.xbf">
+      <PackagePath>PostDetailPage.xbf</PackagePath>
+    </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\TextViewerPage.xbf">
+      <PackagePath>TextViewerPage.xbf</PackagePath>
+    </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\VideoPlayerPage.xbf">
+      <PackagePath>VideoPlayerPage.xbf</PackagePath>
+    </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\FriendsPage.xbf">
+      <PackagePath>FriendsPage.xbf</PackagePath>
+    </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\GroupsPage.xbf">
+      <PackagePath>GroupsPage.xbf</PackagePath>
+    </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\BotsPage.xbf">
+      <PackagePath>BotsPage.xbf</PackagePath>
+    </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\AuthorRecommendPage.xbf">
+      <PackagePath>AuthorRecommendPage.xbf</PackagePath>
+    </AppxPackagedFile>
     <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\云湖WP.WindowsPhone.xr.xml">
       <PackagePath>云湖WP.WindowsPhone.xr.xml</PackagePath>
     </AppxPackagedFile>

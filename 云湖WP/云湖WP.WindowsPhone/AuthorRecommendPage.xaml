@@ -1,0 +1,46 @@
+<Page
+    x:Class="云湖WP.AuthorRecommendPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:云湖WP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 标题栏 -->
+        <StackPanel Grid.Row="0" Margin="19,16,19,12">
+            <TextBlock Text="云湖" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" />
+            <TextBlock Text="作者推荐" FontSize="26" FontWeight="SemiBold" Margin="0,4,0,0" />
+        </StackPanel>
+
+        <!-- 推荐列表 -->
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Margin="19,0,19,20">
+            <StackPanel>
+                <TextBlock Text="精彩推荐群聊" FontSize="13" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,10" />
+
+                <!-- 推荐群 1: 糖味堂-闲聊茶馆 -->
+                <Border BorderThickness="1" BorderBrush="#33FFFFFF" Background="#0CFFFFFF" Padding="14,12" Margin="0,0,0,10" Tapped="BtnRecommendGroup1_Tapped">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="糖味堂-闲聊茶馆" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                            <TextBlock Text="群ID: 418769995" FontSize="12" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,3,0,0" HorizontalAlignment="Left" />
+                            <TextBlock Text="https://yhfx.jwznb.com/share?key=KaSJi2AyHGOg&amp;ts=1790420305" FontSize="10" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,2,0,0" TextWrapping="Wrap" HorizontalAlignment="Left" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" Text=">" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" Margin="8,0,0,0" />
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

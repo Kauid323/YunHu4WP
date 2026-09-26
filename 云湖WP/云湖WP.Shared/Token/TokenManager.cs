@@ -25,7 +25,10 @@ namespace 云湖WP.Token
             if (!string.IsNullOrEmpty(_cachedToken)) return true;
 
             var localSettings = ApplicationData.Current.LocalSettings;
-            return localSettings.Values.ContainsKey(SettingKeyTokenEncrypted);
+            return localSettings.Values.ContainsKey(SettingKeyTokenEncrypted)
+                || localSettings.Values.ContainsKey("UserToken")
+                || localSettings.Values.ContainsKey("user_token")
+                || localSettings.Values.ContainsKey("token");
         }
 
         /// <summary>
@@ -43,6 +46,7 @@ namespace 云湖WP.Token
                 var localSettings = ApplicationData.Current.LocalSettings;
                 string encryptedToken = await SecurityHelper.EncryptStringAsync(token);
                 localSettings.Values[SettingKeyTokenEncrypted] = encryptedToken;
+                localSettings.Values["UserToken"] = token;
                 
                 if (!string.IsNullOrEmpty(account))
                 {
@@ -58,7 +62,7 @@ namespace 云湖WP.Token
         }
 
         /// <summary>
-        /// 获取当前保存的 Token (自动解密)
+        /// 获取当前保存的 Token (自动解密与多键兼容)
         /// </summary>
         public static async Task<string> GetTokenAsync()
         {
@@ -72,13 +76,37 @@ namespace 云湖WP.Token
                 {
                     try
                     {
-                        _cachedToken = await SecurityHelper.DecryptStringAsync(cipher);
-                        return _cachedToken;
+                        string decrypted = await SecurityHelper.DecryptStringAsync(cipher);
+                        if (!string.IsNullOrEmpty(decrypted))
+                        {
+                            _cachedToken = decrypted;
+                            return _cachedToken;
+                        }
                     }
                     catch (Exception ex)
                     {
                         System.Diagnostics.Debug.WriteLine("TokenManager.GetTokenAsync failed: " + ex.Message);
                     }
+                }
+            }
+
+            if (localSettings.Values.ContainsKey("UserToken"))
+            {
+                string raw = localSettings.Values["UserToken"] as string;
+                if (!string.IsNullOrEmpty(raw))
+                {
+                    _cachedToken = raw;
+                    return _cachedToken;
+                }
+            }
+
+            if (localSettings.Values.ContainsKey("user_token"))
+            {
+                string raw = localSettings.Values["user_token"] as string;
+                if (!string.IsNullOrEmpty(raw))
+                {
+                    _cachedToken = raw;
+                    return _cachedToken;
                 }
             }
 

@@ -1,0 +1,145 @@
+<Page
+    x:Class="云湖WP.VideoPlayerPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:云湖WP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="Black">
+
+    <Grid Background="Black" Tapped="MainGrid_Tapped">
+        
+        <!-- 视频播放主体 (MediaElement) -->
+        <MediaElement x:Name="PlayerMediaElement"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch"
+                      AutoPlay="True"
+                      AreTransportControlsEnabled="False"
+                      MediaOpened="PlayerMediaElement_MediaOpened"
+                      MediaEnded="PlayerMediaElement_MediaEnded"
+                      MediaFailed="PlayerMediaElement_MediaFailed"
+                      CurrentStateChanged="PlayerMediaElement_CurrentStateChanged" />
+
+        <!-- 缓冲与下载进度面板 -->
+        <StackPanel x:Name="PanelBuffering" 
+                    VerticalAlignment="Center" 
+                    HorizontalAlignment="Center" 
+                    Margin="24,0" 
+                    Canvas.ZIndex="30">
+            <ProgressBar x:Name="DownloadProgressBar" 
+                         Minimum="0" 
+                         Maximum="100" 
+                         Value="0" 
+                         IsIndeterminate="False" 
+                         Height="6" 
+                         Foreground="{ThemeResource PhoneAccentBrush}" 
+                         Width="240" 
+                         Margin="0,0,0,12" />
+            <TextBlock x:Name="TxtProgress" 
+                       Text="正在加载视频..." 
+                       FontSize="14" 
+                       Foreground="White" 
+                       HorizontalAlignment="Center" 
+                       Margin="0,0,0,6" />
+            <TextBlock Text="正在通过专用防盗链通道获取视频流" 
+                       FontSize="11" 
+                       Foreground="{ThemeResource PhoneMidBrush}" 
+                       HorizontalAlignment="Center" />
+        </StackPanel>
+
+        <!-- 播放错误提示面板 -->
+        <StackPanel x:Name="PanelError" 
+                    Visibility="Collapsed" 
+                    VerticalAlignment="Center" 
+                    HorizontalAlignment="Center" 
+                    Margin="24,0" 
+                    Canvas.ZIndex="30">
+            <SymbolIcon Symbol="Cancel" Foreground="#FFAAAAAA" Margin="0,0,0,8" HorizontalAlignment="Center" />
+            <TextBlock x:Name="TxtError" Text="视频加载或播放失败" FontSize="15" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,10" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Content="重试播放" BorderThickness="1" Click="BtnRetry_Click" Margin="0,0,10,0" />
+                <Button Content="复制直链" BorderThickness="1" Click="BtnCopyUrl_Click" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- 播放/暂停大图标中心按钮 -->
+        <Border x:Name="CenterPlayBtn" 
+                Width="68" 
+                Height="68" 
+                Background="#90000000" 
+                BorderBrush="#60FFFFFF" 
+                BorderThickness="1" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center" 
+                Visibility="Collapsed" 
+                Tapped="CenterPlayBtn_Tapped" 
+                Canvas.ZIndex="25">
+            <SymbolIcon x:Name="IconCenterPlay" Symbol="Play" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+
+        <!-- Metro 播放器控制悬浮层 (自动淡出/淡入) -->
+        <Grid x:Name="ControlsOverlay" Canvas.ZIndex="20" Background="Transparent">
+            <!-- 顶部导航与标题栏 (带遮罩) -->
+            <Border VerticalAlignment="Top" Background="#B0000000" Padding="12,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="BtnBack" Background="Transparent" BorderThickness="0" Padding="6,4" Click="BtnBack_Click" VerticalAlignment="Center">
+                        <SymbolIcon Symbol="Back" Foreground="White" />
+                    </Button>
+                    <TextBlock x:Name="TxtVideoTitle" Grid.Column="1" Text="视频播放" FontSize="16" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center" Margin="8,0" TextTrimming="CharacterEllipsis" />
+                    <Button x:Name="BtnSaveVideo" Grid.Column="2" Background="Transparent" BorderThickness="0" Padding="6,4" Click="BtnSaveVideo_Click" VerticalAlignment="Center">
+                        <SymbolIcon Symbol="Save" Foreground="White" />
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- 底部播放进度控制条 (带遮罩) -->
+            <Border VerticalAlignment="Bottom" Background="#B0000000" Padding="16,12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- 进度滑块 -->
+                    <Slider x:Name="TimelineSlider" 
+                            Minimum="0" 
+                            Maximum="100" 
+                            Value="0" 
+                            Height="34" 
+                            Foreground="{ThemeResource PhoneAccentBrush}" 
+                            ValueChanged="TimelineSlider_ValueChanged" 
+                            ManipulationStarted="TimelineSlider_ManipulationStarted" 
+                            ManipulationCompleted="TimelineSlider_ManipulationCompleted" />
+
+                    <!-- 底部操作按钮与时间 -->
+                    <Grid Grid.Row="1" Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- 播放/暂停按钮 -->
+                        <Button x:Name="BtnPlayPause" Background="Transparent" BorderThickness="0" Padding="6,4" Click="BtnPlayPause_Click" VerticalAlignment="Center">
+                            <SymbolIcon x:Name="IconPlayPause" Symbol="Pause" Foreground="White" />
+                        </Button>
+
+                        <!-- 当前进度 / 总时长 -->
+                        <TextBlock x:Name="TxtTime" Grid.Column="1" Text="00:00 / 00:00" FontSize="13" Foreground="#CCFFFFFF" VerticalAlignment="Center" Margin="10,0,0,0" />
+
+                        <!-- 重放按钮 -->
+                        <Button x:Name="BtnReplay" Grid.Column="2" Background="Transparent" BorderThickness="0" Padding="6,4" Click="BtnReplay_Click" VerticalAlignment="Center">
+                            <SymbolIcon Symbol="RepeatAll" Foreground="White" />
+                        </Button>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>

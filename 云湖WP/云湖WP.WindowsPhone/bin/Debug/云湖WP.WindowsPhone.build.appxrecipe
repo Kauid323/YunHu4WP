@@ -76,6 +76,21 @@
     <AppxPackagedFile Include="e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Debug\TextViewerPage.xbf">
       <PackagePath>TextViewerPage.xbf</PackagePath>
     </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Debug\VideoPlayerPage.xbf">
+      <PackagePath>VideoPlayerPage.xbf</PackagePath>
+    </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Debug\FriendsPage.xbf">
+      <PackagePath>FriendsPage.xbf</PackagePath>
+    </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Debug\GroupsPage.xbf">
+      <PackagePath>GroupsPage.xbf</PackagePath>
+    </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Debug\BotsPage.xbf">
+      <PackagePath>BotsPage.xbf</PackagePath>
+    </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Debug\AuthorRecommendPage.xbf">
+      <PackagePath>AuthorRecommendPage.xbf</PackagePath>
+    </AppxPackagedFile>
     <AppxPackagedFile Include="e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Debug\云湖WP.WindowsPhone.xr.xml">
       <PackagePath>云湖WP.WindowsPhone.xr.xml</PackagePath>
     </AppxPackagedFile>

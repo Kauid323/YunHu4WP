@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Phone.UI.Input;
+using Windows.Storage;
+using Windows.Storage.Pickers;
+using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Popups;
@@ -12,9 +17,13 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using 云湖WP.Api.Common;
 using 云湖WP.Api.Message;
+using 云湖WP.Api.User;
+using 云湖WP.Api.User.Info;
+using 云湖WP.Api.WebSocket;
 using 云湖WP.Token;
 using 云湖WP.Utils;
 
@@ -40,8 +49,13 @@ namespace 云湖WP
         private bool _hasMoreHistory = true;
         private bool _isSending = false;
         private bool _isInitialLoadDone = false;
-        private double _lastScrollOffset = 0;
         private DateTime _lastLoadMoreTime = DateTime.MinValue;
+        private CancellationTokenSource _uploadCts = null;
+
+        // 全局本机用户头像与发送者头像缓存（跨会话复用，进入聊天无需重复拉取，发消息/加载历史即时显示）
+        private static BitmapImage _selfAvatarBitmap = null;
+        private static string _selfAvatarUrl = "";
+        private static readonly Dictionary<string, BitmapImage> _senderAvatarBitmapCache = new Dictionary<string, BitmapImage>();
 
         public ChatPage()
         {
@@ -57,6 +71,9 @@ namespace 云湖WP
             HardwareButtons.BackPressed += HardwareButtons_BackPressed;
             InputPane.GetForCurrentView().Showing += InputPane_Showing;
             InputPane.GetForCurrentView().Hiding += InputPane_Hiding;
+
+            // 无论进入还是返回，始终确保 CommandBar 收起
+            if (ChatCommandBar != null) ChatCommandBar.IsOpen = false;
 
             // 如果是从子页面（如用户详情页、大图查看器）返回，且已有消息列表，直接保持原状态，不重复请求或刷新
             if (e.NavigationMode == NavigationMode.Back && _messageList.Count > 0)
@@ -75,16 +92,25 @@ namespace 云湖WP
             var args = e.Parameter as ChatNavigationArgs;
             if (args != null)
             {
-                _chatId = args.ChatId;
+                _chatId = args.ChatId ?? "";
                 _chatType = args.ChatType;
-                _title = args.Title;
-                _avatarUrl = args.AvatarUrl;
-                _token = args.Token;
+                _title = args.Title ?? "";
+                _avatarUrl = args.AvatarUrl ?? "";
+                _token = args.Token ?? "";
             }
 
             if (string.IsNullOrEmpty(_token))
             {
                 _token = await TokenManager.GetTokenAsync();
+            }
+
+            if (string.IsNullOrEmpty(_title) || _title == "群聊消息" || _title == "云湖好友" || _title == "云湖会话")
+            {
+                _title = NotificationHelper.GetChatTitle(_chatId, _chatType);
+            }
+            else
+            {
+                NotificationHelper.RegisterChatTitle(_chatId, _title);
             }
 
             TxtChatTitle.Text = !string.IsNullOrEmpty(_title) ? _title : "云湖会话";
@@ -94,6 +120,14 @@ namespace 云湖WP
             _hasMoreHistory = true;
             _isLoadingHistory = false;
             _isInitialLoadDone = false;
+
+            // 设置当前活跃会话 ID 并注册 WebSocket 实时消息监听
+            YunhuWebSocketService.Instance.CurrentActiveChatId = _chatId ?? "";
+            YunhuWebSocketService.Instance.OnNewMessageReceived -= OnWebSocketNewMessageReceived;
+            YunhuWebSocketService.Instance.OnNewMessageReceived += OnWebSocketNewMessageReceived;
+            YunhuWebSocketService.Instance.OnMessageEdited -= OnWebSocketMessageEdited;
+            YunhuWebSocketService.Instance.OnMessageEdited += OnWebSocketMessageEdited;
+
             AppLogger.Log("ChatPage", string.Format("OnNavigatedTo: ChatId={0}, Title={1}", _chatId, _title));
             await LoadHistoryMessagesAsync();
         }
@@ -104,6 +138,14 @@ namespace 云湖WP
             HardwareButtons.BackPressed -= HardwareButtons_BackPressed;
             InputPane.GetForCurrentView().Showing -= InputPane_Showing;
             InputPane.GetForCurrentView().Hiding -= InputPane_Hiding;
+
+            // 解绑 WebSocket 实时消息监听并复位当前活跃会话 ID
+            YunhuWebSocketService.Instance.OnNewMessageReceived -= OnWebSocketNewMessageReceived;
+            YunhuWebSocketService.Instance.OnMessageEdited -= OnWebSocketMessageEdited;
+            if (YunhuWebSocketService.Instance.CurrentActiveChatId == _chatId)
+            {
+                YunhuWebSocketService.Instance.CurrentActiveChatId = "";
+            }
 
             if (_chatScrollViewer != null)
             {
@@ -131,6 +173,181 @@ namespace 云湖WP
                 if (EmptyMsgPanel != null)
                 {
                     EmptyMsgPanel.Visibility = Visibility.Collapsed;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 收到 WebSocket 实时推送的新聊天消息 (带全类型强力去重机制，防止自发附件/消息与推送产生重复)
+        /// </summary>
+        private void OnWebSocketNewMessageReceived(ChatMessageItem msg)
+        {
+            if (msg == null) return;
+            if (msg.ChatId != _chatId || msg.ChatType != _chatType) return;
+
+            // 1. 全局精确查重：按 MsgId 匹配
+            if (!string.IsNullOrEmpty(msg.MsgId))
+            {
+                for (int i = 0; i < _messageList.Count; i++)
+                {
+                    var existing = _messageList[i];
+                    if (existing != null && existing.MsgId == msg.MsgId)
+                    {
+                        if (msg.MsgSeq > 0) existing.MsgSeq = msg.MsgSeq;
+                        if (msg.SendTime > 0) existing.SendTime = msg.SendTime;
+                        if (msg.IsVideoMsg && !string.IsNullOrEmpty(msg.ExtractedVideoUrl) && string.IsNullOrEmpty(existing.VideoUrl))
+                        {
+                            existing.VideoUrl = msg.VideoUrl;
+                            existing.InitParsedData();
+                        }
+                        return;
+                    }
+                }
+            }
+
+            // 2. 全局精确查重：按 MsgSeq 匹配（MsgSeq > 0 且在会话内唯一）
+            if (msg.MsgSeq > 0)
+            {
+                for (int i = 0; i < _messageList.Count; i++)
+                {
+                    var existing = _messageList[i];
+                    if (existing != null && existing.MsgSeq > 0 && existing.MsgSeq == msg.MsgSeq)
+                    {
+                        if (!string.IsNullOrEmpty(msg.MsgId)) existing.MsgId = msg.MsgId;
+                        if (msg.SendTime > 0) existing.SendTime = msg.SendTime;
+                        return;
+                    }
+                }
+            }
+
+            // 3. 我方自发消息/附件智能匹配去重（处理本地乐观插入导致 MsgId 未对齐或推送稍后到达的情况）
+            if (msg.IsSelf)
+            {
+                int searchStart = _messageList.Count - 1;
+                int searchEnd = Math.Max(0, _messageList.Count - 20);
+                for (int i = searchStart; i >= searchEnd; i--)
+                {
+                    var existing = _messageList[i];
+                    if (existing == null || !existing.IsSelf) continue;
+
+                    bool isMatch = false;
+
+                    // 视频消息匹配 (ContentType == 10 或 IsVideoMsg)
+                    if ((msg.IsVideoMsg || msg.ContentType == 10) && (existing.IsVideoMsg || existing.ContentType == 10))
+                    {
+                        string msgVideo = !string.IsNullOrEmpty(msg.ExtractedVideoUrl) ? msg.ExtractedVideoUrl : msg.VideoUrl;
+                        string exVideo = !string.IsNullOrEmpty(existing.ExtractedVideoUrl) ? existing.ExtractedVideoUrl : existing.VideoUrl;
+                        if (!string.IsNullOrEmpty(msgVideo) && !string.IsNullOrEmpty(exVideo))
+                        {
+                            if (msgVideo == exVideo || msgVideo.Contains(exVideo) || exVideo.Contains(msgVideo))
+                            {
+                                isMatch = true;
+                            }
+                        }
+                        if (!isMatch && !string.IsNullOrEmpty(msg.FileName) && !string.IsNullOrEmpty(existing.FileName) && msg.FileName == existing.FileName)
+                        {
+                            isMatch = true;
+                        }
+                    }
+                    // 图片消息匹配 (ContentType == 2 或 IsImageMsg)
+                    else if ((msg.IsImageMsg || msg.ContentType == 2) && (existing.IsImageMsg || existing.ContentType == 2))
+                    {
+                        string msgImg = !string.IsNullOrEmpty(msg.ExtractedImageUrl) ? msg.ExtractedImageUrl : msg.ImageUrl;
+                        string exImg = !string.IsNullOrEmpty(existing.ExtractedImageUrl) ? existing.ExtractedImageUrl : existing.ImageUrl;
+                        if (!string.IsNullOrEmpty(msgImg) && !string.IsNullOrEmpty(exImg))
+                        {
+                            if (msgImg == exImg || msgImg.Contains(exImg) || exImg.Contains(msgImg))
+                            {
+                                isMatch = true;
+                            }
+                        }
+                        if (!isMatch && !string.IsNullOrEmpty(msg.Text) && !string.IsNullOrEmpty(existing.Text) && msg.Text == existing.Text)
+                        {
+                            isMatch = true;
+                        }
+                    }
+                    // 文件消息匹配 (ContentType == 3/4/5 或 IsFileMsg)
+                    else if ((msg.IsFileMsg || msg.ContentType == 3 || msg.ContentType == 4 || msg.ContentType == 5) && 
+                             (existing.IsFileMsg || existing.ContentType == 3 || existing.ContentType == 4 || existing.ContentType == 5))
+                    {
+                        if (!string.IsNullOrEmpty(msg.FileUrl) && !string.IsNullOrEmpty(existing.FileUrl) && msg.FileUrl == existing.FileUrl)
+                        {
+                            isMatch = true;
+                        }
+                        else if (!string.IsNullOrEmpty(msg.FileName) && !string.IsNullOrEmpty(existing.FileName) && msg.FileName == existing.FileName)
+                        {
+                            isMatch = true;
+                        }
+                    }
+                    // 普通文本消息匹配
+                    else if (existing.ContentType == msg.ContentType && !string.IsNullOrEmpty(existing.Text) && existing.Text == msg.Text)
+                    {
+                        long timeDiff = Math.Abs(existing.SendTime - msg.SendTime);
+                        if (timeDiff < 120000 || existing.SendTime == 0 || msg.SendTime == 0)
+                        {
+                            isMatch = true;
+                        }
+                    }
+
+                    if (isMatch)
+                    {
+                        // 命中重复，合并更新服务器元数据并直接返回
+                        if (!string.IsNullOrEmpty(msg.MsgId)) existing.MsgId = msg.MsgId;
+                        if (msg.MsgSeq > 0) existing.MsgSeq = msg.MsgSeq;
+                        if (msg.SendTime > 0) existing.SendTime = msg.SendTime;
+                        if (!string.IsNullOrEmpty(msg.VideoUrl) && string.IsNullOrEmpty(existing.VideoUrl)) existing.VideoUrl = msg.VideoUrl;
+                        if (!string.IsNullOrEmpty(msg.ImageUrl) && string.IsNullOrEmpty(existing.ImageUrl)) existing.ImageUrl = msg.ImageUrl;
+                        if (!string.IsNullOrEmpty(msg.FileUrl) && string.IsNullOrEmpty(existing.FileUrl)) existing.FileUrl = msg.FileUrl;
+                        existing.InitParsedData();
+                        return;
+                    }
+                }
+            }
+
+            // 绑定或预拉取发送者头像
+            if (msg.IsSelf && _selfAvatarBitmap != null)
+            {
+                msg.SenderAvatarBitmap = _selfAvatarBitmap;
+                if (string.IsNullOrEmpty(msg.SenderAvatarUrl)) msg.SenderAvatarUrl = _selfAvatarUrl;
+            }
+            else if (!string.IsNullOrEmpty(msg.SenderAvatarUrl))
+            {
+                string finalUrl = ImageHelper.FormatQiniuUrl(msg.SenderAvatarUrl, 72, 72);
+                BitmapImage cachedBmp;
+                if (_senderAvatarBitmapCache.TryGetValue(finalUrl, out cachedBmp))
+                {
+                    msg.SenderAvatarBitmap = cachedBmp;
+                }
+                else
+                {
+                    PreloadSenderAvatars(new List<ChatMessageItem> { msg });
+                }
+            }
+
+            _messageList.Add(msg);
+            if (EmptyMsgPanel != null)
+            {
+                EmptyMsgPanel.Visibility = Visibility.Collapsed;
+            }
+
+            ScrollToBottom(true);
+        }
+
+        /// <summary>
+        /// 收到 WebSocket 消息编辑实时推送
+        /// </summary>
+        private void OnWebSocketMessageEdited(ChatMessageItem msg)
+        {
+            if (msg == null || string.IsNullOrEmpty(msg.MsgId)) return;
+            if (msg.ChatId != _chatId || msg.ChatType != _chatType) return;
+
+            for (int i = 0; i < _messageList.Count; i++)
+            {
+                var existing = _messageList[i];
+                if (existing != null && existing.MsgId == msg.MsgId)
+                {
+                    existing.Text = msg.Text;
+                    break;
                 }
             }
         }
@@ -164,28 +381,30 @@ namespace 云湖WP
 
         private async void ChatScrollViewer_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
         {
+            // 只在惯性/拖拽完全停止后的最终帧（IsIntermediate==false）判断，彻底避免惯性期间多次触发
+            if (e.IsIntermediate) return;
+
             var sv = sender as ScrollViewer;
             if (sv == null) return;
 
-            // 严格防护：必须已完成初次加载、当前无加载任务、有更多历史数据
-            if (_isInitialLoadDone && !_isLoadingHistory && _hasMoreHistory && _messageList.Count > 0)
+            // 严格防护：初次加载完成、当前无加载任务、有更多历史数据、有内容
+            if (!_isInitialLoadDone || _isLoadingHistory || !_hasMoreHistory || _messageList.Count == 0) return;
+
+            // 到达顶部：VerticalOffset == 0 即触发（消除之前的 >15 二次条件）
+            if (sv.VerticalOffset <= 1.0 && sv.ScrollableHeight > 50)
             {
-                // 只有在列表已具备滚动内容（高度>120）、用户主动由下方向上滑动到顶部边缘（VerticalOffset <= 10 且 _lastScrollOffset > 30）时才触发
-                if (sv.ScrollableHeight > 120 && sv.VerticalOffset <= 10 && _lastScrollOffset > 30)
+                // 节流：距上次加载超过 1500ms 才再次触发
+                if ((DateTime.Now - _lastLoadMoreTime).TotalMilliseconds > 1500)
                 {
-                    if ((DateTime.Now - _lastLoadMoreTime).TotalMilliseconds > 2500)
-                    {
-                        AppLogger.Log("ChatPage", string.Format("User scroll reached top, trigger LoadMoreHistory: Offset={0}, Last={1}, Scrollable={2}", sv.VerticalOffset, _lastScrollOffset, sv.ScrollableHeight));
-                        await LoadMoreHistoryMessagesAsync();
-                    }
+                    AppLogger.Log("ChatPage", "Auto-trigger LoadMoreHistory by scroll top.");
+                    await LoadMoreHistoryMessagesAsync();
                 }
             }
-            _lastScrollOffset = sv.VerticalOffset;
         }
 
+        // 保留此方法防止旧版 XAML 编译缓存残留引用（XAML 中已去掉 Tapped 绑定）
         private async void TopLoadMoreBorder_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            AppLogger.Log("ChatPage", "TopLoadMoreBorder tapped manually");
             await LoadMoreHistoryMessagesAsync();
         }
 
@@ -213,13 +432,22 @@ namespace 云湖WP
         /// </summary>
         private async Task LoadHistoryMessagesAsync()
         {
-            if (string.IsNullOrEmpty(_token) || string.IsNullOrEmpty(_chatId)) return;
+            if (string.IsNullOrEmpty(_token))
+            {
+                _token = await TokenManager.GetTokenAsync();
+            }
+
+            if (string.IsNullOrEmpty(_token) || string.IsNullOrEmpty(_chatId))
+            {
+                AppLogger.Log("ChatPage", string.Format("LoadHistoryMessagesAsync 终止: token为空={0}, chatId为空={1}", string.IsNullOrEmpty(_token), string.IsNullOrEmpty(_chatId)));
+                return;
+            }
 
             _isLoadingHistory = true;
             _hasMoreHistory = true;
             _isInitialLoadDone = false;
             string errMsg = null;
-            AppLogger.Log("ChatPage", "LoadHistoryMessagesAsync started");
+            AppLogger.Log("ChatPage", string.Format("LoadHistoryMessagesAsync 开始: ChatId={0}, ChatType={1}", _chatId, _chatType));
             try
             {
                 MsgProgressBar.Visibility = Visibility.Visible;
@@ -236,6 +464,23 @@ namespace 云湖WP
 
                     foreach (var m in list)
                     {
+                        if (m != null)
+                        {
+                            if (m.IsSelf && _selfAvatarBitmap != null)
+                            {
+                                m.SenderAvatarBitmap = _selfAvatarBitmap;
+                                if (string.IsNullOrEmpty(m.SenderAvatarUrl)) m.SenderAvatarUrl = _selfAvatarUrl;
+                            }
+                            else if (!string.IsNullOrEmpty(m.SenderAvatarUrl))
+                            {
+                                string finalUrl = ImageHelper.FormatQiniuUrl(m.SenderAvatarUrl, 72, 72);
+                                BitmapImage cachedBmp;
+                                if (_senderAvatarBitmapCache.TryGetValue(finalUrl, out cachedBmp))
+                                {
+                                    m.SenderAvatarBitmap = cachedBmp;
+                                }
+                            }
+                        }
                         _messageList.Add(m);
                     }
 
@@ -247,10 +492,14 @@ namespace 云湖WP
                     }
 
                     AppLogger.Log("ChatPage", string.Format("Initial messages loaded: {0}", list.Count));
-                    ScrollToBottom();
 
-                    // 平滑预加载发送者头像
+                    // 平滑预加载发送者头像与本机用户自身头像
                     PreloadSenderAvatars(list);
+                    EnsureSelfAvatarPreloaded();
+
+                    // 确保绑定内部 ScrollViewer 并一次性对齐到底部
+                    EnsureScrollViewerAttached();
+                    ScrollToBottom(true);
                 }
                 else
                 {
@@ -282,7 +531,7 @@ namespace 云湖WP
             EnsureScrollViewerAttached();
 
             // 延迟完成初始状态，避免进入页面时误触发分页
-            await Task.Delay(500);
+            await Task.Delay(300);
             _isInitialLoadDone = true;
             _isLoadingHistory = false;
 
@@ -293,7 +542,8 @@ namespace 云湖WP
         }
 
         /// <summary>
-        /// 划到顶部时自动分页拉取更早的历史消息 (优先使用 /v1/msg/list-message 按 msgId 分页，兼容 by-seq)
+        /// 划到顶部时自动分页拉取更早的历史消息
+        /// 核心：切换 ItemsUpdatingScrollMode + ChangeView 恢复像素级锚点，彻底消除跳动
         /// </summary>
         private async Task LoadMoreHistoryMessagesAsync()
         {
@@ -306,10 +556,10 @@ namespace 云湖WP
             _lastLoadMoreTime = DateTime.Now;
             AppLogger.Log("ChatPage", "LoadMoreHistoryMessagesAsync starting...");
 
-            if (TxtTopLoadMore != null)
-            {
-                TxtTopLoadMore.Text = "正在加载更早历史消息...";
-            }
+            // 显示加载指示器
+            if (TopLoadMoreBorder != null) TopLoadMoreBorder.Visibility = Visibility.Visible;
+            if (TopLoadingRing != null) TopLoadingRing.IsActive = true;
+            if (TxtTopLoadMore != null) TxtTopLoadMore.Text = "正在加载历史消息...";
 
             try
             {
@@ -370,40 +620,40 @@ namespace 云湖WP
 
                     if (newOlderList.Count > 0)
                     {
-                        // 确保新拉取的消息按时间升序排列
                         newOlderList.Sort((a, b) => a.SendTime.CompareTo(b.SendTime));
 
-                        // 记录插入前顶部的消息作为锚点
-                        var anchorItem = _messageList.Count > 0 ? _messageList[0] : null;
-
-                        // 倒序依次插入到头部 index 0
+                        // KeepScrollOffset 模式下，ListView 在头部插入时会自动保持当前像素偏移不跳动
+                        // 无需手动切换 ScrollMode 或调用 ScrollIntoView
                         for (int i = newOlderList.Count - 1; i >= 0; i--)
                         {
-                            _messageList.Insert(0, newOlderList[i]);
-                        }
-
-                        // 保持视口定位在原顶部消息
-                        if (anchorItem != null)
-                        {
-                            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                            var m = newOlderList[i];
+                            if (m != null)
                             {
-                                try
+                                if (m.IsSelf && _selfAvatarBitmap != null)
                                 {
-                                    ChatListView.ScrollIntoView(anchorItem, ScrollIntoViewAlignment.Leading);
+                                    m.SenderAvatarBitmap = _selfAvatarBitmap;
+                                    if (string.IsNullOrEmpty(m.SenderAvatarUrl)) m.SenderAvatarUrl = _selfAvatarUrl;
                                 }
-                                catch { }
-                            });
+                                else if (!string.IsNullOrEmpty(m.SenderAvatarUrl))
+                                {
+                                    string finalUrl = ImageHelper.FormatQiniuUrl(m.SenderAvatarUrl, 72, 72);
+                                    BitmapImage cachedBmp;
+                                    if (_senderAvatarBitmapCache.TryGetValue(finalUrl, out cachedBmp))
+                                    {
+                                        m.SenderAvatarBitmap = cachedBmp;
+                                    }
+                                }
+                            }
+                            _messageList.Insert(0, m);
                         }
 
-                        // 允许继续加载下一页更早的历史消息
+                        // 等待一帧让布局测量完成
+                        await Task.Delay(32);
+
+                        AppLogger.Log("ChatPage", string.Format("Inserted {0} items, total: {1}", newOlderList.Count, _messageList.Count));
+
                         _hasMoreHistory = true;
-                        if (TopLoadMoreBorder != null)
-                        {
-                            TopLoadMoreBorder.Visibility = Visibility.Visible;
-                        }
-
-                        // 后台预加载新拉取历史消息的头像
-                        PreloadSenderAvatars(newOlderList);
+                        if (TopLoadMoreBorder != null) TopLoadMoreBorder.Visibility = Visibility.Visible;
                     }
                     else
                     {
@@ -425,24 +675,31 @@ namespace 云湖WP
             catch (Exception ex)
             {
                 MsgProgressBar.Visibility = Visibility.Collapsed;
-                AppLogger.Log("ChatPage", "LoadMoreHistoryMessages error: " + ex.Message);
+                AppLogger.Log("ChatPage", "LoadMoreHistoryMessages error: " + ex.Message + "\n" + ex.StackTrace);
             }
-
-            if (TxtTopLoadMore != null)
+            finally
             {
-                TxtTopLoadMore.Text = _hasMoreHistory ? "点击加载更早历史消息" : "已加载全部历史消息";
+                if (TopLoadingRing != null) TopLoadingRing.IsActive = false;
+                if (TxtTopLoadMore != null)
+                {
+                    TxtTopLoadMore.Text = _hasMoreHistory ? "向上滑动加载更早消息" : "已加载全部历史消息";
+                }
+                AppLogger.Log("ChatPage", "LoadMoreHistoryMessages finished.");
             }
 
-            // 保持加载锁定至少 1200ms，防止高频惯性滚动连环触发
+            // 加载完毕后延迟 1200ms 再解锁，防止高频惯性滚动连环触发
             await Task.Delay(1200);
+            _lastLoadMoreTime = DateTime.Now;
             _isLoadingHistory = false;
+            AppLogger.Log("ChatPage", "LoadMoreHistory lock released.");
         }
 
         /// <summary>
-        /// 后台异步低优先级预加载消息发送者头像
+        /// 后台异步低优先级预加载消息发送者头像（含自身头像缓存）
         /// </summary>
         private void PreloadSenderAvatars(IEnumerable<ChatMessageItem> items)
         {
+            if (ImageLoader.DisableAllImages) return;
             if (items == null) return;
             var list = new List<ChatMessageItem>(items);
 
@@ -452,35 +709,182 @@ namespace 云湖WP
 
                 foreach (var item in list)
                 {
+                    if (ImageLoader.DisableAllImages) break;
                     if (item == null || string.IsNullOrEmpty(item.SenderAvatarUrl) || item.SenderAvatarBitmap != null) continue;
 
                     var currentItem = item;
                     string finalUrl = ImageHelper.FormatQiniuUrl(currentItem.SenderAvatarUrl, 72, 72);
+
+                    // 优先从内存已解码缓存直接复用
+                    BitmapImage cachedBmp;
+                    if (_senderAvatarBitmapCache.TryGetValue(finalUrl, out cachedBmp))
+                    {
+                        await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                        {
+                            try
+                            {
+                                currentItem.SenderAvatarBitmap = cachedBmp;
+                            }
+                            catch { }
+                        });
+                        continue;
+                    }
 
                     try
                     {
                         byte[] bytes = await ImageLoader.GetImageBytesAsync(finalUrl);
                         if (bytes != null && bytes.Length > 0)
                         {
-                            await Dispatcher.RunAsync(CoreDispatcherPriority.Low, async () =>
+                            await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
                             {
-                                var bmp = await ImageLoader.BytesToBitmapImageAsync(bytes, 72, 72);
-                                if (bmp != null)
+                                try
                                 {
+                                    var bmp = new BitmapImage();
+                                    bmp.DecodePixelWidth = 72;
+                                    bmp.DecodePixelHeight = 72;
+                                    bmp.DecodePixelType = DecodePixelType.Logical;
+                                    using (var stream = new InMemoryRandomAccessStream())
+                                    {
+                                        using (var writer = new DataWriter(stream.GetOutputStreamAt(0)))
+                                        {
+                                            writer.WriteBytes(bytes);
+                                            writer.StoreAsync().AsTask().Wait();
+                                        }
+                                        stream.Seek(0);
+                                        bmp.SetSource(stream);
+                                    }
+                                    _senderAvatarBitmapCache[finalUrl] = bmp;
                                     currentItem.SenderAvatarBitmap = bmp;
+
+                                    // 顺便缓存自身头像，下次发消息直接复用
+                                    if (currentItem.IsSelf && _selfAvatarBitmap == null)
+                                    {
+                                        _selfAvatarBitmap = bmp;
+                                        _selfAvatarUrl = currentItem.SenderAvatarUrl ?? "";
+                                    }
                                 }
+                                catch { }
                             });
                         }
                     }
                     catch { }
 
-                    await Task.Delay(15);
+                    await Task.Delay(25);
                 }
             });
         }
 
-        private void ScrollToBottom()
+        /// <summary>
+        /// 预拉取本机用户头像并缓存，自动刷给消息列表中所有我方消息
+        /// </summary>
+        private void EnsureSelfAvatarPreloaded()
         {
+            if (ImageLoader.DisableAllImages) return;
+
+            // 如果已有全局内存缓存，立即刷给当前列表所有自己的消息
+            if (_selfAvatarBitmap != null)
+            {
+                ApplySelfAvatarToMessageList();
+                return;
+            }
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    string avatarUrl = _selfAvatarUrl;
+
+                    // 1. 如果尚未获取过自身头像 URL，从用户资料接口拉取
+                    if (string.IsNullOrEmpty(avatarUrl) && !string.IsNullOrEmpty(_token))
+                    {
+                        var userInfo = await UserApi.GetUserInfoAsync(_token);
+                        if (userInfo != null && !string.IsNullOrEmpty(userInfo.AvatarUrl))
+                        {
+                            avatarUrl = userInfo.AvatarUrl;
+                        }
+                    }
+
+                    // 2. 如果接口拉取失败，尝试从已有消息中找
+                    if (string.IsNullOrEmpty(avatarUrl))
+                    {
+                        for (int i = _messageList.Count - 1; i >= 0; i--)
+                        {
+                            var m = _messageList[i];
+                            if (m != null && m.IsSelf && !string.IsNullOrEmpty(m.SenderAvatarUrl))
+                            {
+                                avatarUrl = m.SenderAvatarUrl;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (string.IsNullOrEmpty(avatarUrl)) return;
+
+                    _selfAvatarUrl = avatarUrl;
+                    string finalUrl = ImageHelper.FormatQiniuUrl(avatarUrl, 72, 72);
+                    byte[] bytes = await ImageLoader.GetImageBytesAsync(finalUrl);
+                    if (bytes != null && bytes.Length > 0)
+                    {
+                        await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            try
+                            {
+                                var bmp = new BitmapImage();
+                                bmp.DecodePixelWidth = 72;
+                                bmp.DecodePixelHeight = 72;
+                                bmp.DecodePixelType = DecodePixelType.Logical;
+                                using (var stream = new InMemoryRandomAccessStream())
+                                {
+                                    using (var writer = new DataWriter(stream.GetOutputStreamAt(0)))
+                                    {
+                                        writer.WriteBytes(bytes);
+                                        writer.StoreAsync().AsTask().Wait();
+                                    }
+                                    stream.Seek(0);
+                                    bmp.SetSource(stream);
+                                }
+                                _selfAvatarBitmap = bmp;
+                                ApplySelfAvatarToMessageList();
+                            }
+                            catch { }
+                        });
+                    }
+                }
+                catch { }
+            });
+        }
+
+        /// <summary>
+        /// 将当前已缓存的自身头像立即应用到消息列表中所有我方消息
+        /// </summary>
+        private void ApplySelfAvatarToMessageList()
+        {
+            if (_selfAvatarBitmap == null) return;
+            for (int i = 0; i < _messageList.Count; i++)
+            {
+                var m = _messageList[i];
+                if (m != null && m.IsSelf && m.SenderAvatarBitmap == null)
+                {
+                    m.SenderAvatarBitmap = _selfAvatarBitmap;
+                    if (string.IsNullOrEmpty(m.SenderAvatarUrl)) m.SenderAvatarUrl = _selfAvatarUrl;
+                }
+            }
+        }
+
+        private void ScrollToBottom(bool disableAnimation = true)
+        {
+            EnsureScrollViewerAttached();
+
+            if (_chatScrollViewer != null)
+            {
+                try
+                {
+                    _chatScrollViewer.ChangeView(null, double.MaxValue, null, disableAnimation);
+                    return;
+                }
+                catch { }
+            }
+
             if (_messageList.Count > 0)
             {
                 try
@@ -488,6 +892,25 @@ namespace 云湖WP
                     ChatListView.ScrollIntoView(_messageList[_messageList.Count - 1]);
                 }
                 catch { }
+            }
+        }
+
+        /// <summary>
+        /// 取消正在进行的图片/视频上传
+        /// </summary>
+        private void BtnCancelUpload_Click(object sender, RoutedEventArgs e)
+        {
+            if (_uploadCts != null)
+            {
+                try
+                {
+                    _uploadCts.Cancel();
+                }
+                catch { }
+            }
+            if (UploadProgressPanel != null)
+            {
+                UploadProgressPanel.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -504,6 +927,7 @@ namespace 云湖WP
                 picker.FileTypeFilter.Add(".png");
                 picker.FileTypeFilter.Add(".gif");
                 picker.FileTypeFilter.Add(".bmp");
+                picker.ContinuationData["Action"] = "PickImage";
                 picker.PickSingleFileAndContinue();
             }
             catch (Exception ex)
@@ -513,32 +937,86 @@ namespace 云湖WP
 #endif
         }
 
+        private void AppBarBtnSendVideo_Click(object sender, RoutedEventArgs e)
+        {
+#if WINDOWS_PHONE_APP
+            try
+            {
+                var picker = new Windows.Storage.Pickers.FileOpenPicker();
+                picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail;
+                picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.VideosLibrary;
+                picker.FileTypeFilter.Add(".mp4");
+                picker.FileTypeFilter.Add(".mov");
+                picker.FileTypeFilter.Add(".wmv");
+                picker.FileTypeFilter.Add(".avi");
+                picker.FileTypeFilter.Add(".3gp");
+                picker.FileTypeFilter.Add(".mkv");
+                picker.FileTypeFilter.Add(".webm");
+                picker.ContinuationData["Action"] = "PickVideo";
+                picker.PickSingleFileAndContinue();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("PickVideo failed: " + ex.Message);
+            }
+#endif
+        }
+
 #if WINDOWS_PHONE_APP
         /// <summary>
-        /// 接收系统相册选图回调并直传七牛云发送图片
+        /// 接收系统相册/视频库选择回调并直传七牛云发送媒体
         /// </summary>
         public async void ContinueFileOpenPicker(Windows.ApplicationModel.Activation.FileOpenPickerContinuationEventArgs args)
         {
-            if (args != null && args.Files != null && args.Files.Count > 0)
+            try
             {
-                var file = args.Files[0];
-                await UploadAndSendLocalImageAsync(file);
+                if (args != null && args.Files != null && args.Files.Count > 0)
+                {
+                    var file = args.Files[0];
+                    bool isVideo = false;
+                    if (args.ContinuationData != null && args.ContinuationData.ContainsKey("Action") && (args.ContinuationData["Action"] as string) == "PickVideo")
+                    {
+                        isVideo = true;
+                    }
+                    else if (file != null)
+                    {
+                        string ext = file.FileType.ToLowerInvariant();
+                        if (ext == ".mp4" || ext == ".mov" || ext == ".wmv" || ext == ".avi" || ext == ".3gp" || ext == ".mkv" || ext == ".webm")
+                        {
+                            isVideo = true;
+                        }
+                    }
+
+                    if (isVideo)
+                    {
+                        await UploadAndSendLocalVideoAsync(file);
+                    }
+                    else
+                    {
+                        await UploadAndSendLocalImageAsync(file);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Log("ChatPage", "ContinueFileOpenPicker error: " + ex.Message + "\n" + ex.StackTrace);
             }
         }
 #endif
 
         /// <summary>
-        /// 上传本地图片到七牛云并发送图片消息 (带实时进度条显示)
+        /// 上传本地图片到七牛云并发送图片消息 (带实时进度条显示与取消支持)
         /// </summary>
         private async Task UploadAndSendLocalImageAsync(Windows.Storage.StorageFile file)
         {
             if (file == null || string.IsNullOrEmpty(_token)) return;
 
             string errMsg = null;
+            _uploadCts = new CancellationTokenSource();
             UploadProgressPanel.Visibility = Visibility.Visible;
             UploadProgressBar.Value = 0;
             TxtUploadPercentage.Text = "0%";
-            TxtUploadStatus.Text = "准备上传...";
+            TxtUploadStatus.Text = "准备上传图片...";
 
             var uploadProgress = new Progress<double>(pct =>
             {
@@ -560,8 +1038,8 @@ namespace 云湖WP
 
             try
             {
-                // 调用系统七牛云直传组件 (附带实时进度报告)
-                string publicUrl = await QiniuUploadHelper.UploadImageAsync(file, _token, uploadProgress);
+                // 调用系统七牛云直传组件 (附带实时进度报告与 CancellationToken)
+                string publicUrl = await QiniuUploadHelper.UploadImageAsync(file, _token, uploadProgress, _uploadCts.Token);
                 if (!string.IsNullOrEmpty(publicUrl))
                 {
                     await DoSendImageAsync(publicUrl);
@@ -571,13 +1049,28 @@ namespace 云湖WP
                     errMsg = "上传图片未获取到访问地址";
                 }
             }
+            catch (OperationCanceledException)
+            {
+                AppLogger.Log("ChatPage", "用户取消了图片上传");
+            }
             catch (Exception ex)
             {
                 errMsg = "图片上传失败: " + ex.Message;
             }
             finally
             {
-                UploadProgressPanel.Visibility = Visibility.Collapsed;
+                _uploadCts = null;
+                var ignore = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    try
+                    {
+                        if (UploadProgressPanel != null)
+                        {
+                            UploadProgressPanel.Visibility = Visibility.Collapsed;
+                        }
+                    }
+                    catch { }
+                });
             }
 
             if (errMsg != null)
@@ -586,17 +1079,206 @@ namespace 云湖WP
             }
         }
 
+        /// <summary>
+        /// 上传本地视频到七牛云并发送视频消息 (带实时进度条显示与取消支持)
+        /// </summary>
+        private async Task UploadAndSendLocalVideoAsync(Windows.Storage.StorageFile file)
+        {
+            if (file == null || string.IsNullOrEmpty(_token)) return;
+
+            string errMsg = null;
+            _uploadCts = new CancellationTokenSource();
+            UploadProgressPanel.Visibility = Visibility.Visible;
+            UploadProgressBar.Value = 0;
+            TxtUploadPercentage.Text = "0%";
+            TxtUploadStatus.Text = "准备上传视频...";
+
+            var uploadProgress = new Progress<double>(pct =>
+            {
+                UploadProgressBar.Value = pct;
+                TxtUploadPercentage.Text = string.Format("{0:0}%", pct);
+                if (pct < 20)
+                {
+                    TxtUploadStatus.Text = "准备视频数据...";
+                }
+                else if (pct < 95)
+                {
+                    TxtUploadStatus.Text = "正在直传七牛云...";
+                }
+                else
+                {
+                    TxtUploadStatus.Text = "上传完成，正在发送...";
+                }
+            });
+
+            try
+            {
+                // 获取本地视频基础属性 (大小与文件名)
+                var props = await file.GetBasicPropertiesAsync();
+                long fileSize = (long)props.Size;
+                string fileName = file.Name;
+
+                // 调用系统七牛云直传组件 (附带实时进度报告与 CancellationToken)
+                var uploadRes = await QiniuUploadHelper.UploadVideoDetailedAsync(file, _token, uploadProgress, _uploadCts.Token);
+                if (uploadRes != null && !string.IsNullOrEmpty(uploadRes.Key))
+                {
+                    await DoSendVideoAsync(uploadRes);
+                }
+                else
+                {
+                    errMsg = "上传视频未获取到访问地址";
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                AppLogger.Log("ChatPage", "用户取消了视频上传");
+            }
+            catch (Exception ex)
+            {
+                errMsg = "视频上传失败: " + ex.Message;
+            }
+            finally
+            {
+                _uploadCts = null;
+                var ignore = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    try
+                    {
+                        if (UploadProgressPanel != null)
+                        {
+                            UploadProgressPanel.Visibility = Visibility.Collapsed;
+                        }
+                    }
+                    catch { }
+                });
+            }
+
+            if (errMsg != null)
+            {
+                await ShowToastAsync(errMsg);
+            }
+        }
+
+        private async Task DoSendVideoAsync(QiniuUploadResult videoResult)
+        {
+            if (videoResult == null || string.IsNullOrWhiteSpace(videoResult.Key)) return;
+
+            string msgId = Guid.NewGuid().ToString("N");
+
+            // 本地乐观添加视频消息 (ContentType = 10 视频)
+            var localMsg = new ChatMessageItem
+            {
+                MsgId = msgId,
+                ChatId = _chatId,
+                ChatType = _chatType,
+                Direction = "right",
+                ContentType = 10,
+                VideoUrl = videoResult.PublicUrl,
+                FileName = !string.IsNullOrEmpty(videoResult.FileName) ? videoResult.FileName : "视频",
+                FileSize = videoResult.FileSize,
+                MediaWidth = videoResult.Width,
+                MediaHeight = videoResult.Height,
+                SendTime = DateTime.UtcNow.Ticks / 10000 - 62135596800000L, // UTC ms
+                SenderName = "我",
+                SenderAvatarUrl = _selfAvatarUrl,
+                SenderAvatarBitmap = _selfAvatarBitmap
+            };
+            localMsg.InitParsedData();
+
+            _messageList.Add(localMsg);
+            if (EmptyMsgPanel != null)
+            {
+                EmptyMsgPanel.Visibility = Visibility.Collapsed;
+            }
+            ScrollToBottom(true);
+
+            string sendErr = null;
+            try
+            {
+                var res = await MessageApi.SendVideoMessageAsync(
+                    _token, 
+                    _chatId, 
+                    _chatType, 
+                    videoResult.Key, 
+                    videoResult.Hash, 
+                    videoResult.FileName, 
+                    videoResult.FileSize, 
+                    videoResult.Width, 
+                    videoResult.Height, 
+                    videoResult.MimeType, 
+                    videoResult.FileExtension, 
+                    msgId);
+
+                if (!res.IsSuccess)
+                {
+                    sendErr = "发送视频失败: " + res.Msg;
+                }
+            }
+            catch (Exception ex)
+            {
+                sendErr = "发送视频异常: " + ex.Message;
+            }
+
+            if (sendErr != null)
+            {
+                await ShowToastAsync(sendErr);
+            }
+        }
+
+        private async Task DoSendVideoAsync(string videoUrl, string fileName = null, long fileSize = 0)
+        {
+            if (string.IsNullOrWhiteSpace(videoUrl)) return;
+            string cleanUrl = videoUrl.Trim();
+            string key = cleanUrl;
+            if (key.Contains("/"))
+            {
+                key = key.Substring(key.LastIndexOf('/') + 1);
+            }
+            int qIdx = key.IndexOf('?');
+            if (qIdx >= 0)
+            {
+                key = key.Substring(0, qIdx);
+            }
+            string ext = "mp4";
+            if (key.Contains("."))
+            {
+                ext = key.Substring(key.LastIndexOf('.') + 1).ToLowerInvariant();
+            }
+
+            var result = new QiniuUploadResult
+            {
+                Key = key,
+                Hash = key.Contains(".") ? key.Substring(0, key.IndexOf('.')) : key,
+                FileName = !string.IsNullOrEmpty(fileName) ? fileName : key,
+                FileSize = fileSize,
+                FileExtension = ext,
+                MimeType = "video/" + ext,
+                PublicUrl = cleanUrl,
+                Width = 0,
+                Height = 0
+            };
+            await DoSendVideoAsync(result);
+        }
+
         private async void AppBarBtnSendUrl_Click(object sender, RoutedEventArgs e)
         {
             string currentText = TxtInput.Text.Trim();
             if (!string.IsNullOrEmpty(currentText) && (currentText.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || currentText.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
             {
                 TxtInput.Text = "";
-                await DoSendImageAsync(currentText);
+                string lower = currentText.ToLowerInvariant();
+                if (lower.EndsWith(".mp4") || lower.EndsWith(".mov") || lower.EndsWith(".wmv") || lower.EndsWith(".avi") || lower.EndsWith(".3gp") || lower.EndsWith(".mkv") || lower.EndsWith(".webm") || lower.Contains("/video/"))
+                {
+                    await DoSendVideoAsync(currentText);
+                }
+                else
+                {
+                    await DoSendImageAsync(currentText);
+                }
             }
             else
             {
-                await ShowToastAsync("请先在输入框中输入或粘贴图片 URL (http/https)，然后点击此项发送");
+                await ShowToastAsync("请先在输入框中输入或粘贴媒体 URL (http/https 图片或视频直链)，然后点击此项发送");
             }
         }
 
@@ -612,10 +1294,9 @@ namespace 云湖WP
 
         private async void AppBarBtnViewLogs_Click(object sender, RoutedEventArgs e)
         {
-            string logs = AppLogger.GetAllLogs();
+            string logs = await AppLogger.ReadFullPersistedLogsAsync();
             if (string.IsNullOrEmpty(logs)) logs = "暂无诊断日志";
-            var dialog = new Windows.UI.Popups.MessageDialog(logs, "运行与上传诊断日志");
-            await dialog.ShowAsync();
+            Frame.Navigate(typeof(TextViewerPage), logs);
         }
 
         #region 软键盘与 CommandBar 交互防冲突处理
@@ -696,11 +1377,12 @@ namespace 云湖WP
 
             string cleanUrl = imageUrl.Trim();
             string msgText = string.Format("![图片]({0})", cleanUrl);
+            string msgId = Guid.NewGuid().ToString("N");
 
             // 本地乐观添加图片消息
             var localMsg = new ChatMessageItem
             {
-                MsgId = Guid.NewGuid().ToString("N"),
+                MsgId = msgId,
                 ChatId = _chatId,
                 ChatType = _chatType,
                 Direction = "right",
@@ -708,17 +1390,20 @@ namespace 云湖WP
                 ImageUrl = cleanUrl,
                 Text = msgText,
                 SendTime = DateTime.UtcNow.Ticks / 10000 - 62135596800000L, // UTC ms
-                SenderName = "我"
+                SenderName = "我",
+                SenderAvatarUrl = _selfAvatarUrl,
+                SenderAvatarBitmap = _selfAvatarBitmap
             };
+            localMsg.InitParsedData();
 
             _messageList.Add(localMsg);
             EmptyMsgPanel.Visibility = Visibility.Collapsed;
-            ScrollToBottom();
+            ScrollToBottom(true);
 
             string sendErr = null;
             try
             {
-                var res = await MessageApi.SendImageMessageAsync(_token, _chatId, _chatType, cleanUrl, msgText);
+                var res = await MessageApi.SendImageMessageAsync(_token, _chatId, _chatType, cleanUrl, msgText, msgId);
                 if (!res.IsSuccess)
                 {
                     sendErr = "发送图片失败: " + res.Msg;
@@ -771,27 +1456,32 @@ namespace 云湖WP
 
             try
             {
+                string msgId = Guid.NewGuid().ToString("N");
+
                 // 本地乐观添加消息
                 var localMsg = new ChatMessageItem
                 {
-                    MsgId = Guid.NewGuid().ToString("N"),
+                    MsgId = msgId,
                     ChatId = _chatId,
                     ChatType = _chatType,
                     Direction = "right",
                     ContentType = 1,
                     Text = text.Trim(),
                     SendTime = DateTime.UtcNow.Ticks / 10000 - 62135596800000L, // UTC ms
-                    SenderName = "我"
+                    SenderName = "我",
+                    SenderAvatarUrl = _selfAvatarUrl,
+                    SenderAvatarBitmap = _selfAvatarBitmap  // 直接复用缓存，头像即时显示
                 };
+                localMsg.InitParsedData();
 
                 _messageList.Add(localMsg);
                 EmptyMsgPanel.Visibility = Visibility.Collapsed;
-                ScrollToBottom();
+                ScrollToBottom(true);
 
                 string sendErr = null;
                 try
                 {
-                    var res = await MessageApi.SendTextMessageAsync(_token, _chatId, _chatType, text.Trim());
+                    var res = await MessageApi.SendTextMessageAsync(_token, _chatId, _chatType, text.Trim(), msgId);
                     if (!res.IsSuccess)
                     {
                         sendErr = "发送失败: " + res.Msg;
@@ -814,6 +1504,38 @@ namespace 云湖WP
         }
 
         /// <summary>
+        /// 点击头像：自己 → MyProfilePage；对方 → UserDetailPage
+        /// </summary>
+        private void Avatar_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            e.Handled = true;
+            var element = sender as FrameworkElement;
+            if (element == null) return;
+
+            var msg = element.DataContext as ChatMessageItem;
+            if (msg == null) return;
+
+            if (msg.IsSelf)
+            {
+                // 自己的头像 → 进入我的个人信息页面
+                Frame.Navigate(typeof(MyProfilePage));
+            }
+            else
+            {
+                // 对方头像 → 进入对方用户详情页面
+                if (!string.IsNullOrEmpty(msg.SenderId))
+                {
+                    Frame.Navigate(typeof(UserDetailPage), new UserDetailNavArgs
+                    {
+                        UserId = msg.SenderId,
+                        Name = msg.DisplaySenderName,
+                        AvatarUrl = msg.SenderAvatarUrl ?? ""
+                    });
+                }
+            }
+        }
+
+        /// <summary>
         /// 消息单击弹出操作菜单 (复制、引用回复、撤回、删除)
         /// </summary>
         private void MessageBubble_Tapped(object sender, TappedRoutedEventArgs e)
@@ -825,6 +1547,31 @@ namespace 云湖WP
             if (msg == null) return;
 
             var flyout = new MenuFlyout();
+
+            // 0. 视频播放与直链 (如果是视频消息)
+            if (msg.IsVideoMsg && !string.IsNullOrEmpty(msg.ExtractedVideoUrl))
+            {
+                string rawVideoUrl = msg.ExtractedVideoUrl;
+                string fullVideoUrl = ImageHelper.FormatQiniuUrl(rawVideoUrl, 0, 0);
+
+                var itemPlayVideo = new MenuFlyoutItem { Text = "播放视频 (专用播放器)" };
+                itemPlayVideo.Click += (s, args) =>
+                {
+                    Frame.Navigate(typeof(VideoPlayerPage), new VideoPlayerNavArgs
+                    {
+                        VideoUrl = fullVideoUrl,
+                        Title = string.Format("{0} 的视频", msg.DisplaySenderName)
+                    });
+                };
+                flyout.Items.Add(itemPlayVideo);
+
+                var itemCopyVideo = new MenuFlyoutItem { Text = "复制/查看视频直链" };
+                itemCopyVideo.Click += (s, args) =>
+                {
+                    Frame.Navigate(typeof(TextViewerPage), fullVideoUrl);
+                };
+                flyout.Items.Add(itemCopyVideo);
+            }
 
             // 1. 复制/查看文本 (进入独立全屏页面，巨大输入框随意复制)
             if (!string.IsNullOrEmpty(msg.Text))
@@ -970,6 +1717,30 @@ namespace 云湖WP
         }
 
         /// <summary>
+        /// 点击视频消息预览块，直接打开专属视频播放器页面 (支持 Referer 防盗链流式缓冲与硬件解码)
+        /// </summary>
+        private void VideoBubble_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            e.Handled = true;
+            var element = sender as FrameworkElement;
+            if (element == null) return;
+
+            var msg = element.DataContext as ChatMessageItem;
+            if (msg == null) return;
+
+            string rawUrl = msg.ExtractedVideoUrl;
+            if (string.IsNullOrEmpty(rawUrl)) return;
+
+            string fullUrl = ImageHelper.FormatQiniuUrl(rawUrl, 0, 0);
+
+            Frame.Navigate(typeof(VideoPlayerPage), new VideoPlayerNavArgs
+            {
+                VideoUrl = fullUrl,
+                Title = string.Format("{0} 的视频", msg.DisplaySenderName)
+            });
+        }
+
+        /// <summary>
         /// 点击图片消息预览块，进入全屏图片预览器
         /// </summary>
         private void ImageBubble_Tapped(object sender, TappedRoutedEventArgs e)
@@ -993,27 +1764,21 @@ namespace 云湖WP
         }
 
         /// <summary>
-        /// 点击用户头像进入用户详情页
+        /// 点击 HTML 网页富文本消息卡片，直接打开复制/文本查看页 (不渲染原生 HTML，避免卡顿与排版异常)
         /// </summary>
-        private void Avatar_Tapped(object sender, TappedRoutedEventArgs e)
+        private void HtmlBubble_Tapped(object sender, TappedRoutedEventArgs e)
         {
+            e.Handled = true;
             var element = sender as FrameworkElement;
             if (element == null) return;
 
             var msg = element.DataContext as ChatMessageItem;
             if (msg == null) return;
 
-            string targetUserId = msg.IsSelf ? "" : (msg.SenderId ?? _chatId);
-            string targetName = msg.IsSelf ? "我" : msg.DisplaySenderName;
-            string targetAvatar = msg.IsSelf ? "" : msg.SenderAvatarUrl;
-
-            Frame.Navigate(typeof(UserDetailPage), new 云湖WP.Api.User.Info.UserDetailNavArgs
-            {
-                UserId = targetUserId,
-                Name = targetName,
-                AvatarUrl = targetAvatar
-            });
+            string textToView = msg.Text ?? "";
+            Frame.Navigate(typeof(TextViewerPage), textToView);
         }
+
 
         private void BtnBack_Click(object sender, RoutedEventArgs e)
         {
@@ -1025,6 +1790,11 @@ namespace 云湖WP
 
         private async void BtnRefresh_Click(object sender, RoutedEventArgs e)
         {
+            _isLoadingHistory = false;
+            if (string.IsNullOrEmpty(_token))
+            {
+                _token = await TokenManager.GetTokenAsync();
+            }
             await LoadHistoryMessagesAsync();
         }
 

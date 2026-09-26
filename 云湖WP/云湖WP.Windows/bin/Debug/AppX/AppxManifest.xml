@@ -22,7 +22,7 @@
   </Resources>
   <Applications>
     <Application Id="App" Executable="云湖WP.Windows.exe" EntryPoint="云湖WP.Windows.App">
-      <m2:VisualElements DisplayName="云湖WP.Windows" Square150x150Logo="Assets\Logo.png" Square30x30Logo="Assets\SmallLogo.png" Description="云湖WP.Windows" ForegroundText="light" BackgroundColor="#464646">
+      <m2:VisualElements DisplayName="云湖WP.Windows" Square150x150Logo="Assets\Logo.png" Square30x30Logo="Assets\SmallLogo.png" Description="云湖WP.Windows" ForegroundText="light" BackgroundColor="#464646" ToastCapable="true">
         <m2:SplashScreen Image="Assets\SplashScreen.png" />
       </m2:VisualElements>
     </Application>

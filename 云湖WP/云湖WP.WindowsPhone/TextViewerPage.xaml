@@ -8,45 +8,6 @@
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Page.Resources>
-        <Style x:Key="LargeTextViewerTextBoxStyle" TargetType="TextBox">
-            <Setter Property="MinWidth" Value="{ThemeResource TextControlThemeMinWidth}" />
-            <Setter Property="MinHeight" Value="{ThemeResource TextControlThemeMinHeight}" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="Background" Value="#18FFFFFF" />
-            <Setter Property="BorderBrush" Value="{ThemeResource PhoneAccentBrush}" />
-            <Setter Property="SelectionHighlightColor" Value="{ThemeResource PhoneAccentBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="FontFamily" Value="{ThemeResource PhoneFontFamilyNormal}" />
-            <Setter Property="FontSize" Value="17" />
-            <Setter Property="TextWrapping" Value="Wrap" />
-            <Setter Property="Padding" Value="12" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Grid>
-                            <Border x:Name="BackgroundElement"
-                                    Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}">
-                                <ScrollViewer x:Name="ContentElement"
-                                              AutomationProperties.AccessibilityView="Raw"
-                                              HorizontalScrollMode="Disabled"
-                                              VerticalScrollMode="Auto"
-                                              HorizontalScrollBarVisibility="Disabled"
-                                              VerticalScrollBarVisibility="Auto"
-                                              IsDeferredScrollingEnabled="False"
-                                              Margin="{TemplateBinding BorderThickness}"
-                                              Padding="{TemplateBinding Padding}"
-                                              Foreground="White" />
-                            </Border>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Page.Resources>
-
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -54,21 +15,26 @@
         </Grid.RowDefinitions>
 
         <!-- Metro 风格大标题 (云湖 / 查看与复制) -->
-        <StackPanel Grid.Row="0" Margin="19,10,19,6">
-            <TextBlock Text="云湖" FontSize="11" FontWeight="Normal" Foreground="{ThemeResource PhoneMidBrush}" />
+        <StackPanel x:Name="HeaderPanel" Grid.Row="0" Margin="19,10,19,6">
+            <TextBlock x:Name="TxtSubTitle" Text="云湖" FontSize="11" FontWeight="Normal" Foreground="{ThemeResource PhoneMidBrush}" />
             <TextBlock x:Name="TxtPageTitle" Text="查看与复制" FontSize="42" FontWeight="Light" Margin="0,-4,0,0" />
         </StackPanel>
 
-        <!-- 全屏巨大文本输入/查看框 (高对比度纯白字体，支持任意滚动、长按选中、全选、复制、编辑) -->
+        <!-- 内容区域：包含 TextBox (文本模式) 与 WebView (网页渲染模式) -->
         <Grid Grid.Row="1" Margin="16,0,16,16">
+            <!-- 纯文本输入/查看/复制框 -->
             <TextBox x:Name="TxtMainContent"
-                     Style="{StaticResource LargeTextViewerTextBoxStyle}"
                      AcceptsReturn="True"
                      TextWrapping="Wrap"
-                     FontSize="17"
-                     Foreground="White"
+                     FontSize="16"
                      HorizontalAlignment="Stretch"
                      VerticalAlignment="Stretch" />
+
+            <!-- WebView 网页渲染视图 -->
+            <WebView x:Name="WebMainContent"
+                     HorizontalAlignment="Stretch"
+                     VerticalAlignment="Stretch"
+                     Visibility="Collapsed" />
         </Grid>
     </Grid>
 
@@ -76,6 +42,8 @@
         <CommandBar x:Name="ViewerCommandBar" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" ClosedDisplayMode="Compact">
             <CommandBar.PrimaryCommands>
                 <AppBarButton x:Name="AppBarBtnSelectAll" Icon="SelectAll" Label="全选" Click="AppBarBtnSelectAll_Click" />
+                <AppBarButton x:Name="AppBarBtnToggleWeb" Icon="Globe" Label="WebView渲染" Click="AppBarBtnToggleWeb_Click" />
+                <AppBarButton x:Name="AppBarBtnBrowser" Icon="OpenFile" Label="系统浏览器" Click="AppBarBtnBrowser_Click" />
                 <AppBarButton x:Name="AppBarBtnClear" Icon="Clear" Label="清空" Click="AppBarBtnClear_Click" />
             </CommandBar.PrimaryCommands>
         </CommandBar>

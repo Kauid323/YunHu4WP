@@ -109,8 +109,9 @@
 
     <!-- 3. 原生 Windows Phone 8.1 底部应用栏 CommandBar -->
     <Page.BottomAppBar>
-        <CommandBar Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <CommandBar x:Name="DetailCommandBar" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
             <CommandBar.PrimaryCommands>
+                <AppBarButton x:Name="AppBarBtnAddFriend" Icon="AddFriend" Label="添加好友" Click="BtnAddFriend_Click" Visibility="Collapsed" />
                 <AppBarButton x:Name="AppBarBtnSendMessage" Icon="Message" Label="发送消息" Click="BtnSendMessage_Click" />
                 <AppBarButton x:Name="AppBarBtnCopyId" Icon="Copy" Label="复制 ID" Click="BtnCopyId_Click" />
                 <AppBarButton x:Name="AppBarBtnRefresh" Icon="Refresh" Label="刷新" Click="BtnRefresh_Click" />

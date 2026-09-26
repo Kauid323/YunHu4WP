@@ -7,6 +7,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
+using 云湖WP.Api.Friend;
 using 云湖WP.Api.Message;
 using 云湖WP.Api.User;
 using 云湖WP.Api.User.Info;
@@ -24,6 +25,7 @@ namespace 云湖WP
         private string _userId = "";
         private string _userName = "";
         private string _avatarUrl = "";
+        private string _selfUserId = "";
 
         public UserDetailPage()
         {
@@ -54,7 +56,7 @@ namespace 云湖WP
             // 初始显示传入的概要信息
             UpdateInitialUI();
 
-            // 从服务端拉取完整资料
+            // 从服务端拉取完整资料并检测通讯录好友状态
             LoadUserDetailAsync();
         }
 
@@ -125,6 +127,7 @@ namespace 云湖WP
                     {
                         var data = selfRes.Data;
                         _userId = data.Id;
+                        _selfUserId = data.Id;
                         _userName = data.Name;
                         _avatarUrl = data.AvatarUrl;
 
@@ -154,9 +157,44 @@ namespace 云湖WP
                 UserProgressBar.Visibility = Visibility.Collapsed;
             }
 
+            // 异步检测当前用户是否存在于通讯录中
+            await CheckFriendStatusAsync();
+
             if (errMsg != null)
             {
                 await ShowToastAsync(errMsg);
+            }
+        }
+
+        private async Task CheckFriendStatusAsync()
+        {
+            if (string.IsNullOrEmpty(_token)) return;
+
+            try
+            {
+                if (string.IsNullOrEmpty(_selfUserId))
+                {
+                    var selfRes = await UserApi.GetSelfInfoAsync(_token);
+                    if (selfRes != null && selfRes.Data != null)
+                    {
+                        _selfUserId = selfRes.Data.Id ?? "";
+                    }
+                }
+
+                // 如果是本人，不显示添加好友按钮
+                if (string.IsNullOrEmpty(_userId) || _userId == _selfUserId)
+                {
+                    AppBarBtnAddFriend.Visibility = Visibility.Collapsed;
+                    return;
+                }
+
+                // 检查通讯录好友列表
+                bool exists = await FriendApi.IsContactExistsAsync(_token, _userId, 1);
+                AppBarBtnAddFriend.Visibility = exists ? Visibility.Collapsed : Visibility.Visible;
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Log("UserDetailPage", "CheckFriendStatusAsync error: " + ex.Message);
             }
         }
 
@@ -214,6 +252,41 @@ namespace 云湖WP
                 }
                 catch { }
             });
+        }
+
+        private async void BtnAddFriend_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(_userId)) return;
+
+            string successMsg = null;
+            string errMsg = null;
+
+            try
+            {
+                var result = await FriendApi.AddFriendAsync(_token, _userId, 1, "请求添加为好友");
+                if (result != null && result.Code == 1)
+                {
+                    AppBarBtnAddFriend.Visibility = Visibility.Collapsed;
+                    successMsg = "好友申请已成功发送！";
+                }
+                else
+                {
+                    errMsg = (result != null && !string.IsNullOrEmpty(result.Msg)) ? result.Msg : "添加好友失败，请稍后重试";
+                }
+            }
+            catch (Exception ex)
+            {
+                errMsg = "添加好友异常: " + ex.Message;
+            }
+
+            if (successMsg != null)
+            {
+                await ShowToastAsync(successMsg);
+            }
+            else if (errMsg != null)
+            {
+                await ShowToastAsync(errMsg);
+            }
         }
 
         private void BtnSendMessage_Click(object sender, RoutedEventArgs e)

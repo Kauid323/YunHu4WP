@@ -16,8 +16,11 @@ using 云湖WP.Api.Common;
 using 云湖WP.Api.Community;
 using 云湖WP.Api.Community.PostDetail;
 using 云湖WP.Api.Conversation;
+using 云湖WP.Api.Friend;
 using 云湖WP.Api.Message;
+using 云湖WP.Api.Sticky;
 using 云湖WP.Api.User;
+using 云湖WP.Api.WebSocket;
 using 云湖WP.Token;
 using 云湖WP.Utils;
 
@@ -39,6 +42,9 @@ namespace 云湖WP
         private ScrollViewer _communityScrollViewer;
         private DispatcherTimer _scrollDebounceTimer;
 
+        // 会话列表数据源 (支持 DiffUtil 增量原地刷新)
+        private ObservableCollection<ConversationItem> _conversationList = new ObservableCollection<ConversationItem>();
+
         // 社区动态数据源与筛选状态
         private ObservableCollection<CommunityPostItem> _communityPostList = new ObservableCollection<CommunityPostItem>();
         private string _currentCommunityFilter = "latest"; // "latest" (最新) 或 "hot" (热门)
@@ -46,10 +52,22 @@ namespace 云湖WP
         private bool _isLoadingCommunity = false;
         private bool _hasMoreCommunity = true;
 
+        // 置顶会话数据源
+        private ObservableCollection<StickyItem> _stickyList = new ObservableCollection<StickyItem>();
+
         public MainPage()
         {
             this.InitializeComponent();
             this.NavigationCacheMode = NavigationCacheMode.Required;
+            if (ConvListView != null)
+            {
+                ConvListView.ItemsSource = _conversationList;
+            }
+            if (StickyItemsControl != null)
+            {
+                StickyItemsControl.ItemsSource = _stickyList;
+            }
+            YunhuWebSocketService.Instance.OnNewMessageReceived += WebSocket_OnNewMessageReceived;
             InitScrollDebounceTimer();
         }
 
@@ -207,7 +225,7 @@ namespace 云湖WP
             HardwareButtons.BackPressed += HardwareButtons_BackPressed;
 
             // 如果是从子页面（如聊天界面）返回，且会话列表已有数据，直接保持原状态，跳过重复拉取与刷新
-            if (e.NavigationMode == NavigationMode.Back && ConvListView.ItemsSource != null)
+            if (e.NavigationMode == NavigationMode.Back && _conversationList.Count > 0)
             {
                 return;
             }
@@ -256,6 +274,8 @@ namespace 云湖WP
                 UpdateAccountDisplay();
                 await LoadUserProfileAsync();
                 await LoadConversationsAsync();
+                await LoadStickyListAsync();
+                PreloadAddressBookTitlesAsync();
             }
             catch (Exception ex)
             {
@@ -346,6 +366,12 @@ namespace 云湖WP
                         LoadUserAvatarAsync(data.AvatarUrl);
                     }
                     AppLogger.Log("UserProfile", "个人资料加载成功: " + data.DisplayName);
+
+                    // 启动 WebSocket 实时长连接
+                    if (!YunhuWebSocketService.Instance.IsConnected)
+                    {
+                        await YunhuWebSocketService.Instance.StartAsync(data.Id, _userToken);
+                    }
                 }
                 else
                 {
@@ -358,24 +384,37 @@ namespace 云湖WP
             }
         }
 
-        private async void LoadUserAvatarAsync(string avatarUrl)
+        private void LoadUserAvatarAsync(string avatarUrl)
         {
-            try
+            if (string.IsNullOrEmpty(avatarUrl) || ImageLoader.DisableAllImages) return;
+            string finalUrl = ImageHelper.FormatQiniuUrl(avatarUrl, 120, 120);
+
+            Task.Run(async () =>
             {
-                var bmp = await ImageLoader.LoadAvatarAsync(avatarUrl, 120, 120);
-                if (bmp != null)
+                try
                 {
-                    ImgUserAvatar.Source = bmp;
+                    byte[] bytes = await ImageLoader.GetImageBytesAsync(finalUrl);
+                    if (bytes != null && bytes.Length > 0)
+                    {
+                        await Dispatcher.RunAsync(CoreDispatcherPriority.Low, async () =>
+                        {
+                            var bmp = await ImageLoader.BytesToBitmapImageAsync(bytes, 120, 120);
+                            if (bmp != null)
+                            {
+                                ImgUserAvatar.Source = bmp;
+                            }
+                        });
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("LoadUserAvatarAsync failed: " + ex.Message);
-            }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine("LoadUserAvatarAsync failed: " + ex.Message);
+                }
+            });
         }
 
         /// <summary>
-        /// 通过 Protobuf 协议从服务器拉取最新会话列表 (POST /v1/conversation/list)
+        /// 通过 Protobuf 协议从服务器拉取最新会话列表并执行增量比对 (POST /v1/conversation/list)
         /// </summary>
         private async Task LoadConversationsAsync()
         {
@@ -388,18 +427,24 @@ namespace 云湖WP
                 var res = await ConversationApi.GetConversationListAsync(_userToken);
                 ConvProgressBar.Visibility = Visibility.Collapsed;
 
-                if (res.IsSuccess && res.Conversations != null && res.Conversations.Count > 0)
+                if (res.IsSuccess && res.Conversations != null)
                 {
-                    ConvListView.ItemsSource = res.Conversations;
-                    EmptyConvPanel.Visibility = Visibility.Collapsed;
+                    // 使用 DiffUtil 原地增量同步，保留滚动条位置与已解码头像，消除列表全量重建与闪烁
+                    ConversationDiffUtil.ApplyDiff(_conversationList, res.Conversations);
+                    EmptyConvPanel.Visibility = _conversationList.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
                     // 启动后台头像并发平滑预加载 (受控于 ImageLoader 线程数设置及 Referer: http://myapp.jwznb.com)
-                    PreloadAvatars(res.Conversations);
+                    PreloadAvatars(_conversationList);
+
+                    // 同步更新系统磁贴未读数字角标
+                    UpdateTotalBadge();
                 }
                 else
                 {
-                    ConvListView.ItemsSource = null;
-                    EmptyConvPanel.Visibility = Visibility.Visible;
+                    if (_conversationList.Count == 0)
+                    {
+                        EmptyConvPanel.Visibility = Visibility.Visible;
+                    }
                     if (!res.IsSuccess && !string.IsNullOrEmpty(res.Msg))
                     {
                         convError = "会话列表: " + res.Msg;
@@ -416,6 +461,47 @@ namespace 云湖WP
             {
                 await ShowToastAsync(convError);
             }
+        }
+
+        /// <summary>
+        /// WebSocket 实时推送新消息时的增量刷新处理
+        /// </summary>
+        private void WebSocket_OnNewMessageReceived(ChatMessageItem msg)
+        {
+            if (msg == null) return;
+
+            // 使用 DiffUtil 高性能增量置顶并更新未读数与最新消息摘要
+            ConversationDiffUtil.ApplyPushMessage(_conversationList, msg, YunhuWebSocketService.Instance.CurrentActiveChatId);
+            EmptyConvPanel.Visibility = _conversationList.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
+            // 预加载可能新增会话项的头像
+            PreloadAvatars(_conversationList);
+
+            // 同步更新系统磁贴未读数字角标
+            UpdateTotalBadge();
+        }
+
+        /// <summary>
+        /// 计算所有会话未读数总和并更新系统 Badge 角标
+        /// </summary>
+        private void UpdateTotalBadge()
+        {
+            try
+            {
+                int total = 0;
+                if (_conversationList != null)
+                {
+                    foreach (var conv in _conversationList)
+                    {
+                        if (conv != null && conv.UnreadCount > 0)
+                        {
+                            total += conv.UnreadCount;
+                        }
+                    }
+                }
+                NotificationHelper.UpdateBadge(total);
+            }
+            catch { }
         }
 
         /// <summary>
@@ -663,6 +749,7 @@ namespace 云湖WP
             {
                 await LoadUserProfileAsync();
                 await LoadConversationsAsync();
+                await LoadStickyListAsync();
                 await ShowToastAsync("数据已刷新");
             }
         }
@@ -711,6 +798,13 @@ namespace 云湖WP
                 this.BottomAppBar.IsOpen = false;
             }
 
+            // 清空本地未读计数
+            if (conv.UnreadCount > 0)
+            {
+                conv.UnreadCount = 0;
+                conv.NotifyAllChanged();
+            }
+
             var args = new ChatNavigationArgs
             {
                 ChatId = conv.ChatId,
@@ -741,9 +835,178 @@ namespace 云湖WP
             }
         }
 
-        private async void ContactCategory_Tapped(object sender, TappedRoutedEventArgs e)
+        private void ContactCategory_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            await ShowToastAsync("分类列表功能即将上线");
+            var element = sender as FrameworkElement;
+            if (element == null) return;
+
+            string tag = element.Tag as string;
+            if (string.Equals(tag, "Friends", StringComparison.OrdinalIgnoreCase))
+            {
+                Frame.Navigate(typeof(FriendsPage));
+            }
+            else if (string.Equals(tag, "Groups", StringComparison.OrdinalIgnoreCase))
+            {
+                Frame.Navigate(typeof(GroupsPage));
+            }
+            else if (string.Equals(tag, "Bots", StringComparison.OrdinalIgnoreCase))
+            {
+                Frame.Navigate(typeof(BotsPage));
+            }
+        }
+
+        private void StickyItem_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            var element = sender as FrameworkElement;
+            if (element != null && element.DataContext is StickyItem)
+            {
+                var item = element.DataContext as StickyItem;
+                if (item != null)
+                {
+                    if (this.BottomAppBar != null)
+                    {
+                        this.BottomAppBar.IsOpen = false;
+                    }
+
+                    var args = new ChatNavigationArgs
+                    {
+                        ChatId = item.ChatId,
+                        ChatType = item.ChatType,
+                        Title = item.DisplayName,
+                        AvatarUrl = item.AvatarUrl,
+                        Token = _userToken
+                    };
+                    Frame.Navigate(typeof(ChatPage), args);
+                }
+            }
+        }
+
+        private async Task LoadStickyListAsync()
+        {
+            if (string.IsNullOrEmpty(_userToken)) return;
+            try
+            {
+                var res = await StickyApi.GetStickyListAsync(_userToken);
+                if (res.IsSuccess && res.StickyList != null)
+                {
+                    _stickyList.Clear();
+                    foreach (var item in res.StickyList)
+                    {
+                        _stickyList.Add(item);
+                        if (item != null && !string.IsNullOrEmpty(item.ChatId) && !string.IsNullOrEmpty(item.ChatName))
+                        {
+                            NotificationHelper.RegisterChatTitle(item.ChatId, item.ChatName);
+                        }
+                    }
+
+                    if (EmptyStickyText != null)
+                    {
+                        EmptyStickyText.Visibility = _stickyList.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+                    }
+
+                    PreloadStickyAvatars(res.StickyList);
+                }
+                else
+                {
+                    if (EmptyStickyText != null)
+                    {
+                        EmptyStickyText.Visibility = _stickyList.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+                    }
+                }
+            }
+            catch
+            {
+                if (EmptyStickyText != null)
+                {
+                    EmptyStickyText.Visibility = _stickyList.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 后台静默预加载群聊与好友通讯录名称，确保系统通知与会话列表始终能显示真实群聊名称
+        /// </summary>
+        private void PreloadAddressBookTitlesAsync()
+        {
+            if (string.IsNullOrEmpty(_userToken)) return;
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    var book = await FriendApi.GetAddressBookListAsync(_userToken);
+                    if (book != null && book.IsSuccess)
+                    {
+                        if (book.Groups != null)
+                        {
+                            foreach (var g in book.Groups)
+                            {
+                                if (g != null && !string.IsNullOrEmpty(g.ChatId) && !string.IsNullOrEmpty(g.DisplayName))
+                                {
+                                    NotificationHelper.RegisterChatTitle(g.ChatId, g.DisplayName);
+                                }
+                            }
+                        }
+                        if (book.Friends != null)
+                        {
+                            foreach (var f in book.Friends)
+                            {
+                                if (f != null && !string.IsNullOrEmpty(f.ChatId) && !string.IsNullOrEmpty(f.DisplayName))
+                                {
+                                    NotificationHelper.RegisterChatTitle(f.ChatId, f.DisplayName);
+                                }
+                            }
+                        }
+                        if (book.Bots != null)
+                        {
+                            foreach (var b in book.Bots)
+                            {
+                                if (b != null && !string.IsNullOrEmpty(b.ChatId) && !string.IsNullOrEmpty(b.DisplayName))
+                                {
+                                    NotificationHelper.RegisterChatTitle(b.ChatId, b.DisplayName);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch { }
+            });
+        }
+
+        private void PreloadStickyAvatars(IEnumerable<StickyItem> items)
+        {
+            if (ImageLoader.DisableAllImages || items == null) return;
+            var list = new List<StickyItem>(items);
+
+            Task.Run(async () =>
+            {
+                await Task.Delay(50);
+                foreach (var item in list)
+                {
+                    if (item == null || string.IsNullOrEmpty(item.AvatarUrl) || item.AvatarBitmap != null) continue;
+                    var cur = item;
+                    string finalUrl = ImageHelper.FormatQiniuUrl(cur.AvatarUrl, 96, 96);
+
+                    try
+                    {
+                        byte[] bytes = await ImageLoader.GetImageBytesAsync(finalUrl);
+                        if (bytes != null && bytes.Length > 0)
+                        {
+                            await Dispatcher.RunAsync(CoreDispatcherPriority.Low, async () =>
+                            {
+                                var bmp = await ImageLoader.BytesToBitmapImageAsync(bytes, 96, 96);
+                                if (bmp != null)
+                                {
+                                    cur.AvatarBitmap = bmp;
+                                }
+                            });
+                        }
+                    }
+                    catch { }
+
+                    await Task.Delay(20);
+                }
+            });
         }
 
         private async void ContactItem_Tapped(object sender, TappedRoutedEventArgs e)
