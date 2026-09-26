@@ -54,6 +54,18 @@
     <Compile Include="$(MSBuildThisFileDirectory)Api\Community\CommunityApi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Community\PostDetail\PostDetailModels.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Community\PostDetail\PostDetailApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Community\Board\BoardModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Community\Board\BoardApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Community\CreatePost\CreatePostModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Community\CreatePost\CreatePostApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Community\PostDraft\PostDraftModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Community\PostDraft\PostDraftApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Community\MyActivity\MyActivityModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Community\MyActivity\MyActivityApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Community\EditPost\EditPostModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Community\EditPost\EditPostApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Community\EditBoard\EditBoardModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Community\EditBoard\EditBoardApi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Sticky\StickyModels.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Sticky\StickyApi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Friend\FriendModels.cs" />
@@ -61,6 +73,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Api\Friend\FriendApi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Share\ShareModels.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Share\ShareApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\WebApi\User\UserWebModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\WebApi\User\UserWebApi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\YunhuApiClient.cs" />
   </ItemGroup>
 </Project>

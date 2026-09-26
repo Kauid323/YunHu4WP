@@ -10,7 +10,7 @@ using 云湖WP.Utils;
 namespace 云湖WP.Api.Common
 {
     /// <summary>
-    /// 文件下载助手 (自动附带 Referer 防盗链请求头、忽略过时证书、支持流式实时下载进度通知)
+    /// 文件下载助手 (智能存入系统公共 Music/Videos/Pictures 媒体目录、自动附带 Referer 防盗链请求头、忽略过时证书、支持流式实时下载进度通知)
     /// </summary>
     public static class FileDownloadHelper
     {
@@ -18,7 +18,7 @@ namespace 云湖WP.Api.Common
         private const string UserAgent = "Mozilla/5.0 (Windows Phone 8.1; ARM; Trident/7.0; Touch; rv:11.0; IEMobile/11.0; NOKIA; Lumia 930) like Gecko";
 
         /// <summary>
-        /// 带实时进度报告的文件下载方法
+        /// 带实时进度报告的文件下载方法（根据类型直接存入系统公共 Music/Videos/Pictures 目录）
         /// </summary>
         /// <param name="fileUrl">文件下载直链</param>
         /// <param name="fileName">期望保存的文件名</param>
@@ -53,9 +53,9 @@ namespace 云湖WP.Api.Common
                 safeFileName = "yunhu_file_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
             }
 
-            // 1. 创建目标存储文件
+            // 1. 创建目标存储文件（根据类型存入系统公共对应目录）
             StorageFile targetFile = await CreateTargetStorageFileAsync(safeFileName);
-            AppLogger.Log("FileDownload", string.Format("开始下载文件: Name={0}, Target={1}, Url={2}", safeFileName, targetFile.Path, finalUrl));
+            AppLogger.Log("FileDownload", string.Format("开始下载文件: Name={0}, TargetPath={1}, Url={2}", safeFileName, targetFile.Path, finalUrl));
 
             // 2. 配置带 WP8.1 证书忽略与 Referer 请求头的 HttpClient
             var filter = new HttpBaseProtocolFilter();
@@ -110,56 +110,105 @@ namespace 云湖WP.Api.Common
                 }
 
                 if (progress != null) progress.Report(100.0);
-                AppLogger.Log("FileDownload", "文件下载成功完成: " + targetFile.Path);
+                AppLogger.Log("FileDownload", "文件已成功下载存入: " + targetFile.Path);
                 return targetFile;
             }
         }
 
         /// <summary>
-        /// 根据文件扩展名创建最合适的存储位置文件
+        /// 创建目标存储文件（根据文件类型存入系统公共 Music / Videos / Pictures 目录，使自带应用、文件管理器和 USB 传输均可直接访问）
         /// </summary>
         private static async Task<StorageFile> CreateTargetStorageFileAsync(string fileName)
         {
-            string ext = Path.GetExtension(fileName).ToLowerInvariant();
-            StorageFolder targetFolder = null;
-
-            // 图片类型优先存入系统相册
-            if (ext == ".jpg" || ext == ".png" || ext == ".gif" || ext == ".jpeg" || ext == ".bmp")
-            {
-                try
-                {
-                    targetFolder = KnownFolders.SavedPictures;
-                }
-                catch { }
-            }
-            // 音频音乐类型存入音乐库
-            else if (ext == ".mp3" || ext == ".m4a" || ext == ".wav" || ext == ".aac" || ext == ".flac")
-            {
-                try
-                {
-                    targetFolder = KnownFolders.MusicLibrary;
-                }
-                catch { }
-            }
-
-            if (targetFolder == null)
-            {
-                targetFolder = ApplicationData.Current.LocalFolder;
-            }
-
             StorageFile file = null;
+            string ext = Path.GetExtension(fileName).ToLowerInvariant();
+
+            // 1. 音乐/音频类型保存至系统公共音乐库 (C:\Data\Users\Public\Music)
+            if (ext == ".mp3" || ext == ".m4a" || ext == ".wav" || ext == ".aac" || ext == ".flac" || ext == ".ogg" || ext == ".wma" || ext == ".mid" || ext == ".midi")
+            {
+                try
+                {
+                    file = await KnownFolders.MusicLibrary.CreateFileAsync(fileName, CreationCollisionOption.GenerateUniqueName);
+                    if (file != null)
+                    {
+                        AppLogger.Log("FileDownload", "成功在系统公共音乐库(Music)创建文件: " + file.Path);
+                        return file;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Log("FileDownload", "在公共 Music 创建文件失败: " + ex.Message);
+                }
+            }
+
+            // 2. 视频类型保存至系统公共视频库 (C:\Data\Users\Public\Videos)
+            if (ext == ".mp4" || ext == ".mkv" || ext == ".avi" || ext == ".wmv" || ext == ".mov" || ext == ".3gp" || ext == ".flv" || ext == ".webm")
+            {
+                try
+                {
+                    file = await KnownFolders.VideosLibrary.CreateFileAsync(fileName, CreationCollisionOption.GenerateUniqueName);
+                    if (file != null)
+                    {
+                        AppLogger.Log("FileDownload", "成功在系统公共视频库(Videos)创建文件: " + file.Path);
+                        return file;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Log("FileDownload", "在公共 Videos 创建文件失败: " + ex.Message);
+                }
+            }
+
+            // 3. 图片类型保存至系统公共相册 (C:\Data\Users\Public\Pictures\Saved Pictures)
+            if (ext == ".jpg" || ext == ".png" || ext == ".gif" || ext == ".jpeg" || ext == ".bmp" || ext == ".webp")
+            {
+                try
+                {
+                    file = await KnownFolders.SavedPictures.CreateFileAsync(fileName, CreationCollisionOption.GenerateUniqueName);
+                    if (file != null)
+                    {
+                        AppLogger.Log("FileDownload", "成功在系统公共相册(Pictures)创建文件: " + file.Path);
+                        return file;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Log("FileDownload", "在公共 Pictures 创建文件失败: " + ex.Message);
+                }
+            }
+
+            // 4. 其他类型普通文件（doc, pdf, zip 等）：优先保存在公共 Music/Pictures 目录中（这样文件管理器可以浏览到）
             try
             {
-                file = await targetFolder.CreateFileAsync(fileName, CreationCollisionOption.GenerateUniqueName);
+                file = await KnownFolders.MusicLibrary.CreateFileAsync(fileName, CreationCollisionOption.GenerateUniqueName);
+                if (file != null)
+                {
+                    AppLogger.Log("FileDownload", "普通文件已存入公共 Music 目录: " + file.Path);
+                    return file;
+                }
             }
-            catch
-            {
-                // 标记异常，在 catch 外部回退
-            }
+            catch { }
 
+            try
+            {
+                file = await KnownFolders.SavedPictures.CreateFileAsync(fileName, CreationCollisionOption.GenerateUniqueName);
+                if (file != null)
+                {
+                    AppLogger.Log("FileDownload", "普通文件已存入公共 Pictures 目录: " + file.Path);
+                    return file;
+                }
+            }
+            catch { }
+
+            // 5. 最终回退到应用沙盒 LocalFolder
             if (file == null)
             {
-                file = await ApplicationData.Current.LocalFolder.CreateFileAsync(fileName, CreationCollisionOption.GenerateUniqueName);
+                try
+                {
+                    file = await ApplicationData.Current.LocalFolder.CreateFileAsync(fileName, CreationCollisionOption.GenerateUniqueName);
+                    AppLogger.Log("FileDownload", "回退在应用沙盒 LocalFolder 创建文件: " + file.Path);
+                }
+                catch { }
             }
 
             return file;

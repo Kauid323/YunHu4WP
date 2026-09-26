@@ -26,6 +26,8 @@
     <RootPropertyPathName Name="TextMsgVisibility" />
     <RootPropertyPathName Name="DisplayText" />
     <RootPropertyPathName Name="HtmlMsgVisibility" />
+    <RootPropertyPathName Name="PostMsgVisibility" />
+    <RootPropertyPathName Name="DisplayPostTitle" />
     <RootPropertyPathName Name="FileMsgVisibility" />
     <RootPropertyPathName Name="DownloadStatusText" />
     <RootPropertyPathName Name="DownloadProgress" />
@@ -38,6 +40,7 @@
     <RootPropertyPathName Name="OtherBubbleVisibility" />
     <RootPropertyPathName Name="DisplaySenderName" />
     <RootPropertyPathName Name="ShowSenderNameVisibility" />
+    <RootPropertyPathName Name="UserId" />
     <RootPropertyPathName Name="Subtitle" />
     <RootPropertyPathName Name="RoleTag" />
   </Roots.PropertyPathNames>
@@ -65,6 +68,8 @@
       <RootMethod Name="SetColumn" />
       <RootMethod Name="GetRow" />
       <RootMethod Name="SetRow" />
+      <RootMethod Name="GetRowSpan" />
+      <RootMethod Name="SetRowSpan" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.Pivot">
       <RootProperty Name="Title" />
@@ -142,6 +147,7 @@
       <RootProperty Name="VerticalAlignment" />
       <RootProperty Name="AcceptsReturn" />
       <RootProperty Name="Height" />
+      <RootProperty Name="MaxLength" />
       <RootProperty Name="TextWrapping" />
       <RootEvent Name="KeyDown" />
       <RootEvent Name="GotFocus" />
@@ -279,6 +285,7 @@
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.ItemsControl">
       <RootProperty Name="ItemTemplate" />
+      <RootProperty Name="Margin" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.CommandBar">
       <RootProperty Name="Background" />
@@ -364,6 +371,8 @@
     <RootType FullName="云湖WP.ProfileEditPage" />
     <RootType FullName="云湖WP.MyProfilePage" />
     <RootType FullName="云湖WP.PostDetailPage" />
+    <RootType FullName="云湖WP.BoardDetailPage" />
+    <RootType FullName="云湖WP.CreatePostPage" />
     <RootType FullName="Windows.UI.Xaml.Controls.WebView">
       <RootProperty Name="HorizontalAlignment" />
       <RootProperty Name="VerticalAlignment" />

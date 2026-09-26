@@ -9,6 +9,7 @@ namespace 云湖WP.Api.Common
     public static class YunhuApiConfig
     {
         public const string BaseUrl = "https://chat-go.jwzhd.com";
+        public const string WebBaseUrl = "https://chat-web-go.jwzhd.com";
         public const string Platform = "Windows Phone";
 
         private const string SettingKeyDeviceId = "AppDeviceId";

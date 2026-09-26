@@ -1,0 +1,343 @@
+<Page
+    x:Class="云湖WP.BoardDetailPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:云湖WP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <!-- 原生 Windows Phone Metro Pivot 容器 -->
+        <Pivot x:Name="BoardPivot" Title="板块详情" Margin="0" SelectionChanged="BoardPivot_SelectionChanged">
+
+            <!-- 1. 动态标签页 (展示板块内动态列表，支持最热/最新筛选) -->
+            <PivotItem x:Name="PivotItemPosts" Header="动态" Margin="0">
+                <Grid Margin="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <ProgressBar x:Name="PostsProgressBar" IsIndeterminate="True" VerticalAlignment="Top" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}" Canvas.ZIndex="10" Grid.RowSpan="2" />
+
+
+                    <!-- 空状态提示 -->
+                    <StackPanel x:Name="EmptyPostsPanel" Grid.Row="1" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16,0,16,0">
+                        <TextBlock Text="该板块暂无动态" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                        <TextBlock Text="点击刷新或切换筛选查看更多内容" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- 动态列表视图 -->
+                    <ListView x:Name="PostsListView"
+                              Grid.Row="1"
+                              SelectionMode="None"
+                              IsItemClickEnabled="True"
+                              ItemClick="PostsListView_ItemClick"
+                              Loaded="PostsListView_Loaded"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch"
+                              Padding="16,6,16,10">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0,0,0,12" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderThickness="1" BorderBrush="#25FFFFFF" Background="#0AFFFFFF" Padding="14">
+                                    <StackPanel>
+                                        <!-- 作者信息行 -->
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="36" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- 作者头像 (纯直角 Metro 32x32) -->
+                                            <Grid Width="32" Height="32" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                <Border Background="{ThemeResource PhoneAccentBrush}">
+                                                    <TextBlock Text="{Binding DisplayAvatarLetter}" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                </Border>
+                                                <Image Source="{Binding AvatarBitmap}" Stretch="UniformToFill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                                            </Grid>
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
+                                                <TextBlock Text="{Binding DisplayAuthor}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding DisplayTime}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,1,0,0" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- 文章标题 (加粗) -->
+                                        <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,6" />
+
+                                        <!-- 文章内容预览 (精简段落) -->
+                                        <TextBlock Text="{Binding Content}" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" TextWrapping="Wrap" LineHeight="18" MaxHeight="54" TextTrimming="CharacterEllipsis" Margin="0,0,0,10" />
+
+                                        <!-- 统计信息行 -->
+                                        <Grid Margin="0,4,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- 1. 点赞数 -->
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                <FontIcon FontFamily="Segoe UI Symbol" Glyph="&#xE19F;" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding LikeText}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <!-- 2. 评论数 -->
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                <SymbolIcon Symbol="Message" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding CommentText}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <!-- 3. 收藏数 -->
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                <SymbolIcon Symbol="Favorite" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding CollectText}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <!-- 4. 投币数 -->
+                                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                <FontIcon FontFamily="Segoe UI Symbol" Glyph="&#xE13D;" FontSize="11" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding AmountText}" FontSize="11" Foreground="{ThemeResource PhoneAccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </PivotItem>
+
+            <!-- 2. 详情标签页 (展示关于板块所有完整信息与关注状态) -->
+            <PivotItem x:Name="PivotItemDetails" Header="信息" Margin="0">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="19,10,19,24">
+                        <ProgressBar x:Name="DetailsProgressBar" IsIndeterminate="True" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,12" />
+
+                        <!-- A. 板块基本信息 (Metro 直角排版) -->
+                        <Grid Margin="0,4,0,20" HorizontalAlignment="Stretch">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="76" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- 板块头像 (70x70 纯直角方块，点击进入图片预览) -->
+                            <Grid Width="70" Height="70" VerticalAlignment="Top" HorizontalAlignment="Left" Background="Transparent" Tapped="BoardAvatar_Tapped">
+                                <Border x:Name="BorderBoardLetter" Background="{ThemeResource PhoneAccentBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                    <TextBlock x:Name="TxtBoardLetter" Text="板" FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <Image x:Name="ImgBoardAvatar" Stretch="UniformToFill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                            </Grid>
+
+                            <!-- 板块文本信息与关注按钮 -->
+                            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtBoardHeading" Text="加载中..." FontSize="22" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" />
+                                <TextBlock x:Name="TxtBoardSubId" Text="板块 ID: -" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,4,0,8" HorizontalAlignment="Left" />
+
+                                <Button x:Name="BtnFollowAction"
+                                        Content="+ 关注板块"
+                                        FontSize="13"
+                                        MinWidth="110"
+                                        Height="34"
+                                        Padding="12,2"
+                                        BorderThickness="1"
+                                        HorizontalAlignment="Left"
+                                        Background="{ThemeResource PhoneAccentBrush}"
+                                        Foreground="White"
+                                        Click="BtnFollowAction_Click" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- 分割线 -->
+                        <Border Height="1" Background="#1FFFFFFF" Margin="0,0,0,16" />
+
+                        <!-- B. 统计磁贴数据行 (关注成员 / 动态数量 / 绑定群聊) -->
+                        <TextBlock Text="板块数据" FontSize="15" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,12" HorizontalAlignment="Left" />
+
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- 1. 关注成员 -->
+                            <Border BorderThickness="1" BorderBrush="#20FFFFFF" Background="#08FFFFFF" Padding="10,12" Margin="0,0,4,0">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock x:Name="TxtMemberCount" Text="0" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                    <TextBlock Text="关注成员" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,4,0,0" HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 2. 动态数量 -->
+                            <Border Grid.Column="1" BorderThickness="1" BorderBrush="#20FFFFFF" Background="#08FFFFFF" Padding="10,12" Margin="2,0,2,0">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock x:Name="TxtPostCount" Text="0" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                    <TextBlock Text="动态数量" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,4,0,0" HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 3. 绑定群聊 -->
+                            <Border Grid.Column="2" BorderThickness="1" BorderBrush="#20FFFFFF" Background="#08FFFFFF" Padding="10,12" Margin="4,0,0,0">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock x:Name="TxtGroupCount" Text="0" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                    <TextBlock Text="关联群聊" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,4,0,0" HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- 分割线 -->
+                        <Border Height="1" Background="#1FFFFFFF" Margin="0,0,0,16" />
+
+                        <!-- C. 详细档案字段列表 -->
+                        <TextBlock Text="档案信息" FontSize="15" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,14" HorizontalAlignment="Left" />
+
+                        <!-- 板块 ID -->
+                        <StackPanel Margin="0,0,0,14" HorizontalAlignment="Left">
+                            <TextBlock Text="板块编号 (ID)" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                            <TextBlock x:Name="TxtDetailId" Text="-" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                        </StackPanel>
+
+                        <!-- 板块名称 -->
+                        <StackPanel Margin="0,0,0,14" HorizontalAlignment="Left">
+                            <TextBlock Text="板块名称" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                            <TextBlock x:Name="TxtDetailName" Text="-" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                        </StackPanel>
+
+                        <!-- 创建时间 -->
+                        <StackPanel Margin="0,0,0,14" HorizontalAlignment="Left">
+                            <TextBlock Text="创建时间" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                            <TextBlock x:Name="TxtDetailCreateTime" Text="-" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                        </StackPanel>
+
+                        <!-- 最近活跃时间 -->
+                        <StackPanel Margin="0,0,0,14" HorizontalAlignment="Left">
+                            <TextBlock Text="最新内容时间" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Left" />
+                            <TextBlock x:Name="TxtDetailLastActive" Text="-" FontSize="16" Margin="0,2,0,0" HorizontalAlignment="Left" />
+                        </StackPanel>
+
+
+                        <!-- 分割线 -->
+                        <Border Height="1" Background="#1FFFFFFF" Margin="0,4,0,16" />
+
+                        <!-- D. 板块管理组 (板块主与管理员，支持点击进入用户详情) -->
+                        <TextBlock Text="板块管理组" FontSize="15" FontWeight="SemiBold" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,0,12" HorizontalAlignment="Left" />
+
+                        <!-- 1. 板块主 / 创建者 -->
+                        <TextBlock Text="板块主" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,0,6" HorizontalAlignment="Left" />
+                        <Border x:Name="BorderOwnerCard" BorderThickness="1" BorderBrush="#25FFFFFF" Background="#0AFFFFFF" Padding="12,10" Margin="0,0,0,14" Tapped="OwnerCard_Tapped">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="36" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- 板块主头像 (32x32 Metro 直角) -->
+                                <Grid Width="32" Height="32" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                    <Border Background="{ThemeResource PhoneAccentBrush}">
+                                        <TextBlock x:Name="TxtOwnerLetter" Text="主" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Image x:Name="ImgOwnerAvatar" Stretch="UniformToFill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                                </Grid>
+
+                                <!-- 板块主昵称与 ID -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                                    <TextBlock x:Name="TxtOwnerNickname" Text="加载中..." FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock x:Name="TxtOwnerId" Text="ID: -" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,1,0,0" />
+                                </StackPanel>
+
+                                <!-- 身份徽章与箭头 -->
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border Background="{ThemeResource PhoneAccentBrush}" Padding="6,2" Margin="0,0,8,0">
+                                        <TextBlock Text="板块主" FontSize="10" Foreground="White" FontWeight="SemiBold" />
+                                    </Border>
+                                    <SymbolIcon Symbol="Forward" Foreground="{ThemeResource PhoneMidBrush}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- 2. 板块管理员列表 -->
+                        <TextBlock Text="管理员" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,0,6" HorizontalAlignment="Left" />
+
+                        <!-- 暂无管理员提示 -->
+                        <TextBlock x:Name="TxtNoAdmins" Text="暂无管理员" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,0,14" Visibility="Collapsed" />
+
+                        <!-- 管理员列表容器 -->
+                        <ItemsControl x:Name="AdminsItemsControl" Margin="0,0,0,14">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderThickness="1" BorderBrush="#20FFFFFF" Background="#08FFFFFF" Padding="12,10" Margin="0,0,0,8" Tapped="AdminItem_Tapped">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="36" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- 管理员头像 -->
+                                            <Grid Width="32" Height="32" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                <Border Background="{ThemeResource PhoneAccentBrush}">
+                                                    <TextBlock Text="{Binding DisplayAvatarLetter}" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                </Border>
+                                                <Image Source="{Binding AvatarBitmap}" Stretch="UniformToFill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                                            </Grid>
+
+                                            <!-- 管理员昵称与 ID -->
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                                                <TextBlock Text="{Binding DisplayName}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding UserId}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,1,0,0" />
+                                            </StackPanel>
+
+                                            <!-- 身份徽章与箭头 -->
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Border Background="#30FFFFFF" BorderThickness="1" BorderBrush="{ThemeResource PhoneAccentBrush}" Padding="6,2" Margin="0,0,8,0">
+                                                    <TextBlock Text="管理员" FontSize="10" Foreground="{ThemeResource PhoneAccentBrush}" FontWeight="SemiBold" />
+                                                </Border>
+                                                <SymbolIcon Symbol="Forward" Foreground="{ThemeResource PhoneMidBrush}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </PivotItem>
+        </Pivot>
+    </Grid>
+
+    <!-- 原生 Windows Phone 8.1 底部 CommandBar -->
+    <Page.BottomAppBar>
+        <CommandBar x:Name="BoardCommandBar" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" ClosedDisplayMode="Compact" IsSticky="False">
+            <CommandBar.PrimaryCommands>
+                <AppBarButton x:Name="AppBarBtnCreatePost" Icon="Edit" Label="发动态" Click="AppBarBtnCreatePost_Click" />
+                <AppBarButton x:Name="AppBarBtnFilter" Icon="Filter" Label="筛选">
+                    <AppBarButton.Flyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem x:Name="FlyoutItemHot" Text="最热动态 (当前)" Click="FilterHot_Click" />
+                            <MenuFlyoutItem x:Name="FlyoutItemLatest" Text="最新动态" Click="FilterLatest_Click" />
+                        </MenuFlyout>
+                    </AppBarButton.Flyout>
+                </AppBarButton>
+                <AppBarButton x:Name="AppBarBtnFollowCmd" Icon="Add" Label="关注" Click="AppBarBtnFollowCmd_Click" />
+                <AppBarButton x:Name="AppBarBtnRefresh" Icon="Refresh" Label="刷新" Click="AppBarBtnRefresh_Click" />
+            </CommandBar.PrimaryCommands>
+            <CommandBar.SecondaryCommands>
+                <AppBarButton x:Name="AppBarBtnCopyId" Label="复制板块 ID" Click="AppBarBtnCopyId_Click" />
+                <AppBarButton x:Name="AppBarBtnShare" Label="分享板块" Click="AppBarBtnShare_Click" />
+                <AppBarButton x:Name="AppBarBtnEditBoard" Label="编辑板块" Click="AppBarBtnEditBoard_Click" Visibility="Collapsed" />
+            </CommandBar.SecondaryCommands>
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>

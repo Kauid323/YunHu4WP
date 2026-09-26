@@ -15,6 +15,9 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using 云湖WP.Api.Common;
 using 云湖WP.Api.Community;
+using 云湖WP.Api.Community.Board;
+using 云湖WP.Api.Community.CreatePost;
+using 云湖WP.Api.Community.EditPost;
 using 云湖WP.Api.Community.PostDetail;
 using 云湖WP.Api.User.Info;
 using 云湖WP.Token;
@@ -29,13 +32,19 @@ namespace 云湖WP
     {
         private string _token = "";
         private long _postId = 0;
+        private int _baId = 0;
+        private string _selfUserId = ""; // 当前登录用户 ID
         private CommunityPostItem _currentPost;
+        private BoardInfoItem _currentBoard;
         private ObservableCollection<CommunityCommentItem> _commentList = new ObservableCollection<CommunityCommentItem>();
+        private ObservableCollection<CommunityPostItem> _boardHotPosts = new ObservableCollection<CommunityPostItem>();
         private bool _isLoadingDetail = false;
         private bool _isLoadingComments = false;
+        private bool _isLoadingBoardPosts = false;
         private bool _isSendingComment = false;
         private DispatcherTimer _scrollTimer;
         private bool _isKeyboardOpen = false;
+        private ScrollViewer _boardScrollViewer;
 
         public PostDetailPage()
         {
@@ -72,6 +81,11 @@ namespace 云湖WP
                 CommentListView.ItemsSource = _commentList;
             }
 
+            if (BoardHotListView != null)
+            {
+                BoardHotListView.ItemsSource = _boardHotPosts;
+            }
+
             // 读取导航参数
             var args = e.Parameter as PostDetailNavigationArgs;
             if (args != null)
@@ -81,6 +95,7 @@ namespace 云湖WP
                 if (args.InitialPost != null)
                 {
                     _currentPost = args.InitialPost;
+                    if (_currentPost.BaId > 0) _baId = _currentPost.BaId;
                     RenderPost(_currentPost);
                 }
             }
@@ -92,6 +107,20 @@ namespace 云湖WP
             if (string.IsNullOrEmpty(_token))
             {
                 _token = await TokenManager.GetTokenAsync();
+            }
+
+            // 获取当前用户 ID（用于判断是否显示编辑/删除/置顶按钮）
+            if (string.IsNullOrEmpty(_selfUserId) && !string.IsNullOrEmpty(_token))
+            {
+                try
+                {
+                    var selfRes = await 云湖WP.Api.User.UserApi.GetSelfInfoAsync(_token);
+                    if (selfRes != null && selfRes.IsSuccess)
+                    {
+                        _selfUserId = selfRes.Id ?? "";
+                    }
+                }
+                catch { }
             }
 
             if (_postId > 0)
@@ -136,6 +165,7 @@ namespace 云湖WP
         {
             await LoadPostDetailAsync();
             await LoadCommentsAsync();
+            await LoadBoardHotPostsAsync();
         }
 
         /// <summary>
@@ -155,11 +185,19 @@ namespace 云湖WP
                 if (res.IsSuccess && res.Post != null)
                 {
                     _currentPost = res.Post;
+                    if (_currentPost.BaId > 0) _baId = _currentPost.BaId;
                     RenderPost(_currentPost);
                 }
                 else if (!string.IsNullOrEmpty(res.Msg))
                 {
                     err = "获取动态详情失败: " + res.Msg;
+                }
+
+                if (res.Board != null)
+                {
+                    _currentBoard = res.Board;
+                    if (_currentBoard.Id > 0) _baId = _currentBoard.Id;
+                    UpdateBoardHeader(_currentBoard.Name);
                 }
             }
             catch (Exception ex)
@@ -175,9 +213,62 @@ namespace 云湖WP
                 }
             }
 
+            if (_baId > 0 && _boardHotPosts.Count == 0)
+            {
+                var t = LoadBoardHotPostsAsync();
+            }
+
             if (err != null)
             {
                 await ShowToastAsync(err);
+            }
+        }
+
+        private void UpdateBoardHeader(string boardName)
+        {
+            if (!string.IsNullOrWhiteSpace(boardName) && PivotItemBoardHot != null)
+            {
+                PivotItemBoardHot.Header = boardName;
+            }
+        }
+
+        /// <summary>
+        /// 从服务器拉取板块热门动态列表 (POST /v1/community/posts/post-list)
+        /// </summary>
+        private async Task LoadBoardHotPostsAsync()
+        {
+            if (_baId <= 0 || string.IsNullOrEmpty(_token) || _isLoadingBoardPosts) return;
+
+            _isLoadingBoardPosts = true;
+            if (BoardHotProgressBar != null) BoardHotProgressBar.Visibility = Visibility.Visible;
+
+            try
+            {
+                var res = await BoardApi.GetBoardPostsAsync(_token, _baId, typ: 2, page: 1, size: 20);
+                if (res.IsSuccess && res.Posts != null)
+                {
+                    _boardHotPosts.Clear();
+                    foreach (var post in res.Posts)
+                    {
+                        _boardHotPosts.Add(post);
+                    }
+
+                    if (EmptyBoardHotPanel != null)
+                    {
+                        EmptyBoardHotPanel.Visibility = (_boardHotPosts.Count == 0) ? Visibility.Visible : Visibility.Collapsed;
+                    }
+
+                    PreloadPostAvatars(res.Posts);
+                }
+            }
+            catch { }
+            finally
+            {
+                _isLoadingBoardPosts = false;
+                if (BoardHotProgressBar != null)
+                {
+                    BoardHotProgressBar.Visibility = Visibility.Collapsed;
+                }
             }
         }
 
@@ -288,6 +379,115 @@ namespace 云湖WP
             if (AppBarBtnReward != null)
             {
                 AppBarBtnReward.Label = string.Format("{0:0.#} 投币", post.AmountNum);
+            }
+
+            // 判断是否为自己的动态
+            bool isMine = !string.IsNullOrEmpty(_selfUserId) &&
+                          !string.IsNullOrEmpty(post.SenderId) &&
+                          _selfUserId == post.SenderId;
+
+            if (AppBarBtnEditPost != null)
+                AppBarBtnEditPost.Visibility = isMine ? Visibility.Visible : Visibility.Collapsed;
+            if (AppBarBtnDeletePost != null)
+                AppBarBtnDeletePost.Visibility = isMine ? Visibility.Visible : Visibility.Collapsed;
+            if (AppBarBtnStickyPost != null)
+            {
+                AppBarBtnStickyPost.Visibility = isMine ? Visibility.Visible : Visibility.Collapsed;
+                // 置顶状态：IsSticky=0 未置顶 → 显示"置顶"；非0已置顶 → 显示"取消置顶"
+                AppBarBtnStickyPost.Label = (post.IsSticky != 0) ? "取消置顶" : "置顶";
+            }
+        }
+
+        // ─── 编辑动态 ─────────────────────────────────────────
+        private void AppBarBtnEditPost_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentPost == null) return;
+            var navArgs = new CreatePostNavArgs
+            {
+                PostId = _currentPost.Id,
+                BaId = _currentPost.BaId,
+                BoardName = _currentBoard != null ? _currentBoard.Name : "",
+                InitialTitle = _currentPost.Title,
+                InitialContent = _currentPost.Content,
+                InitialContentType = _currentPost.ContentType
+            };
+            Frame.Navigate(typeof(CreatePostPage), navArgs);
+        }
+
+        // ─── 置顶/取消置顶 ────────────────────────────────────
+        private async void AppBarBtnStickyPost_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentPost == null || _postId <= 0) return;
+            string err = null;
+            string successMsg = null;
+            try
+            {
+                var res = await EditPostApi.ToggleStickyAsync(_token, _postId);
+                if (res != null && res.IsSuccess)
+                {
+                    _currentPost.IsSticky = (_currentPost.IsSticky != 0) ? 0 : 1;
+                    UpdateCommandBarStates(_currentPost);
+                    successMsg = (_currentPost.IsSticky != 0) ? "已置顶" : "已取消置顶";
+                }
+                else
+                {
+                    err = (res != null && !string.IsNullOrEmpty(res.Msg)) ? res.Msg : "操作失败";
+                }
+            }
+            catch (Exception ex)
+            {
+                err = "操作异常: " + ex.Message;
+            }
+
+            if (successMsg != null)
+            {
+                await ShowToastAsync(successMsg);
+            }
+            else if (err != null)
+            {
+                await ShowToastAsync(err);
+            }
+        }
+
+        // ─── 删除动态 ─────────────────────────────────────────
+        private async void AppBarBtnDeletePost_Click(object sender, RoutedEventArgs e)
+        {
+            if (_postId <= 0) return;
+            string err = null;
+            bool deleteSuccess = false;
+            try
+            {
+                var dialog = new MessageDialog("确定要删除这条动态吗？删除后不可恢复。", "删除动态");
+                dialog.Commands.Add(new UICommand("确定删除"));
+                dialog.Commands.Add(new UICommand("取消"));
+                dialog.DefaultCommandIndex = 1;
+                dialog.CancelCommandIndex = 1;
+                var chosen = await dialog.ShowAsync();
+                if (chosen == null || chosen.Label != "确定删除") return;
+
+                var res = await EditPostApi.DeletePostAsync(_token, _postId);
+                if (res != null && res.IsSuccess)
+                {
+                    deleteSuccess = true;
+                }
+                else
+                {
+                    err = (res != null && !string.IsNullOrEmpty(res.Msg)) ? res.Msg : "删除失败";
+                }
+            }
+            catch (Exception ex)
+            {
+                err = "删除异常: " + ex.Message;
+            }
+
+            if (deleteSuccess)
+            {
+                await ShowToastAsync("动态已删除");
+                if (Frame.CanGoBack) Frame.GoBack();
+            }
+            else if (err != null)
+            {
+                await ShowToastAsync("删除失败: " + err);
             }
         }
 
@@ -613,9 +813,49 @@ namespace 云湖WP
             return null;
         }
 
+        private void BoardHotListView_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (BoardHotListView != null && _boardScrollViewer == null)
+            {
+                _boardScrollViewer = FindVisualChild<ScrollViewer>(BoardHotListView);
+                if (_boardScrollViewer != null)
+                {
+                    _boardScrollViewer.ViewChanged -= DetailScrollViewer_ViewChanged;
+                    _boardScrollViewer.ViewChanged += DetailScrollViewer_ViewChanged;
+                }
+            }
+        }
+
         private void DetailPivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (DetailPivot == null) return;
+
+            bool isBoardHot = DetailPivot.SelectedItem == PivotItemBoardHot;
+
+            if (AppBarBtnEnterBoard != null)
+            {
+                AppBarBtnEnterBoard.Visibility = isBoardHot ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            if (AppBarBtnLike != null)
+            {
+                AppBarBtnLike.Visibility = isBoardHot ? Visibility.Collapsed : Visibility.Visible;
+            }
+
+            if (AppBarBtnCollect != null)
+            {
+                AppBarBtnCollect.Visibility = isBoardHot ? Visibility.Collapsed : Visibility.Visible;
+            }
+
+            if (AppBarBtnReward != null)
+            {
+                AppBarBtnReward.Visibility = isBoardHot ? Visibility.Collapsed : Visibility.Visible;
+            }
+
+            if (isBoardHot && _boardHotPosts.Count == 0 && !_isLoadingBoardPosts && _baId > 0)
+            {
+                var t = LoadBoardHotPostsAsync();
+            }
 
             if (this.BottomAppBar != null)
             {
@@ -623,6 +863,95 @@ namespace 云湖WP
                 this.BottomAppBar.ClosedDisplayMode = AppBarClosedDisplayMode.Compact;
                 this.BottomAppBar.Visibility = Visibility.Visible;
             }
+        }
+
+        private async void AppBarBtnEnterBoard_Click(object sender, RoutedEventArgs e)
+        {
+            if (_baId <= 0 && _currentPost != null)
+            {
+                _baId = _currentPost.BaId;
+            }
+
+            if (_baId <= 0)
+            {
+                await ShowToastAsync("未获取到所属板块信息");
+                return;
+            }
+
+            string bName = _currentBoard != null ? _currentBoard.Name : (_currentPost != null ? _currentPost.Title : "");
+            if (string.IsNullOrEmpty(bName) && PivotItemBoardHot != null && PivotItemBoardHot.Header != null)
+            {
+                bName = PivotItemBoardHot.Header.ToString();
+            }
+
+            var navArgs = new BoardDetailNavArgs
+            {
+                BaId = _baId,
+                BoardName = bName,
+                BoardAvatar = _currentBoard != null ? _currentBoard.Avatar : "",
+                Token = _token,
+                InitialBoard = _currentBoard
+            };
+
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                Frame.Navigate(typeof(BoardDetailPage), navArgs);
+            });
+        }
+
+        private async void BoardHotListView_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            var clickedPost = e.ClickedItem as CommunityPostItem;
+            if (clickedPost != null && clickedPost.Id > 0)
+            {
+                var navArgs = new PostDetailNavigationArgs
+                {
+                    PostId = clickedPost.Id,
+                    InitialPost = clickedPost,
+                    Token = _token
+                };
+
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    Frame.Navigate(typeof(PostDetailPage), navArgs);
+                });
+            }
+        }
+
+        private void PreloadPostAvatars(IEnumerable<CommunityPostItem> posts)
+        {
+            if (posts == null || ImageLoader.DisableAllImages) return;
+            var list = new List<CommunityPostItem>(posts);
+
+            Task.Run(async () =>
+            {
+                await Task.Delay(100);
+                foreach (var p in list)
+                {
+                    if (p == null || string.IsNullOrEmpty(p.SenderAvatar) || p.AvatarBitmap != null) continue;
+                    var cur = p;
+                    string finalUrl = ImageHelper.FormatQiniuUrl(cur.SenderAvatar, 72, 72);
+
+                    try
+                    {
+                        byte[] bytes = await ImageLoader.GetImageBytesAsync(finalUrl);
+                        if (bytes != null && bytes.Length > 0)
+                        {
+                            await Dispatcher.RunAsync(CoreDispatcherPriority.Low, async () =>
+                            {
+                                var bmp = await ImageLoader.BytesToBitmapImageAsync(bytes, 72, 72);
+                                if (bmp != null)
+                                {
+                                    cur.AvatarBitmap = bmp;
+                                }
+                            });
+                        }
+                    }
+                    catch { }
+
+                    await Task.Delay(15);
+                }
+            });
         }
 
         #region 页面滑动与底栏/输入框自动显隐交互

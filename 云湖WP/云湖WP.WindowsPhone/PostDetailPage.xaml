@@ -10,7 +10,7 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <!-- 原生 Windows Phone Metro Pivot 容器：小标题“云湖”，原生水平滑动分栏 -->
-        <Pivot x:Name="DetailPivot" Title="云湖" Margin="0" SelectionChanged="DetailPivot_SelectionChanged">
+        <Pivot x:Name="DetailPivot" Title="动态详情" Margin="0" SelectionChanged="DetailPivot_SelectionChanged">
 
             <!-- 1. 动态正文 PivotItem (纯净全屏沉浸式阅读) -->
             <PivotItem Header="正文" Margin="0">
@@ -164,6 +164,105 @@
                     </Border>
                 </Grid>
             </PivotItem>
+
+            <!-- 3. 所属板块热门动态 PivotItem (标题为板块名称，展示该板块的热门文章) -->
+            <PivotItem x:Name="PivotItemBoardHot" Header="所属板块" Margin="0">
+                <Grid Margin="0">
+                    <ProgressBar x:Name="BoardHotProgressBar" IsIndeterminate="True" VerticalAlignment="Top" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}" Canvas.ZIndex="10" />
+
+                    <!-- 空状态提示 -->
+                    <StackPanel x:Name="EmptyBoardHotPanel" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16,0,16,0">
+                        <TextBlock Text="暂无热门动态" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                        <TextBlock Text="可点击底部进入按钮查看该板块更多内容" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- 板块热门动态列表视图 -->
+                    <ListView x:Name="BoardHotListView"
+                              SelectionMode="None"
+                              IsItemClickEnabled="True"
+                              ItemClick="BoardHotListView_ItemClick"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch"
+                              Loaded="BoardHotListView_Loaded"
+                              Padding="16,10">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0,0,0,12" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderThickness="1" BorderBrush="#25FFFFFF" Background="#0AFFFFFF" Padding="14">
+                                    <StackPanel>
+                                        <!-- 作者信息行 -->
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="36" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- 作者头像 (纯直角 Metro 32x32) -->
+                                            <Grid Width="32" Height="32" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                <Border Background="{ThemeResource PhoneAccentBrush}">
+                                                    <TextBlock Text="{Binding DisplayAvatarLetter}" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                </Border>
+                                                <Image Source="{Binding AvatarBitmap}" Stretch="UniformToFill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                                            </Grid>
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
+                                                <TextBlock Text="{Binding DisplayAuthor}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding DisplayTime}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,1,0,0" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- 文章标题 (加粗) -->
+                                        <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,6" />
+
+                                        <!-- 文章内容预览 (精简段落) -->
+                                        <TextBlock Text="{Binding Content}" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" TextWrapping="Wrap" LineHeight="18" MaxHeight="54" TextTrimming="CharacterEllipsis" Margin="0,0,0,10" />
+
+                                        <!-- 统计信息行 -->
+                                        <Grid Margin="0,4,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- 1. 点赞数 -->
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                <FontIcon FontFamily="Segoe UI Symbol" Glyph="&#xE19F;" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding LikeText}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <!-- 2. 评论数 -->
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                <SymbolIcon Symbol="Message" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding CommentText}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <!-- 3. 收藏数 -->
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                <SymbolIcon Symbol="Favorite" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding CollectText}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <!-- 4. 投币数 -->
+                                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                <FontIcon FontFamily="Segoe UI Symbol" Glyph="&#xE13D;" FontSize="11" Foreground="{ThemeResource PhoneAccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding AmountText}" FontSize="11" Foreground="{ThemeResource PhoneAccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </PivotItem>
         </Pivot>
     </Grid>
 
@@ -171,6 +270,7 @@
     <Page.BottomAppBar>
         <CommandBar x:Name="DetailCommandBar" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" ClosedDisplayMode="Compact" IsSticky="False">
             <CommandBar.PrimaryCommands>
+                <AppBarButton x:Name="AppBarBtnEnterBoard" Icon="OpenWith" Label="进入板块" Click="AppBarBtnEnterBoard_Click" Visibility="Collapsed" />
                 <AppBarButton x:Name="AppBarBtnLike" Icon="Favorite" Label="0 点赞" Click="AppBarBtnLike_Click" />
                 <AppBarButton x:Name="AppBarBtnCollect" Icon="OutlineStar" Label="0 收藏" Click="AppBarBtnCollect_Click" />
                 <AppBarButton x:Name="AppBarBtnReward" Label="0 投币" Click="AppBarBtnReward_Click">
@@ -181,8 +281,12 @@
                 <AppBarButton x:Name="AppBarBtnRefresh" Icon="Refresh" Label="刷新" Click="AppBarBtnRefresh_Click" />
             </CommandBar.PrimaryCommands>
             <CommandBar.SecondaryCommands>
+                <AppBarButton x:Name="AppBarBtnGoBoardSecondary" Label="进入所属板块" Click="AppBarBtnEnterBoard_Click" />
                 <AppBarButton x:Name="AppBarBtnAuthor" Label="查看作者资料" Click="AppBarBtnAuthor_Click" />
                 <AppBarButton x:Name="AppBarBtnCopy" Label="复制/查看正文" Click="AppBarBtnCopy_Click" />
+                <AppBarButton x:Name="AppBarBtnEditPost" Label="编辑动态" Click="AppBarBtnEditPost_Click" Visibility="Collapsed" />
+                <AppBarButton x:Name="AppBarBtnStickyPost" Label="置顶" Click="AppBarBtnStickyPost_Click" Visibility="Collapsed" />
+                <AppBarButton x:Name="AppBarBtnDeletePost" Label="删除动态" Click="AppBarBtnDeletePost_Click" Visibility="Collapsed" />
             </CommandBar.SecondaryCommands>
         </CommandBar>
     </Page.BottomAppBar>

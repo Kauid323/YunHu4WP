@@ -495,12 +495,20 @@ namespace 云湖WP.Utils
         public static string GetMessageSummary(ChatMessageItem msg)
         {
             if (msg == null) return "";
+            if (msg.IsPostMsg)
+            {
+                return "[动态] " + (!string.IsNullOrEmpty(msg.DisplayPostTitle) ? msg.DisplayPostTitle : "分享");
+            }
+
             switch (msg.ContentType)
             {
                 case 2: return "[图片]";
-                case 4: return "[文件] " + (!string.IsNullOrEmpty(msg.FileName) ? msg.FileName : "");
+                case 4: return "[文件] " + (!string.IsNullOrEmpty(msg.DisplayFileName) ? msg.DisplayFileName : "");
                 case 5:
                 case 10: return "[视频]";
+                case 6:
+                case 12:
+                case 13: return "[动态] " + (!string.IsNullOrEmpty(msg.DisplayPostTitle) ? msg.DisplayPostTitle : "分享");
                 case 7: return "[表情]";
                 case 8: return "[网页/富文本]";
                 case 11: return "[语音]";

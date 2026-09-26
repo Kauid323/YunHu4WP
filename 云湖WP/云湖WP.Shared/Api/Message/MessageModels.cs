@@ -81,21 +81,30 @@ namespace 云湖WP.Api.Message
         public string QuoteMsgId { get; set; }
         public string AudioUrl { get; set; }
         public int AudioDuration { get; set; }
+        public string PostId { get; set; }
+        public string PostTitle { get; set; }
+        public string PostContent { get; set; }
+        public string PostContentType { get; set; }
         public bool IsEdited { get; set; }
         public string Tip { get; set; }
+        public Windows.Storage.StorageFile DownloadedFile { get; set; }
 
         // 缓存预解析字段 (消除每次 UI 绘制与滚动时的重复字符串解析和内存分配)
         private bool _parsed = false;
         private string _extractedImageUrl = "";
         private string _extractedVideoUrl = "";
+        private string _parsedPostId = "";
+        private string _displayPostTitle = "";
         private bool _isVideoMsg;
         private bool _isImageMsg;
         private bool _isFileMsg;
         private bool _isHtmlMsg;
+        private bool _isPostMsg;
         private Visibility _videoMsgVisibility = Visibility.Collapsed;
         private Visibility _imageMsgVisibility = Visibility.Collapsed;
         private Visibility _fileMsgVisibility = Visibility.Collapsed;
         private Visibility _htmlMsgVisibility = Visibility.Collapsed;
+        private Visibility _postMsgVisibility = Visibility.Collapsed;
         private Visibility _textMsgVisibility = Visibility.Visible;
         private string _formattedVideoDuration = "";
         private string _formattedFileSize = "";
@@ -259,11 +268,106 @@ namespace 云湖WP.Api.Message
 
             _isHtmlMsg = !_isVideoMsg && !_isImageMsg && !_isFileMsg && looksLikeHtml;
 
-            _videoMsgVisibility = _isVideoMsg ? Visibility.Visible : Visibility.Collapsed;
-            _imageMsgVisibility = _isImageMsg ? Visibility.Visible : Visibility.Collapsed;
-            _fileMsgVisibility = _isFileMsg ? Visibility.Visible : Visibility.Collapsed;
-            _htmlMsgVisibility = _isHtmlMsg ? Visibility.Visible : Visibility.Collapsed;
-            _textMsgVisibility = (!_isVideoMsg && !_isImageMsg && !_isFileMsg && !_isHtmlMsg && !string.IsNullOrEmpty(Text)) ? Visibility.Visible : Visibility.Collapsed;
+            // 4.6. 动态/文章消息识别 (PostId / PostTitle / ContentType 6,12,13 / 动态 Markdown 或链接格式)
+            _isPostMsg = false;
+            _parsedPostId = "";
+            _displayPostTitle = "";
+
+            if (!string.IsNullOrEmpty(PostId))
+            {
+                _parsedPostId = PostId.Trim();
+                _isPostMsg = true;
+            }
+
+            if (!string.IsNullOrEmpty(PostTitle))
+            {
+                _displayPostTitle = PostTitle.Trim();
+                _isPostMsg = true;
+            }
+            else if (!string.IsNullOrEmpty(PostContent))
+            {
+                string pc = PostContent.Trim();
+                int nl = pc.IndexOf('\n');
+                _displayPostTitle = nl > 0 ? pc.Substring(0, nl).Trim() : pc;
+                if (_displayPostTitle.Length > 60) _displayPostTitle = _displayPostTitle.Substring(0, 60) + "...";
+            }
+
+            if (ContentType == 6 || ContentType == 12 || ContentType == 13)
+            {
+                _isPostMsg = true;
+            }
+
+            if (!_isPostMsg && !_isVideoMsg && !_isImageMsg && !_isFileMsg && !_isHtmlMsg && !string.IsNullOrEmpty(Text))
+            {
+                string t = Text.Trim();
+                if (t.StartsWith("[动态", StringComparison.OrdinalIgnoreCase) || 
+                    t.StartsWith("[文章", StringComparison.OrdinalIgnoreCase) || 
+                    t.StartsWith("[post", StringComparison.OrdinalIgnoreCase))
+                {
+                    _isPostMsg = true;
+                    if (t.Contains("](") && t.EndsWith(")"))
+                    {
+                        int bEnd = t.IndexOf("](");
+                        string titlePart = t.Substring(1, bEnd - 1).Trim();
+                        if (titlePart.Contains(":"))
+                        {
+                            int col = titlePart.IndexOf(':');
+                            _displayPostTitle = titlePart.Substring(col + 1).Trim();
+                        }
+                        else if (titlePart.Contains("："))
+                        {
+                            int col = titlePart.IndexOf('：');
+                            _displayPostTitle = titlePart.Substring(col + 1).Trim();
+                        }
+                        else
+                        {
+                            _displayPostTitle = titlePart;
+                        }
+
+                        int uStart = bEnd + 2;
+                        int uEnd = t.LastIndexOf(')');
+                        if (uEnd > uStart)
+                        {
+                            string url = t.Substring(uStart, uEnd - uStart).Trim();
+                            _parsedPostId = ExtractPostIdFromUrl(url);
+                        }
+                    }
+                    else if (t.StartsWith("[post:", StringComparison.OrdinalIgnoreCase) && t.EndsWith("]"))
+                    {
+                        _parsedPostId = t.Substring(6, t.Length - 7).Trim();
+                        _displayPostTitle = "动态详情";
+                    }
+                    else
+                    {
+                        _displayPostTitle = t;
+                    }
+                }
+                else if (t.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || t.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                {
+                    string pid = ExtractPostIdFromUrl(t);
+                    if (!string.IsNullOrEmpty(pid))
+                    {
+                        _isPostMsg = true;
+                        _parsedPostId = pid;
+                        _displayPostTitle = "动态分享 (" + pid + ")";
+                    }
+                }
+            }
+
+            if (_isPostMsg)
+            {
+                if (string.IsNullOrEmpty(_displayPostTitle))
+                {
+                    _displayPostTitle = !string.IsNullOrEmpty(_parsedPostId) ? ("动态分享 (" + _parsedPostId + ")") : (!string.IsNullOrEmpty(Text) ? Text : "动态分享");
+                }
+            }
+
+            _postMsgVisibility = _isPostMsg ? Visibility.Visible : Visibility.Collapsed;
+            _videoMsgVisibility = (!_isPostMsg && _isVideoMsg) ? Visibility.Visible : Visibility.Collapsed;
+            _imageMsgVisibility = (!_isPostMsg && _isImageMsg) ? Visibility.Visible : Visibility.Collapsed;
+            _fileMsgVisibility = (!_isPostMsg && _isFileMsg) ? Visibility.Visible : Visibility.Collapsed;
+            _htmlMsgVisibility = (!_isPostMsg && _isHtmlMsg) ? Visibility.Visible : Visibility.Collapsed;
+            _textMsgVisibility = (!_isPostMsg && !_isVideoMsg && !_isImageMsg && !_isFileMsg && !_isHtmlMsg && !string.IsNullOrEmpty(Text)) ? Visibility.Visible : Visibility.Collapsed;
 
             // 5. 视频时长与时间格式化
             if (VideoDuration > 0)
@@ -487,9 +591,53 @@ namespace 云湖WP.Api.Message
             get { if (!_parsed) InitParsedData(); return _htmlMsgVisibility; }
         }
 
+        public bool IsPostMsg
+        {
+            get { if (!_parsed) InitParsedData(); return _isPostMsg; }
+        }
+
+        public string ParsedPostId
+        {
+            get { if (!_parsed) InitParsedData(); return _parsedPostId ?? ""; }
+        }
+
+        public string DisplayPostTitle
+        {
+            get { if (!_parsed) InitParsedData(); return _displayPostTitle ?? ""; }
+        }
+
+        public Visibility PostMsgVisibility
+        {
+            get { if (!_parsed) InitParsedData(); return _postMsgVisibility; }
+        }
+
         public Visibility TextMsgVisibility
         {
             get { if (!_parsed) InitParsedData(); return _textMsgVisibility; }
+        }
+
+        private static string ExtractPostIdFromUrl(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return "";
+            try
+            {
+                int postIdx = url.IndexOf("/post/", StringComparison.OrdinalIgnoreCase);
+                if (postIdx >= 0)
+                {
+                    string rem = url.Substring(postIdx + 6);
+                    int end = rem.IndexOfAny(new char[] { '?', '#', '/', '&', ')' });
+                    return end >= 0 ? rem.Substring(0, end) : rem;
+                }
+                int articleIdx = url.IndexOf("/article/", StringComparison.OrdinalIgnoreCase);
+                if (articleIdx >= 0)
+                {
+                    string rem = url.Substring(articleIdx + 9);
+                    int end = rem.IndexOfAny(new char[] { '?', '#', '/', '&', ')' });
+                    return end >= 0 ? rem.Substring(0, end) : rem;
+                }
+            }
+            catch { }
+            return "";
         }
 
         public long SendTime { get; set; }

@@ -130,10 +130,9 @@
                                         <StackPanel>
                                             <!-- 视频消息预览块 (紧凑单行，带播放图标与时长提示) -->
                                             <Border Visibility="{Binding VideoMsgVisibility}" 
-                                                    Background="#25FFFFFF" 
-                                                    BorderThickness="1" 
-                                                    BorderBrush="#40FFFFFF" 
-                                                    Padding="8,5" 
+                                                    Background="Transparent" 
+                                                    BorderThickness="0" 
+                                                    Padding="0,2" 
                                                     Tapped="VideoBubble_Tapped">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
@@ -152,10 +151,9 @@
 
                                             <!-- 图片消息预览块 (紧凑单行) -->
                                             <Border Visibility="{Binding ImageMsgVisibility}" 
-                                                    Background="#25FFFFFF" 
-                                                    BorderThickness="1" 
-                                                    BorderBrush="#40FFFFFF" 
-                                                    Padding="8,5" 
+                                                    Background="Transparent" 
+                                                    BorderThickness="0" 
+                                                    Padding="0,2" 
                                                     Tapped="ImageBubble_Tapped">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
@@ -172,10 +170,9 @@
 
                                             <!-- 文件消息卡片 (文件名、大小、进度条、下载状态) -->
                                             <Border Visibility="{Binding FileMsgVisibility}"
-                                                    Background="#25FFFFFF"
-                                                    BorderThickness="1"
-                                                    BorderBrush="#40FFFFFF"
-                                                    Padding="10,8"
+                                                    Background="Transparent"
+                                                    BorderThickness="0"
+                                                    Padding="0,2"
                                                     MinWidth="180"
                                                     MaxWidth="240"
                                                     Tapped="FileBubble_Tapped">
@@ -207,12 +204,31 @@
                                                 </StackPanel>
                                             </Border>
 
+                                            <!-- 动态/文章消息预览块 (动态图标 + 动态标题) -->
+                                            <Border Visibility="{Binding PostMsgVisibility}" 
+                                                    Background="Transparent" 
+                                                    BorderThickness="0" 
+                                                    Padding="0,2" 
+                                                    MinWidth="180"
+                                                    MaxWidth="240"
+                                                    Tapped="PostBubble_Tapped">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <SymbolIcon Symbol="PostUpdate" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding DisplayPostTitle}" FontSize="13" Foreground="White" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Grid.Column="2" Text="{Binding FormattedTime}" FontSize="10" Foreground="#88FFFFFF" VerticalAlignment="Center" Margin="8,0,0,0" />
+                                                </Grid>
+                                            </Border>
+
                                             <!-- HTML 网页富文本消息预览卡片 (不渲染复杂 HTML，点击直接进入查看/复制页) -->
                                             <Border Visibility="{Binding HtmlMsgVisibility}" 
-                                                    Background="#25FFFFFF" 
-                                                    BorderThickness="1" 
-                                                    BorderBrush="#40FFFFFF" 
-                                                    Padding="8,6" 
+                                                    Background="Transparent" 
+                                                    BorderThickness="0" 
+                                                    Padding="0,2" 
                                                     MinWidth="180"
                                                     Tapped="HtmlBubble_Tapped">
                                                 <Grid>
@@ -250,10 +266,9 @@
                                         <StackPanel>
                                             <!-- 视频消息预览块 (紧凑单行，带播放图标与时长提示) -->
                                             <Border Visibility="{Binding VideoMsgVisibility}" 
-                                                    Background="#20000000" 
-                                                    BorderThickness="1" 
-                                                    BorderBrush="#33FFFFFF" 
-                                                    Padding="8,5" 
+                                                    Background="Transparent" 
+                                                    BorderThickness="0" 
+                                                    Padding="0,2" 
                                                     Tapped="VideoBubble_Tapped">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
@@ -272,10 +287,9 @@
 
                                             <!-- 图片消息预览块 (紧凑单行) -->
                                             <Border Visibility="{Binding ImageMsgVisibility}" 
-                                                    Background="#20000000" 
-                                                    BorderThickness="1" 
-                                                    BorderBrush="#33FFFFFF" 
-                                                    Padding="8,5" 
+                                                    Background="Transparent" 
+                                                    BorderThickness="0" 
+                                                    Padding="0,2" 
                                                     Tapped="ImageBubble_Tapped">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
@@ -292,10 +306,9 @@
 
                                             <!-- 文件消息卡片 (文件名、大小、进度条、下载状态) -->
                                             <Border Visibility="{Binding FileMsgVisibility}"
-                                                    Background="#20000000"
-                                                    BorderThickness="1"
-                                                    BorderBrush="#33FFFFFF"
-                                                    Padding="10,8"
+                                                    Background="Transparent"
+                                                    BorderThickness="0" 
+                                                    Padding="0,2"
                                                     MinWidth="180"
                                                     MaxWidth="240"
                                                     Tapped="FileBubble_Tapped">
@@ -327,12 +340,31 @@
                                                 </StackPanel>
                                             </Border>
 
+                                            <!-- 动态/文章消息预览块 (动态图标 + 动态标题) -->
+                                            <Border Visibility="{Binding PostMsgVisibility}" 
+                                                    Background="Transparent" 
+                                                    BorderThickness="0" 
+                                                    Padding="0,2" 
+                                                    MinWidth="180"
+                                                    MaxWidth="240"
+                                                    Tapped="PostBubble_Tapped">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <SymbolIcon Symbol="PostUpdate" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding DisplayPostTitle}" FontSize="13" Foreground="White" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Grid.Column="2" Text="{Binding FormattedTime}" FontSize="10" Foreground="#CCFFFFFF" VerticalAlignment="Center" Margin="8,0,0,0" />
+                                                </Grid>
+                                            </Border>
+
                                             <!-- HTML 网页富文本消息预览卡片 (不渲染复杂 HTML，点击直接进入查看/复制页) -->
                                             <Border Visibility="{Binding HtmlMsgVisibility}" 
-                                                    Background="#20000000" 
-                                                    BorderThickness="1" 
-                                                    BorderBrush="#33FFFFFF" 
-                                                    Padding="8,6" 
+                                                    Background="Transparent" 
+                                                    BorderThickness="0" 
+                                                    Padding="0,2" 
                                                     MinWidth="180"
                                                     Tapped="HtmlBubble_Tapped">
                                                 <Grid>
@@ -425,10 +457,11 @@
             <CommandBar.PrimaryCommands>
                 <AppBarButton x:Name="AppBarBtnPickImage" Icon="Pictures" Label="发送图片" Click="AppBarBtnPickImage_Click" />
                 <AppBarButton x:Name="AppBarBtnSendVideo" Icon="Video" Label="发送视频" Click="AppBarBtnSendVideo_Click" />
+                <AppBarButton x:Name="AppBarBtnSendFile" Icon="OpenFile" Label="发送文件" Click="AppBarBtnSendFile_Click" />
                 <AppBarButton x:Name="AppBarBtnSendUrl" Icon="World" Label="媒体链接" Click="AppBarBtnSendUrl_Click" />
-                <AppBarButton x:Name="AppBarBtnRefresh" Icon="Refresh" Label="刷新" Click="BtnRefresh_Click" />
             </CommandBar.PrimaryCommands>
             <CommandBar.SecondaryCommands>
+                <AppBarButton x:Name="AppBarBtnRefresh" Label="刷新聊天" Click="BtnRefresh_Click" />
                 <AppBarButton x:Name="AppBarBtnClearInput" Label="清空输入框" Click="AppBarBtnClearInput_Click" />
                 <AppBarButton x:Name="AppBarBtnScrollBottom" Label="滚动到底部" Click="AppBarBtnScrollBottom_Click" />
                 <AppBarButton x:Name="AppBarBtnViewLogs" Label="查看诊断日志" Click="AppBarBtnViewLogs_Click" />

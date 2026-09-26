@@ -36,6 +36,9 @@
   <Capabilities>
     <Capability Name="internetClientServer" />
     <Capability Name="picturesLibrary" />
+    <Capability Name="musicLibrary" />
+    <Capability Name="videosLibrary" />
+    <Capability Name="removableStorage" />
   </Capabilities>
   <build:Metadata>
     <build:Item Name="SharedGUID" Value="031490cc-5699-4b16-88ef-861a620305e3" />

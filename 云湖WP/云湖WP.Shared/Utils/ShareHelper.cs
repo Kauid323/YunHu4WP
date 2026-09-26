@@ -89,13 +89,27 @@ namespace 云湖WP.Utils
                 return;
             }
 
+            string creatorDisplayName = createBy;
+            if (!string.IsNullOrEmpty(createBy))
+            {
+                try
+                {
+                    var userWebRes = await 云湖WP.Api.WebApi.User.UserWebApi.GetUserHomepageAsync(createBy, token);
+                    if (userWebRes != null && userWebRes.IsSuccess && userWebRes.User != null && !string.IsNullOrEmpty(userWebRes.User.Nickname))
+                    {
+                        creatorDisplayName = string.Format("{0} (ID: {1})", userWebRes.User.Nickname, createBy);
+                    }
+                }
+                catch { }
+            }
+
             string typeText = (chatType == 2) ? "群聊" : ((chatType == 3) ? "机器人" : "私聊");
             string dialogContent = string.Format(
                 "会话名称: {0}\n会话 ID: {1}\n会话类型: {2}{3}{4}",
                 string.IsNullOrEmpty(chatName) ? "未知" : chatName,
                 chatId,
                 typeText,
-                !string.IsNullOrEmpty(createBy) ? string.Format("\n创建者: {0}", createBy) : "",
+                !string.IsNullOrEmpty(creatorDisplayName) ? string.Format("\n分享者: {0}", creatorDisplayName) : "",
                 !string.IsNullOrEmpty(key) ? string.Format("\n分享 Key: {0}", key) : ""
             );
 

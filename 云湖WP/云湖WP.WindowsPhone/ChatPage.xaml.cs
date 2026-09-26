@@ -20,6 +20,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using 云湖WP.Api.Common;
+using 云湖WP.Api.Community.PostDetail;
 using 云湖WP.Api.Message;
 using 云湖WP.Api.User;
 using 云湖WP.Api.User.Info;
@@ -962,9 +963,28 @@ namespace 云湖WP
 #endif
         }
 
+        private void AppBarBtnSendFile_Click(object sender, RoutedEventArgs e)
+        {
+#if WINDOWS_PHONE_APP
+            try
+            {
+                var picker = new Windows.Storage.Pickers.FileOpenPicker();
+                picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.List;
+                picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+                picker.FileTypeFilter.Add("*");
+                picker.ContinuationData["Action"] = "PickFile";
+                picker.PickSingleFileAndContinue();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("PickFile failed: " + ex.Message);
+            }
+#endif
+        }
+
 #if WINDOWS_PHONE_APP
         /// <summary>
-        /// 接收系统相册/视频库选择回调并直传七牛云发送媒体
+        /// 接收系统相册/视频库/文件库选择回调并直传七牛云发送媒体与文件
         /// </summary>
         public async void ContinueFileOpenPicker(Windows.ApplicationModel.Activation.FileOpenPickerContinuationEventArgs args)
         {
@@ -973,27 +993,38 @@ namespace 云湖WP
                 if (args != null && args.Files != null && args.Files.Count > 0)
                 {
                     var file = args.Files[0];
-                    bool isVideo = false;
-                    if (args.ContinuationData != null && args.ContinuationData.ContainsKey("Action") && (args.ContinuationData["Action"] as string) == "PickVideo")
-                    {
-                        isVideo = true;
-                    }
-                    else if (file != null)
-                    {
-                        string ext = file.FileType.ToLowerInvariant();
-                        if (ext == ".mp4" || ext == ".mov" || ext == ".wmv" || ext == ".avi" || ext == ".3gp" || ext == ".mkv" || ext == ".webm")
-                        {
-                            isVideo = true;
-                        }
-                    }
+                    string action = (args.ContinuationData != null && args.ContinuationData.ContainsKey("Action"))
+                        ? (args.ContinuationData["Action"] as string)
+                        : null;
 
-                    if (isVideo)
+                    if (action == "PickFile")
+                    {
+                        await UploadAndSendLocalFileAsync(file);
+                    }
+                    else if (action == "PickVideo")
                     {
                         await UploadAndSendLocalVideoAsync(file);
                     }
                     else
                     {
-                        await UploadAndSendLocalImageAsync(file);
+                        bool isVideo = false;
+                        if (file != null)
+                        {
+                            string ext = file.FileType.ToLowerInvariant();
+                            if (ext == ".mp4" || ext == ".mov" || ext == ".wmv" || ext == ".avi" || ext == ".3gp" || ext == ".mkv" || ext == ".webm")
+                            {
+                                isVideo = true;
+                            }
+                        }
+
+                        if (isVideo)
+                        {
+                            await UploadAndSendLocalVideoAsync(file);
+                        }
+                        else
+                        {
+                            await UploadAndSendLocalImageAsync(file);
+                        }
                     }
                 }
             }
@@ -1260,6 +1291,178 @@ namespace 云湖WP
             await DoSendVideoAsync(result);
         }
 
+        /// <summary>
+        /// 上传本地普通文件到七牛云并发送文件消息 (带实时进度条显示与取消支持)
+        /// </summary>
+        private async Task UploadAndSendLocalFileAsync(Windows.Storage.StorageFile file)
+        {
+            if (file == null || string.IsNullOrEmpty(_token)) return;
+
+            string errMsg = null;
+            _uploadCts = new CancellationTokenSource();
+            UploadProgressPanel.Visibility = Visibility.Visible;
+            UploadProgressBar.Value = 0;
+            TxtUploadPercentage.Text = "0%";
+            TxtUploadStatus.Text = "准备上传文件...";
+
+            var uploadProgress = new Progress<double>(pct =>
+            {
+                UploadProgressBar.Value = pct;
+                TxtUploadPercentage.Text = string.Format("{0:0}%", pct);
+                if (pct < 20)
+                {
+                    TxtUploadStatus.Text = "准备文件数据...";
+                }
+                else if (pct < 95)
+                {
+                    TxtUploadStatus.Text = "正在直传七牛云...";
+                }
+                else
+                {
+                    TxtUploadStatus.Text = "上传完成，正在发送...";
+                }
+            });
+
+            try
+            {
+                // 调用系统七牛云直传组件 (附带实时进度报告与 CancellationToken)
+                var uploadRes = await QiniuUploadHelper.UploadFileDetailedAsync(file, _token, uploadProgress, _uploadCts.Token);
+                if (uploadRes != null && !string.IsNullOrEmpty(uploadRes.Key))
+                {
+                    await DoSendFileAsync(uploadRes);
+                }
+                else
+                {
+                    errMsg = "上传文件未获取到访问地址";
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                AppLogger.Log("ChatPage", "用户取消了文件上传");
+            }
+            catch (Exception ex)
+            {
+                errMsg = "文件上传失败: " + ex.Message;
+            }
+            finally
+            {
+                _uploadCts = null;
+                var ignore = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    try
+                    {
+                        if (UploadProgressPanel != null)
+                        {
+                            UploadProgressPanel.Visibility = Visibility.Collapsed;
+                        }
+                    }
+                    catch { }
+                });
+            }
+
+            if (errMsg != null)
+            {
+                await ShowToastAsync(errMsg);
+            }
+        }
+
+        private async Task DoSendFileAsync(QiniuUploadResult fileResult)
+        {
+            if (fileResult == null || string.IsNullOrWhiteSpace(fileResult.Key)) return;
+
+            string msgId = Guid.NewGuid().ToString("N");
+            string fullFileUrl = fileResult.PublicUrl;
+
+            // 本地乐观添加文件消息 (ContentType = 4 文件)
+            var localMsg = new ChatMessageItem
+            {
+                MsgId = msgId,
+                ChatId = _chatId,
+                ChatType = _chatType,
+                Direction = "right",
+                ContentType = 4,
+                FileUrl = fullFileUrl,
+                FileName = !string.IsNullOrEmpty(fileResult.FileName) ? fileResult.FileName : "文件",
+                FileSize = fileResult.FileSize,
+                Text = string.Format("[文件: {0}]", fileResult.FileName),
+                SendTime = DateTime.UtcNow.Ticks / 10000 - 62135596800000L, // UTC ms
+                SenderName = "我",
+                SenderAvatarUrl = _selfAvatarUrl,
+                SenderAvatarBitmap = _selfAvatarBitmap
+            };
+            localMsg.InitParsedData();
+
+            _messageList.Add(localMsg);
+            if (EmptyMsgPanel != null)
+            {
+                EmptyMsgPanel.Visibility = Visibility.Collapsed;
+            }
+            ScrollToBottom(true);
+
+            string sendErr = null;
+            try
+            {
+                var res = await MessageApi.SendFileMessageAsync(
+                    token: _token,
+                    chatId: _chatId,
+                    chatType: _chatType,
+                    fileKey: fileResult.Key,
+                    fileHash: fileResult.Hash,
+                    fileName: fileResult.FileName,
+                    fileSize: fileResult.FileSize,
+                    mimeType: fileResult.MimeType,
+                    fileExtension: fileResult.FileExtension,
+                    customMsgId: msgId);
+
+                if (!res.IsSuccess)
+                {
+                    sendErr = "发送文件失败: " + res.Msg;
+                }
+            }
+            catch (Exception ex)
+            {
+                sendErr = "发送文件异常: " + ex.Message;
+            }
+
+            if (sendErr != null)
+            {
+                await ShowToastAsync(sendErr);
+            }
+        }
+
+        private async Task DoSendFileAsync(string fileUrl, string fileName = null, long fileSize = 0)
+        {
+            if (string.IsNullOrWhiteSpace(fileUrl)) return;
+            string cleanUrl = fileUrl.Trim();
+            string key = cleanUrl;
+            if (key.Contains("/"))
+            {
+                key = key.Substring(key.LastIndexOf('/') + 1);
+            }
+            int qIdx = key.IndexOf('?');
+            if (qIdx >= 0)
+            {
+                key = key.Substring(0, qIdx);
+            }
+            string ext = "dat";
+            if (key.Contains("."))
+            {
+                ext = key.Substring(key.LastIndexOf('.') + 1).ToLowerInvariant();
+            }
+
+            var result = new QiniuUploadResult
+            {
+                Key = key,
+                Hash = key.Contains(".") ? key.Substring(0, key.IndexOf('.')) : key,
+                FileName = !string.IsNullOrEmpty(fileName) ? fileName : key,
+                FileSize = fileSize,
+                FileExtension = ext,
+                MimeType = "application/octet-stream",
+                PublicUrl = cleanUrl
+            };
+            await DoSendFileAsync(result);
+        }
+
         private async void AppBarBtnSendUrl_Click(object sender, RoutedEventArgs e)
         {
             string currentText = TxtInput.Text.Trim();
@@ -1271,6 +1474,10 @@ namespace 云湖WP
                 {
                     await DoSendVideoAsync(currentText);
                 }
+                else if (lower.EndsWith(".zip") || lower.EndsWith(".rar") || lower.EndsWith(".7z") || lower.EndsWith(".pdf") || lower.EndsWith(".doc") || lower.EndsWith(".docx") || lower.EndsWith(".xls") || lower.EndsWith(".xlsx") || lower.EndsWith(".ppt") || lower.EndsWith(".pptx") || lower.EndsWith(".apk") || lower.EndsWith(".xap") || lower.EndsWith(".appx") || lower.EndsWith(".txt") || lower.Contains("/file/"))
+                {
+                    await DoSendFileAsync(currentText);
+                }
                 else
                 {
                     await DoSendImageAsync(currentText);
@@ -1278,7 +1485,7 @@ namespace 云湖WP
             }
             else
             {
-                await ShowToastAsync("请先在输入框中输入或粘贴媒体 URL (http/https 图片或视频直链)，然后点击此项发送");
+                await ShowToastAsync("请先在输入框中输入或粘贴媒体/文件 URL (http/https 直链)，然后点击此项发送");
             }
         }
 
@@ -1674,9 +1881,20 @@ namespace 云湖WP
                 return;
             }
 
-            if (msg.IsDownloading || msg.IsDownloaded)
+            if (msg.IsDownloading)
             {
                 return;
+            }
+
+            // 若已经下载过，尝试直接用系统关联应用打开该文件
+            if (msg.IsDownloaded && msg.DownloadedFile != null)
+            {
+                try
+                {
+                    bool launched = await Windows.System.Launcher.LaunchFileAsync(msg.DownloadedFile);
+                    if (launched) return;
+                }
+                catch { }
             }
 
             msg.IsDownloading = true;
@@ -1690,18 +1908,60 @@ namespace 云湖WP
             });
 
             string errMsg = null;
+            StorageFile savedFile = null;
 
             try
             {
-                var savedFile = await FileDownloadHelper.DownloadFileWithProgressAsync(
+                savedFile = await FileDownloadHelper.DownloadFileWithProgressAsync(
                     msg.FileUrl,
                     msg.DisplayFileName,
                     msg.FileSize,
                     downloadProgress);
 
+                msg.DownloadedFile = savedFile;
                 msg.IsDownloading = false;
                 msg.IsDownloaded = true;
-                msg.DownloadStatusText = "已下载";
+
+                string folderDesc = "公共目录";
+                if (savedFile != null && !string.IsNullOrEmpty(savedFile.Path))
+                {
+                    if (savedFile.Path.IndexOf("Music", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        folderDesc = "【Music (音乐)】目录";
+                        msg.DownloadStatusText = "已存入音乐库";
+                    }
+                    else if (savedFile.Path.IndexOf("Pictures", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        folderDesc = "【Pictures (相册)】目录";
+                        msg.DownloadStatusText = "已存入相册";
+                    }
+                    else if (savedFile.Path.IndexOf("Videos", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        folderDesc = "【Videos (视频)】目录";
+                        msg.DownloadStatusText = "已存入视频库";
+                    }
+                    else
+                    {
+                        folderDesc = "本地目录";
+                        msg.DownloadStatusText = "已下载";
+                    }
+                }
+                else
+                {
+                    msg.DownloadStatusText = "已下载";
+                }
+
+                await ShowToastAsync(string.Format("文件已存入系统{0}: {1}", folderDesc, (savedFile != null ? savedFile.Name : msg.DisplayFileName)));
+
+                // 下载完成后尝试唤起系统默认应用打开
+                if (savedFile != null)
+                {
+                    try
+                    {
+                        await Windows.System.Launcher.LaunchFileAsync(savedFile);
+                    }
+                    catch { }
+                }
             }
             catch (Exception ex)
             {
@@ -1777,6 +2037,46 @@ namespace 云湖WP
 
             string textToView = msg.Text ?? "";
             Frame.Navigate(typeof(TextViewerPage), textToView);
+        }
+
+        /// <summary>
+        /// 点击动态消息预览卡片，直接跳转至动态详情页 (PostDetailPage)
+        /// </summary>
+        private void PostBubble_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            e.Handled = true;
+            var element = sender as FrameworkElement;
+            if (element == null) return;
+
+            var msg = element.DataContext as ChatMessageItem;
+            if (msg == null) return;
+
+            string pid = !string.IsNullOrEmpty(msg.ParsedPostId) ? msg.ParsedPostId : msg.PostId;
+            long parsedId = 0;
+            if (!string.IsNullOrEmpty(pid) && long.TryParse(pid, out parsedId) && parsedId > 0)
+            {
+                try
+                {
+                    var navArgs = new PostDetailNavigationArgs
+                    {
+                        PostId = parsedId,
+                        Token = _token
+                    };
+                    Frame.Navigate(typeof(PostDetailPage), navArgs);
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Log("ChatPage", "跳转动态详情异常: " + ex.Message);
+                }
+            }
+            else
+            {
+                // 如果没有提取到有效 postId，若有标题或正文文本，降级打开文本查看器
+                if (!string.IsNullOrEmpty(msg.Text))
+                {
+                    Frame.Navigate(typeof(TextViewerPage), msg.Text);
+                }
+            }
         }
 
 

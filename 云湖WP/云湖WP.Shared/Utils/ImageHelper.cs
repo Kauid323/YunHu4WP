@@ -49,8 +49,8 @@ namespace 云湖WP.Utils
         }
 
         /// <summary>
-        /// 格式化七牛云图片 URL，按需拼接 imageView2 缩放/压缩参数
-        /// 针对 96x96 头像生成 imageView2/2/w/96/h/96/q/75
+        /// 格式化七牛云缩略图/头像 URL (按需生成指定宽高的缩略图)
+        /// 若 width <= 0 且 height <= 0，则返回原始无参纯净 URL
         /// </summary>
         public static string FormatQiniuUrl(string url, int width = 96, int height = 96)
         {
@@ -80,11 +80,12 @@ namespace 云湖WP.Utils
             }
 
             // 将 HTTP 的 chat-img 自动升级为 HTTPS 避免重定向与安全策略拦截
-            if (trimmed.StartsWith("http://chat-img.jwznb.com", StringComparison.OrdinalIgnoreCase))
+            if (trimmed.StartsWith("http://chat-img", StringComparison.OrdinalIgnoreCase))
             {
                 trimmed = "https://" + trimmed.Substring("http://".Length);
             }
 
+            // 若不需要缩放 (原图)，直接返回无参纯净 URL
             if (width <= 0 && height <= 0) return SafeEscapeUrl(trimmed);
 
             // 如果已经包含 imageView2 参数，不再重复拼接
@@ -101,7 +102,7 @@ namespace 云湖WP.Utils
             }
 
             // 避开不支持七牛图片处理的后缀格式
-            string lower = trimmed.ToLower();
+            string lower = trimmed.ToLowerInvariant();
             string pathPart = lower.Contains("?") ? lower.Substring(0, lower.IndexOf('?')) : lower;
             if (pathPart.EndsWith(".tmp") || pathPart.EndsWith(".gif") || pathPart.EndsWith(".svg")
                 || pathPart.EndsWith(".mp4") || pathPart.EndsWith(".mp3") || pathPart.EndsWith(".wav")
@@ -111,20 +112,13 @@ namespace 云湖WP.Utils
                 return SafeEscapeUrl(trimmed);
             }
 
-            // 拼接七牛云 imageView2/2 参数 (96x96 / format/jpg / q75，强制转为 WP8.1 硬件支持的 JPEG)
+            // 拼接七牛云 imageView2/2 参数 (96x96 / format/jpg / q75)
             string param = string.Format("imageView2/2/w/{0}/h/{1}/format/jpg/q/75", width, height);
             string finalUrl;
 
             if (trimmed.Contains("?"))
             {
-                if (trimmed.EndsWith("?") || trimmed.EndsWith("&"))
-                {
-                    finalUrl = trimmed + param;
-                }
-                else
-                {
-                    finalUrl = trimmed + "&" + param;
-                }
+                finalUrl = (trimmed.EndsWith("?") || trimmed.EndsWith("&")) ? trimmed + param : trimmed + "&" + param;
             }
             else
             {
@@ -135,42 +129,105 @@ namespace 云湖WP.Utils
         }
 
         /// <summary>
-        /// 格式化大图查看器 URL (若为七牛图床，自动追加 imageView2/0/format/jpg 确保 WebP 原图转码为 WP8.1 硬件支持的 JPEG，同时保持 100% 原始分辨率)
+        /// 格式化大图查看器 URL:
+        /// 1. 对于本身是 JPG / PNG / GIF / BMP 的图片：保持原始纯净 URL，绝不添加任何多余参数！
+        /// 2. 对于 WebP 格式（Windows Phone 8.1 硬件不支持解码 WebP）：追加七牛 imageView2/0/format/jpg 在线转码为原分辨率 JPEG。
         /// </summary>
         public static string FormatFullImageUrl(string url)
         {
             if (string.IsNullOrEmpty(url)) return "";
-            string formatted = FormatQiniuUrl(url, 0, 0);
-            if (string.IsNullOrEmpty(formatted)) return "";
+            string trimmed = url.Trim();
+            if (trimmed.Length == 0) return "";
+
+            // 修正相对协议
+            if (trimmed.StartsWith("//")) trimmed = "https:" + trimmed;
+            if (!trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                !trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                trimmed = trimmed.StartsWith("/") ? DefaultImageHost + trimmed : DefaultImageHost + "/" + trimmed;
+            }
+
+            // HTTP 升级为 HTTPS
+            if (trimmed.StartsWith("http://chat-img", StringComparison.OrdinalIgnoreCase))
+            {
+                trimmed = "https://" + trimmed.Substring("http://".Length);
+            }
 
             // 若已经带有 imageView2，直接返回
-            if (formatted.IndexOf("imageView2/", StringComparison.OrdinalIgnoreCase) >= 0)
+            if (trimmed.IndexOf("imageView2/", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                return formatted;
+                return SafeEscapeUrl(trimmed);
             }
 
-            // 避开 GIF 动图与矢量/特殊文件，不强转为 JPG
-            string lower = formatted.ToLower();
-            if (lower.Contains(".gif") || lower.Contains(".svg") || lower.Contains(".tgs") || lower.Contains(".mp4"))
+            string lower = trimmed.ToLowerInvariant();
+            string pathPart = lower.Contains("?") ? lower.Substring(0, lower.IndexOf('?')) : lower;
+
+            // 1. 本身为 JPG, JPEG, PNG, BMP, GIF, SVG 等 WP8.1 原生支持格式：保持原始纯净链接，不添加任何参数！
+            if (pathPart.EndsWith(".jpg") || pathPart.EndsWith(".jpeg") || pathPart.EndsWith(".png") ||
+                pathPart.EndsWith(".bmp") || pathPart.EndsWith(".gif") || pathPart.EndsWith(".svg") ||
+                pathPart.EndsWith(".ico") || pathPart.EndsWith(".mp4"))
             {
-                return formatted;
+                return SafeEscapeUrl(trimmed);
             }
 
-            // 若属于七牛图床，追加 imageView2/0/format/jpg 以兼容 WP8.1 解码 WebP 原图
-            if (formatted.Contains("chat-img.jwznb.com") || formatted.Contains("clouddn.com") || formatted.Contains("qiniucdn.com"))
+            // 2. 针对 WebP 格式（WP8.1 系统无 WebP 解码器）：
+            // 在七牛图床 (包含 chat-img.jwznb.com, chat-img1, chat-img2, chat-img3 等所有 jwznb.com 域名) 上追加 imageView2/0/format/jpg
+            bool isQiniu = lower.Contains("jwznb.com") || lower.Contains("qiniu") || lower.Contains("clouddn");
+            bool isWebpOrExpression = pathPart.EndsWith(".webp") || pathPart.Contains("/expression/") || (!pathPart.Contains(".") && isQiniu);
+
+            if (isQiniu && isWebpOrExpression)
             {
                 string param = "imageView2/0/format/jpg/q/95";
-                if (formatted.Contains("?"))
+                string finalUrl;
+                if (trimmed.Contains("?"))
                 {
-                    return formatted + "&" + param;
+                    finalUrl = (trimmed.EndsWith("?") || trimmed.EndsWith("&")) ? trimmed + param : trimmed + "&" + param;
                 }
                 else
                 {
-                    return formatted + "?" + param;
+                    finalUrl = trimmed + "?" + param;
                 }
+                return SafeEscapeUrl(finalUrl);
             }
 
-            return formatted;
+            return SafeEscapeUrl(trimmed);
+        }
+
+        /// <summary>
+        /// 将 WebP 链接转码为 JPEG 链接 (专门用于在 WP8.1 上展示 WebP 表情/贴纸/图片)
+        /// </summary>
+        public static string ConvertWebPToJpgUrl(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return "";
+            string trimmed = url.Trim();
+            if (trimmed.StartsWith("//")) trimmed = "https:" + trimmed;
+            if (!trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                !trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                trimmed = trimmed.StartsWith("/") ? DefaultImageHost + trimmed : DefaultImageHost + "/" + trimmed;
+            }
+
+            if (trimmed.StartsWith("http://chat-img", StringComparison.OrdinalIgnoreCase))
+            {
+                trimmed = "https://" + trimmed.Substring("http://".Length);
+            }
+
+            if (trimmed.IndexOf("imageView2/", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return SafeEscapeUrl(trimmed);
+            }
+
+            string param = "imageView2/0/format/jpg/q/95";
+            string finalUrl;
+            if (trimmed.Contains("?"))
+            {
+                finalUrl = (trimmed.EndsWith("?") || trimmed.EndsWith("&")) ? trimmed + param : trimmed + "&" + param;
+            }
+            else
+            {
+                finalUrl = trimmed + "?" + param;
+            }
+            return SafeEscapeUrl(finalUrl);
         }
 
         private const string DefaultVideoHost = "https://chat-video1.jwznb.com";
@@ -217,7 +274,6 @@ namespace 云湖WP.Utils
             if (string.IsNullOrEmpty(rawUrl)) return "";
             try
             {
-                // 处理 URL 中的空格等未编码字符
                 return Uri.EscapeUriString(rawUrl);
             }
             catch

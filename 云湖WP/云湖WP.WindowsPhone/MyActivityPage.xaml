@@ -1,0 +1,260 @@
+<Page
+    x:Class="云湖WP.MyActivityPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:云湖WP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Pivot x:Name="ActivityPivot" Title="动态管理" Margin="0" SelectionChanged="ActivityPivot_SelectionChanged">
+
+            <!-- 1. 我的动态 -->
+            <PivotItem Header="动态" Margin="0">
+                <Grid Margin="0">
+                    <ProgressBar x:Name="MyPostsProgressBar" IsIndeterminate="True" VerticalAlignment="Top" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}" Canvas.ZIndex="10"/>
+
+                    <StackPanel x:Name="EmptyMyPostsPanel" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16,0">
+                        <TextBlock Text="暂无动态" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                        <TextBlock Text="去动态广场发布你的第一条动态吧" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+
+                    <ListView x:Name="MyPostsListView"
+                              SelectionMode="None"
+                              IsItemClickEnabled="True"
+                              ItemClick="MyPostsListView_ItemClick"
+                              Loaded="MyPostsListView_Loaded"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch"
+                              Padding="16,6,16,10">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0,0,0,10" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderThickness="1" BorderBrush="#25FFFFFF" Background="#0AFFFFFF" Padding="14">
+                                    <StackPanel>
+                                        <!-- 草稿标记 -->
+                                        <Border Background="{ThemeResource PhoneAccentBrush}" Padding="6,2" HorizontalAlignment="Left" Margin="0,0,0,8" Visibility="{Binding DraftBadgeVisibility}">
+                                            <TextBlock Text="草稿" FontSize="10" Foreground="White" FontWeight="SemiBold"/>
+                                        </Border>
+
+                                        <!-- 标题 -->
+                                        <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,4"/>
+
+                                        <!-- 内容预览 -->
+                                        <TextBlock Text="{Binding Content}" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" TextWrapping="Wrap" MaxHeight="40" TextTrimming="CharacterEllipsis" Margin="0,0,0,8"/>
+
+                                        <!-- 统计行 -->
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding LikeText}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding CommentText}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding CollectText}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding DisplayTime}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                        <ListView.Footer>
+                            <StackPanel x:Name="MyPostsLoadMorePanel" Margin="0,10,0,20" HorizontalAlignment="Center">
+                                <ProgressBar x:Name="MyPostsLoadMoreBar" IsIndeterminate="True" Width="120" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}"/>
+                                <TextBlock x:Name="MyPostsNoMoreText" Text="没有更多了" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Visibility="Collapsed" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </ListView.Footer>
+                    </ListView>
+                </Grid>
+            </PivotItem>
+
+            <!-- 2. 我的板块 -->
+            <PivotItem Header="板块" Margin="0">
+                <Grid Margin="0">
+                    <ProgressBar x:Name="MyBoardsProgressBar" IsIndeterminate="True" VerticalAlignment="Top" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}" Canvas.ZIndex="10"/>
+
+                    <StackPanel x:Name="EmptyMyBoardsPanel" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16,0">
+                        <TextBlock Text="暂无创建的板块" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                        <TextBlock Text="在动态广场中创建你的专属板块" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+
+                    <ListView x:Name="MyBoardsListView"
+                              SelectionMode="None"
+                              IsItemClickEnabled="True"
+                              ItemClick="MyBoardsListView_ItemClick"
+                              Loaded="MyBoardsListView_Loaded"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch"
+                              Padding="16,6,16,10">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0,0,0,1" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,12" Background="Transparent">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="48"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <!-- 板块头像 -->
+                                        <Grid Width="40" Height="40" VerticalAlignment="Center">
+                                            <Border Background="{ThemeResource PhoneAccentBrush}">
+                                                <TextBlock Text="{Binding NameLetter}" FontSize="18" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <Image Source="{Binding AvatarBitmap}" Stretch="UniformToFill"/>
+                                        </Grid>
+                                        <!-- 板块名称 -->
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                                            <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding IdText}" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" Text=">" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </PivotItem>
+
+            <!-- 3. 我的关注 -->
+            <PivotItem Header="关注" Margin="0">
+                <Grid Margin="0">
+                    <ProgressBar x:Name="MyFollowProgressBar" IsIndeterminate="True" VerticalAlignment="Top" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}" Canvas.ZIndex="10"/>
+
+                    <StackPanel x:Name="EmptyMyFollowPanel" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16,0">
+                        <TextBlock Text="暂无关注的板块" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                        <TextBlock Text="前往动态广场发现感兴趣的板块" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+
+                    <ListView x:Name="MyFollowListView"
+                              SelectionMode="None"
+                              IsItemClickEnabled="True"
+                              ItemClick="MyFollowListView_ItemClick"
+                              Loaded="MyFollowListView_Loaded"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch"
+                              Padding="16,6,16,10">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0,0,0,1" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,12" Background="Transparent">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="48"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="40" Height="40" VerticalAlignment="Center">
+                                            <Border Background="{ThemeResource PhoneAccentBrush}">
+                                                <TextBlock Text="{Binding NameLetter}" FontSize="18" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <Image Source="{Binding AvatarBitmap}" Stretch="UniformToFill"/>
+                                        </Grid>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                                            <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding StatsText}" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" Text=">" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                        <ListView.Footer>
+                            <StackPanel Margin="0,10,0,20" HorizontalAlignment="Center">
+                                <ProgressBar x:Name="MyFollowLoadMoreBar" IsIndeterminate="True" Width="120" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}"/>
+                                <TextBlock x:Name="MyFollowNoMoreText" Text="没有更多了" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Visibility="Collapsed" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </ListView.Footer>
+                    </ListView>
+                </Grid>
+            </PivotItem>
+
+            <!-- 4. 我的收藏 -->
+            <PivotItem Header="收藏" Margin="0">
+                <Grid Margin="0">
+                    <ProgressBar x:Name="MyCollectProgressBar" IsIndeterminate="True" VerticalAlignment="Top" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}" Canvas.ZIndex="10"/>
+
+                    <StackPanel x:Name="EmptyMyCollectPanel" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16,0">
+                        <TextBlock Text="暂无收藏的动态" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                        <TextBlock Text="在动态详情页收藏你喜欢的内容" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+
+                    <ListView x:Name="MyCollectListView"
+                              SelectionMode="None"
+                              IsItemClickEnabled="True"
+                              ItemClick="MyCollectListView_ItemClick"
+                              Loaded="MyCollectListView_Loaded"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch"
+                              Padding="16,6,16,10">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0,0,0,10" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderThickness="1" BorderBrush="#25FFFFFF" Background="#0AFFFFFF" Padding="14">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                                        <TextBlock Text="{Binding Content}" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" TextWrapping="Wrap" MaxHeight="40" TextTrimming="CharacterEllipsis" Margin="0,0,0,8"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding LikeText}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding CommentText}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding DisplayAuthor}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                        <ListView.Footer>
+                            <StackPanel Margin="0,10,0,20" HorizontalAlignment="Center">
+                                <ProgressBar x:Name="MyCollectLoadMoreBar" IsIndeterminate="True" Width="120" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}"/>
+                                <TextBlock x:Name="MyCollectNoMoreText" Text="没有更多了" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Visibility="Collapsed" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </ListView.Footer>
+                    </ListView>
+                </Grid>
+            </PivotItem>
+
+        </Pivot>
+    </Grid>
+
+    <Page.BottomAppBar>
+        <CommandBar x:Name="ActivityCommandBar" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" ClosedDisplayMode="Minimal" IsSticky="False">
+            <CommandBar.PrimaryCommands>
+                <AppBarButton x:Name="AppBarBtnRefresh" Icon="Refresh" Label="刷新" Click="AppBarBtnRefresh_Click"/>
+            </CommandBar.PrimaryCommands>
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>

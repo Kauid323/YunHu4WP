@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using Windows.UI.Xaml.Media.Imaging;
 using 云湖WP.Api.Common;
+using 云湖WP.Api.Community.Board;
 
 namespace 云湖WP.Api.Community.PostDetail
 {
@@ -12,6 +13,7 @@ namespace 云湖WP.Api.Community.PostDetail
     public class CommunityPostDetailResult : ApiResult
     {
         public CommunityPostItem Post { get; set; }
+        public BoardInfoItem Board { get; set; }
     }
 
     /// <summary>

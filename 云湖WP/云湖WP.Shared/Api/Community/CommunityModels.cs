@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media.Imaging;
 using 云湖WP.Api.Common;
 
@@ -41,6 +42,17 @@ namespace 云湖WP.Api.Community
         public bool IsLiked { get; set; }
         public bool IsCollected { get; set; }
         public bool IsReward { get; set; }
+
+        /// <summary>是否为草稿 (1=草稿, 0=已发布)</summary>
+        public bool IsDraft { get; set; }
+
+        public Visibility DraftBadgeVisibility
+        {
+            get { return IsDraft ? Visibility.Visible : Visibility.Collapsed; }
+        }
+
+        /// <summary>置顶时间戳，0=未置顶，非0=已置顶</summary>
+        public int IsSticky { get; set; }
 
         public string DisplayAuthor
         {

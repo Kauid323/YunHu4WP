@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Windows.Data.Json;
 using 云湖WP.Api.Common;
+using 云湖WP.Api.Community.Board;
 
 namespace 云湖WP.Api.Community.PostDetail
 {
@@ -47,6 +48,11 @@ namespace 云湖WP.Api.Community.PostDetail
                     if (dataVal.ValueType == JsonValueType.Object)
                     {
                         var data = dataVal.GetObject();
+                        if (data.ContainsKey("ba") && data.GetNamedValue("ba").ValueType == JsonValueType.Object)
+                        {
+                            result.Board = BoardApi.ParseBoardItem(data.GetNamedObject("ba"));
+                        }
+
                         if (data.ContainsKey("post") && data.GetNamedValue("post").ValueType == JsonValueType.Object)
                         {
                             result.Post = ParsePostItem(data.GetNamedObject("post"));

@@ -335,6 +335,17 @@
                             </Grid>
                         </Border>
 
+                        <Border BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,12" Background="Transparent" Tapped="ActivityMenu_Tapped">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="动态管理" FontSize="16" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text=">" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+
                         <Border BorderThickness="0,0,0,1" BorderBrush="#1FFFFFFF" Padding="0,12" Background="Transparent" Tapped="SettingsMenu_Tapped">
                             <Grid>
                                 <Grid.ColumnDefinitions>

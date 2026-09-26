@@ -72,6 +72,12 @@
     <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\PostDetailPage.xbf">
       <PackagePath>PostDetailPage.xbf</PackagePath>
     </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\BoardDetailPage.xbf">
+      <PackagePath>BoardDetailPage.xbf</PackagePath>
+    </AppxPackagedFile>
+    <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\CreatePostPage.xbf">
+      <PackagePath>CreatePostPage.xbf</PackagePath>
+    </AppxPackagedFile>
     <AppxPackagedFile Include="e:\Users\admin\Documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.WindowsPhone\bin\Release\TextViewerPage.xbf">
       <PackagePath>TextViewerPage.xbf</PackagePath>
     </AppxPackagedFile>

@@ -6,13 +6,17 @@ Assets\StoreLogo.scale-240.png
 Assets\WideLogo.scale-240.png
 App.xbf
 AuthorRecommendPage.xbf
+BoardDetailPage.xbf
 BotsPage.xbf
 ChatPage.xbf
+CreatePostPage.xbf
+EditBoardPage.xbf
 FriendsPage.xbf
 GroupsPage.xbf
 ImageViewerPage.xbf
 LoginPage.xbf
 MainPage.xbf
+MyActivityPage.xbf
 MyProfilePage.xbf
 PostDetailPage.xbf
 ProfileEditPage.xbf

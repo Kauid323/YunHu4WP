@@ -240,6 +240,56 @@ namespace 云湖WP.Api.Message
         }
 
         /// <summary>
+        /// 发送单条文件消息 (POST /v1/msg/send-message, ContentType = 4 文件)
+        /// 严格遵循 API 规范：包含 Content (file_name, file_size, file) 与 Media (file_key, file_hash, file_type, file_size, file_key2, file_suffix)
+        /// </summary>
+        public static async Task<SendMessageResult> SendFileMessageAsync(
+            string token, 
+            string chatId, 
+            int chatType, 
+            string fileKey, 
+            string fileHash = null, 
+            string fileName = null, 
+            long fileSize = 0, 
+            string mimeType = null, 
+            string fileExtension = null, 
+            string customMsgId = null)
+        {
+            var result = new SendMessageResult();
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(chatId) || string.IsNullOrEmpty(fileKey))
+            {
+                result.Code = -1;
+                result.Msg = "参数不能为空";
+                return result;
+            }
+
+            try
+            {
+                string msgId = !string.IsNullOrEmpty(customMsgId) ? customMsgId : Guid.NewGuid().ToString("N");
+                result.MsgId = msgId;
+
+                byte[] reqBody = EncodeSendFileMsgRequest(msgId, chatId, chatType, fileKey, fileHash, fileName, fileSize, mimeType, fileExtension);
+                byte[] respBytes = await HttpHelper.PostProtobufAsync("/v1/msg/send-message", reqBody, token);
+
+                if (respBytes == null || respBytes.Length == 0)
+                {
+                    result.Code = -1;
+                    result.Msg = "发送未收到响应";
+                    return result;
+                }
+
+                DecodeStatusResponse(respBytes, result);
+            }
+            catch (Exception ex)
+            {
+                result.Code = -1;
+                result.Msg = "发送文件异常: " + ex.Message;
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// 撤回单条消息 (POST /v1/msg/recall-msg)
         /// </summary>
         public static async Task<ApiResult> RecallMessageAsync(string token, string msgId, string chatId, int chatType)
@@ -564,6 +614,157 @@ namespace 云湖WP.Api.Message
         }
 
         /// <summary>
+        /// 编码发送文件消息的 Protobuf 请求包 (send_message_send, ContentType = 4 文件)
+        /// </summary>
+        private static byte[] EncodeSendFileMsgRequest(
+            string msgId, 
+            string chatId, 
+            int chatType, 
+            string fileKey, 
+            string fileHash = null, 
+            string fileName = null, 
+            long fileSize = 0, 
+            string mimeType = null, 
+            string fileExtension = null)
+        {
+            if (string.IsNullOrEmpty(fileExtension))
+            {
+                if (!string.IsNullOrEmpty(fileKey) && fileKey.Contains("."))
+                {
+                    fileExtension = fileKey.Substring(fileKey.LastIndexOf('.') + 1).ToLowerInvariant();
+                }
+                else
+                {
+                    fileExtension = "dat";
+                }
+            }
+
+            if (string.IsNullOrEmpty(mimeType))
+            {
+                mimeType = "application/octet-stream";
+            }
+
+            if (string.IsNullOrEmpty(fileHash))
+            {
+                if (!string.IsNullOrEmpty(fileKey))
+                {
+                    int dot = fileKey.IndexOf('.');
+                    fileHash = dot > 0 ? fileKey.Substring(0, dot) : fileKey;
+                }
+                else
+                {
+                    fileHash = "";
+                }
+            }
+
+            using (var ms = new MemoryStream())
+            {
+                // Field 2: msg_id
+                if (!string.IsNullOrEmpty(msgId))
+                {
+                    ProtocolParser.WriteKey(ms, new Key(2, Wire.LengthDelimited));
+                    ProtocolParser.WriteString(ms, msgId);
+                }
+
+                // Field 3: chat_id
+                if (!string.IsNullOrEmpty(chatId))
+                {
+                    ProtocolParser.WriteKey(ms, new Key(3, Wire.LengthDelimited));
+                    ProtocolParser.WriteString(ms, chatId);
+                }
+
+                // Field 4: chat_type (int64 in proto)
+                if (chatType != 0)
+                {
+                    ProtocolParser.WriteKey(ms, new Key(4, Wire.Varint));
+                    ProtocolParser.WriteUInt64(ms, (ulong)chatType);
+                }
+
+                // Field 5: Content (send_message_send.Content)
+                using (var contentMs = new MemoryStream())
+                {
+                    // Field 4: file_name
+                    if (!string.IsNullOrEmpty(fileName))
+                    {
+                        ProtocolParser.WriteKey(contentMs, new Key(4, Wire.LengthDelimited));
+                        ProtocolParser.WriteString(contentMs, fileName);
+                    }
+
+                    // Field 5: file (欲发送文件 key/url)
+                    if (!string.IsNullOrEmpty(fileKey))
+                    {
+                        ProtocolParser.WriteKey(contentMs, new Key(5, Wire.LengthDelimited));
+                        ProtocolParser.WriteString(contentMs, fileKey);
+                    }
+
+                    // Field 18: file_size
+                    if (fileSize > 0)
+                    {
+                        ProtocolParser.WriteKey(contentMs, new Key(18, Wire.Varint));
+                        ProtocolParser.WriteUInt64(contentMs, (ulong)fileSize);
+                    }
+
+                    byte[] contentBytes = contentMs.ToArray();
+                    ProtocolParser.WriteKey(ms, new Key(5, Wire.LengthDelimited));
+                    ProtocolParser.WriteBytes(ms, contentBytes);
+                }
+
+                // Field 6: content_type = 4 (文件)
+                ProtocolParser.WriteKey(ms, new Key(6, Wire.Varint));
+                ProtocolParser.WriteUInt64(ms, 4);
+
+                // Field 9: Media
+                using (var mediaMs = new MemoryStream())
+                {
+                    // Field 1: file_key
+                    if (!string.IsNullOrEmpty(fileKey))
+                    {
+                        ProtocolParser.WriteKey(mediaMs, new Key(1, Wire.LengthDelimited));
+                        ProtocolParser.WriteString(mediaMs, fileKey);
+                    }
+
+                    // Field 2: file_hash
+                    if (!string.IsNullOrEmpty(fileHash))
+                    {
+                        ProtocolParser.WriteKey(mediaMs, new Key(2, Wire.LengthDelimited));
+                        ProtocolParser.WriteString(mediaMs, fileHash);
+                    }
+
+                    // Field 3: file_type
+                    ProtocolParser.WriteKey(mediaMs, new Key(3, Wire.LengthDelimited));
+                    ProtocolParser.WriteString(mediaMs, mimeType);
+
+                    // Field 7: file_size
+                    if (fileSize > 0)
+                    {
+                        ProtocolParser.WriteKey(mediaMs, new Key(7, Wire.Varint));
+                        ProtocolParser.WriteUInt64(mediaMs, (ulong)fileSize);
+                    }
+
+                    // Field 8: file_key2 (和 file_key 一致)
+                    if (!string.IsNullOrEmpty(fileKey))
+                    {
+                        ProtocolParser.WriteKey(mediaMs, new Key(8, Wire.LengthDelimited));
+                        ProtocolParser.WriteString(mediaMs, fileKey);
+                    }
+
+                    // Field 9: file_suffix
+                    if (!string.IsNullOrEmpty(fileExtension))
+                    {
+                        ProtocolParser.WriteKey(mediaMs, new Key(9, Wire.LengthDelimited));
+                        ProtocolParser.WriteString(mediaMs, fileExtension);
+                    }
+
+                    byte[] mediaBytes = mediaMs.ToArray();
+                    ProtocolParser.WriteKey(ms, new Key(9, Wire.LengthDelimited));
+                    ProtocolParser.WriteBytes(ms, mediaBytes);
+                }
+
+                return ms.ToArray();
+            }
+        }
+
+        /// <summary>
         /// 编码 recall_msg_send
         /// </summary>
         private static byte[] EncodeRecallMsgRequest(string msgId, string chatId, int chatType)
@@ -667,6 +868,10 @@ namespace 云湖WP.Api.Message
                             item.QuoteVideoDuration = d.Content.QuoteVideoTime;
                             item.MediaWidth = d.Content.Width;
                             item.MediaHeight = d.Content.Height;
+                            item.PostId = d.Content.PostId ?? "";
+                            item.PostTitle = d.Content.PostTitle ?? "";
+                            item.PostContent = d.Content.PostContent ?? "";
+                            item.PostContentType = d.Content.PostContentType ?? "";
                             item.Tip = d.Content.Tip ?? "";
                         }
 

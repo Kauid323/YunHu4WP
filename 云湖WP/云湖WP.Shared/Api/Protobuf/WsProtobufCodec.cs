@@ -272,6 +272,18 @@ namespace 云湖WP.Api.Protobuf
                     case 9: // sticker_url
                         item.StickerUrl = ProtocolParser.ReadString(stream);
                         break;
+                    case 10: // post_id
+                        item.PostId = ProtocolParser.ReadString(stream);
+                        break;
+                    case 11: // post_title
+                        item.PostTitle = ProtocolParser.ReadString(stream);
+                        break;
+                    case 12: // post_content
+                        item.PostContent = ProtocolParser.ReadString(stream);
+                        break;
+                    case 13: // post_content_type
+                        item.PostContentType = ProtocolParser.ReadString(stream);
+                        break;
                     case 15: // expression_id
                         ProtocolParser.ReadString(stream);
                         break;

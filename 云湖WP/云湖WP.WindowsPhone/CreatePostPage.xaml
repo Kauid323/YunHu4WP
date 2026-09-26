@@ -1,0 +1,60 @@
+<Page
+    x:Class="云湖WP.CreatePostPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:云湖WP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 顶部操作加载进度条 -->
+        <ProgressBar x:Name="ActionProgressBar" IsIndeterminate="True" VerticalAlignment="Top" Visibility="Collapsed" Foreground="{ThemeResource PhoneAccentBrush}" Canvas.ZIndex="100" Grid.RowSpan="3" />
+
+        <!-- 经典 Windows Phone Metro 特殊大标题 -->
+        <StackPanel Grid.Row="0" Margin="19,18,19,12">
+            <TextBlock Text="云湖" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" Typography.Capitals="SmallCaps" />
+            <TextBlock x:Name="TxtPageHeader" Text="发动态" FontSize="42" FontWeight="Light" Margin="0,-4,0,0" />
+        </StackPanel>
+
+        <!-- 1. 动态标题输入框 -->
+        <TextBox x:Name="TxtTitle"
+                 Grid.Row="1"
+                 PlaceholderText="输入标题..."
+                 FontSize="16"
+                 MaxLength="100"
+                 Margin="19,0,19,12" />
+
+        <!-- 2. 动态超大正文输入框 (铺满整个屏幕剩余空间，多行无限畅写) -->
+        <TextBox x:Name="TxtContent"
+                 Grid.Row="2"
+                 PlaceholderText="输入正文..."
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap"
+                 VerticalAlignment="Stretch"
+                 HorizontalAlignment="Stretch"
+                 FontSize="16"
+                 Margin="19,0,19,16" />
+    </Grid>
+
+    <!-- 原生 Windows Phone 8.1 底部 CommandBar (默认收回/最小化) -->
+    <Page.BottomAppBar>
+        <CommandBar x:Name="CreatePostCommandBar" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" ClosedDisplayMode="Minimal" IsSticky="False">
+            <CommandBar.PrimaryCommands>
+                <AppBarButton x:Name="AppBarBtnSend" Icon="Send" Label="发送" Click="AppBarBtnSend_Click" />
+                <AppBarButton x:Name="AppBarBtnType" Icon="Document" Label="Markdown" Click="AppBarBtnType_Click" />
+                <AppBarButton x:Name="AppBarBtnDraft" Icon="Save" Label="存草稿" Click="AppBarBtnDraft_Click" />
+            </CommandBar.PrimaryCommands>
+            <CommandBar.SecondaryCommands>
+                <AppBarButton x:Name="AppBarBtnClear" Label="清空输入" Click="AppBarBtnClear_Click" />
+            </CommandBar.SecondaryCommands>
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>

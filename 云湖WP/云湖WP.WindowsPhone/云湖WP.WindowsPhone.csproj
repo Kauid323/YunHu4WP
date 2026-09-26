@@ -131,6 +131,18 @@
     <Compile Include="AuthorRecommendPage.xaml.cs">
       <DependentUpon>AuthorRecommendPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="BoardDetailPage.xaml.cs">
+      <DependentUpon>BoardDetailPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CreatePostPage.xaml.cs">
+      <DependentUpon>CreatePostPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MyActivityPage.xaml.cs">
+      <DependentUpon>MyActivityPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="EditBoardPage.xaml.cs">
+      <DependentUpon>EditBoardPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -183,6 +195,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="BoardDetailPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="CreatePostPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="TextViewerPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -204,6 +224,14 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="AuthorRecommendPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="MyActivityPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="EditBoardPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

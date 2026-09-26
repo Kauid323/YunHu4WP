@@ -1037,6 +1037,11 @@ namespace 云湖WP
             await ShowToastAsync("该模块正在适配中...");
         }
 
+        private void ActivityMenu_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            Frame.Navigate(typeof(MyActivityPage));
+        }
+
         private void SettingsMenu_Tapped(object sender, TappedRoutedEventArgs e)
         {
             Frame.Navigate(typeof(SettingsPage));

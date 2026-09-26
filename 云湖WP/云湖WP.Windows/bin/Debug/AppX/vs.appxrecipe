@@ -20,13 +20,13 @@
     <AppXManifest Include="e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.Windows\bin\Debug\AppxManifest.xml">
       <PackagePath>AppxManifest.xml</PackagePath>
       <ReRegisterAppIfChanged>true</ReRegisterAppIfChanged>
-      <Modified>2026-09-26T11:58:53.571</Modified>
+      <Modified>2026-09-26T13:24:41.623</Modified>
     </AppXManifest>
   </ItemGroup>
   <ItemGroup>
     <AppxPackagedFile Include="e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.Windows\bin\Debug\云湖WP.Windows.exe">
       <PackagePath>云湖WP.Windows.exe</PackagePath>
-      <Modified>2026-09-26T11:58:52.829</Modified>
+      <Modified>2026-09-26T13:24:41.036</Modified>
     </AppxPackagedFile>
     <AppxPackagedFile Include="e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.Windows\Assets\Logo.scale-100.png">
       <PackagePath>Assets\Logo.scale-100.png</PackagePath>
@@ -62,7 +62,7 @@
     </AppxPackagedFile>
     <AppxPackagedFile Include="e:\Users\admin\documents\visual studio 2013\Yunhu_WP\云湖WP\云湖WP\云湖WP.Windows\bin\Debug\resources.pri">
       <PackagePath>resources.pri</PackagePath>
-      <Modified>2026-09-26T11:58:53.309</Modified>
+      <Modified>2026-09-26T13:24:41.204</Modified>
     </AppxPackagedFile>
   </ItemGroup>
   <ItemGroup>
