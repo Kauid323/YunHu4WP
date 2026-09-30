@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Windows.Storage;
@@ -153,7 +154,17 @@ namespace 云湖WP.Api.WebDAV
             return files;
         }
 
-        public static async Task<StorageFile> DownloadFileAsync(WebDAVMountSetting mount, WebDAVFile file, IProgress<double> progress = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public static Task<StorageFile> DownloadFileAsync(WebDAVMountSetting mount, WebDAVFile file)
+        {
+            return DownloadFileAsync(mount, file, null, CancellationToken.None);
+        }
+
+        public static Task<StorageFile> DownloadFileAsync(WebDAVMountSetting mount, WebDAVFile file, IProgress<double> progress)
+        {
+            return DownloadFileAsync(mount, file, progress, CancellationToken.None);
+        }
+
+        public static async Task<StorageFile> DownloadFileAsync(WebDAVMountSetting mount, WebDAVFile file, IProgress<double> progress, CancellationToken cancellationToken)
         {
             if (mount == null || file == null) return null;
 
@@ -208,7 +219,17 @@ namespace 云湖WP.Api.WebDAV
             return targetFile;
         }
 
-        public static async Task<bool> UploadFileAsync(WebDAVMountSetting mount, StorageFile localFile, string remoteRelativeDir, IProgress<double> progress = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public static Task<bool> UploadFileAsync(WebDAVMountSetting mount, StorageFile localFile, string remoteRelativeDir)
+        {
+            return UploadFileAsync(mount, localFile, remoteRelativeDir, null, CancellationToken.None);
+        }
+
+        public static Task<bool> UploadFileAsync(WebDAVMountSetting mount, StorageFile localFile, string remoteRelativeDir, IProgress<double> progress)
+        {
+            return UploadFileAsync(mount, localFile, remoteRelativeDir, progress, CancellationToken.None);
+        }
+
+        public static async Task<bool> UploadFileAsync(WebDAVMountSetting mount, StorageFile localFile, string remoteRelativeDir, IProgress<double> progress, CancellationToken cancellationToken)
         {
             if (mount == null || localFile == null) return false;
 

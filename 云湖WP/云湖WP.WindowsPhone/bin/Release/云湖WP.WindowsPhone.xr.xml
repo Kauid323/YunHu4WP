@@ -47,7 +47,10 @@
     <RootPropertyPathName Name="Initial" />
     <RootPropertyPathName Name="RoleText" />
     <RootPropertyPathName Name="TypeText" />
-    <RootPropertyPathName Name="UploadByName" />
+    <RootPropertyPathName Name="SubtitleText" />
+    <RootPropertyPathName Name="IconText" />
+    <RootPropertyPathName Name="WebdavRootPath" />
+    <RootPropertyPathName Name="DisplaySubtitle" />
     <RootPropertyPathName Name="StatsText" />
     <RootPropertyPathName Name="NameLetter" />
     <RootPropertyPathName Name="IdText" />
@@ -131,6 +134,8 @@
       <RootProperty Name="MaxWidth" />
       <RootProperty Name="TextAlignment" />
       <RootProperty Name="IsTextSelectionEnabled" />
+      <RootProperty Name="FontFamily" />
+      <RootProperty Name="MaxLines" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.PivotItem">
       <RootProperty Name="Header" />
@@ -172,9 +177,11 @@
       <RootProperty Name="Height" />
       <RootProperty Name="MaxLength" />
       <RootProperty Name="TextWrapping" />
+      <RootProperty Name="IsReadOnly" />
       <RootEvent Name="KeyDown" />
       <RootEvent Name="GotFocus" />
       <RootEvent Name="TextChanged" />
+      <RootEvent Name="Tapped" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.Button">
       <RootProperty Name="Content" />
@@ -196,6 +203,7 @@
       <RootProperty Name="Template" />
       <RootProperty Name="Visibility" />
       <RootProperty Name="BorderBrush" />
+      <RootProperty Name="Tag" />
       <RootEvent Name="Click" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.ColumnDefinition">
@@ -257,6 +265,7 @@
       <RootProperty Name="Height" />
       <RootProperty Name="Margin" />
       <RootProperty Name="Width" />
+      <RootProperty Name="Background" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.Canvas">
       <RootMethod Name="GetZIndex" />
@@ -302,7 +311,9 @@
       <RootProperty Name="Margin" />
       <RootProperty Name="VerticalAlignment" />
     </RootType>
-    <RootType FullName="Windows.UI.Xaml.Data.Binding" />
+    <RootType FullName="Windows.UI.Xaml.Data.Binding">
+      <RootProperty Name="TargetNullValue" />
+    </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.SymbolIcon">
       <RootProperty Name="Symbol" />
       <RootProperty Name="Foreground" />

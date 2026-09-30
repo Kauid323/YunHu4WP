@@ -182,6 +182,12 @@ namespace 云湖WP
             }
         }
 
+        private void LoadMore_Click(object sender, RoutedEventArgs e)
+        {
+            // 兼容性保留处理，支持旧缓存绑定
+            var task = LoadMembersAsync(false);
+        }
+
         private async Task LoadMembersAsync(bool reset)
         {
             if (_loadingMembers) return;

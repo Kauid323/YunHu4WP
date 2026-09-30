@@ -18,16 +18,17 @@ namespace 云湖WP.Api.Common
         private const string RefererUrl = "https://myapp.jwznb.com";
         private const string UserAgent = "Mozilla/5.0 (Windows Phone 8.1; ARM; Trident/7.0; Touch; rv:11.0; IEMobile/11.0; NOKIA; Lumia 930) like Gecko";
 
-        /// <summary>
-        /// 带实时进度报告的文件下载方法（根据类型直接存入系统公共 Music/Videos/Pictures 目录）
-        /// </summary>
-        /// <param name="fileUrl">文件下载直链</param>
-        /// <param name="fileName">期望保存的文件名</param>
-        /// <param name="expectedFileSize">预期文件大小 (字节)</param>
-        /// <param name="progress">进度报告回调 (0 - 100)</param>
-        /// <param name="cancellationToken">取消标记</param>
-        /// <returns>下载成功后的 StorageFile 对象</returns>
-        public static async Task<StorageFile> DownloadFileWithProgressAsync(string fileUrl, string fileName, long expectedFileSize = 0, IProgress<double> progress = null, CancellationToken cancellationToken = default(CancellationToken))
+        public static Task<StorageFile> DownloadFileWithProgressAsync(string fileUrl, string fileName)
+        {
+            return DownloadFileWithProgressAsync(fileUrl, fileName, 0, null, CancellationToken.None);
+        }
+
+        public static Task<StorageFile> DownloadFileWithProgressAsync(string fileUrl, string fileName, long expectedFileSize, IProgress<double> progress)
+        {
+            return DownloadFileWithProgressAsync(fileUrl, fileName, expectedFileSize, progress, CancellationToken.None);
+        }
+
+        public static async Task<StorageFile> DownloadFileWithProgressAsync(string fileUrl, string fileName, long expectedFileSize, IProgress<double> progress, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(fileUrl))
             {
