@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Security.Cryptography.Certificates;
 using Windows.Storage;
@@ -24,13 +25,15 @@ namespace 云湖WP.Api.Common
         /// <param name="fileName">期望保存的文件名</param>
         /// <param name="expectedFileSize">预期文件大小 (字节)</param>
         /// <param name="progress">进度报告回调 (0 - 100)</param>
+        /// <param name="cancellationToken">取消标记</param>
         /// <returns>下载成功后的 StorageFile 对象</returns>
-        public static async Task<StorageFile> DownloadFileWithProgressAsync(string fileUrl, string fileName, long expectedFileSize = 0, IProgress<double> progress = null)
+        public static async Task<StorageFile> DownloadFileWithProgressAsync(string fileUrl, string fileName, long expectedFileSize = 0, IProgress<double> progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrEmpty(fileUrl))
             {
                 throw new ArgumentException("文件下载链接不能为空", "fileUrl");
             }
+            if (cancellationToken.IsCancellationRequested) throw new OperationCanceledException();
 
             string finalUrl = fileUrl.Trim();
             if (finalUrl.StartsWith("//"))
@@ -71,7 +74,7 @@ namespace 云湖WP.Api.Common
                 client.DefaultRequestHeaders.TryAppendWithoutValidation("User-Agent", UserAgent);
 
                 var uri = new Uri(finalUrl);
-                var response = await client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead);
+                var response = await client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead).AsTask(cancellationToken);
                 response.EnsureSuccessStatusCode();
 
                 ulong totalBytes = 0;
@@ -85,7 +88,7 @@ namespace 云湖WP.Api.Common
                 }
 
                 // 3. 流式读取并实时更新进度
-                using (var inputStream = (await response.Content.ReadAsInputStreamAsync()).AsStreamForRead())
+                using (var inputStream = (await response.Content.ReadAsInputStreamAsync().AsTask(cancellationToken)).AsStreamForRead())
                 using (var outputStream = await targetFile.OpenStreamForWriteAsync())
                 {
                     byte[] buffer = new byte[16384]; // 16 KB 块缓冲
@@ -94,9 +97,10 @@ namespace 云湖WP.Api.Common
 
                     if (progress != null) progress.Report(1.0);
 
-                    while ((bytesRead = await inputStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                    while ((bytesRead = await inputStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
                     {
-                        await outputStream.WriteAsync(buffer, 0, bytesRead);
+                        cancellationToken.ThrowIfCancellationRequested();
+                        await outputStream.WriteAsync(buffer, 0, bytesRead, cancellationToken);
                         downloadedBytes += (ulong)bytesRead;
 
                         if (totalBytes > 0 && progress != null)

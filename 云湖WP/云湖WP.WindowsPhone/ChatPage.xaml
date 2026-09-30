@@ -16,7 +16,7 @@
         </Grid.RowDefinitions>
 
         <!-- 1. 顶部 Metro 标题栏 (纯几何直角风格，适中高度) -->
-        <Border Grid.Row="0" BorderThickness="0,0,0,1" BorderBrush="#22FFFFFF" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="10,6" Height="52">
+        <Border Grid.Row="0" BorderThickness="0,0,0,1" BorderBrush="#22FFFFFF" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="10,6" Height="52" Tapped="ChatHeader_Tapped">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="42" />

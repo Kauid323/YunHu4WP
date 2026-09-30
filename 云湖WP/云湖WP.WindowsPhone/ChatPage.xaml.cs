@@ -2080,6 +2080,12 @@ namespace 云湖WP
         }
 
 
+        private void ChatHeader_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            if (_chatType != 2 || string.IsNullOrEmpty(_chatId)) return;
+            Frame.Navigate(typeof(GroupDetailPage), new GroupDetailNavigationArgs { GroupId = _chatId, Token = _token });
+        }
+
         private void BtnBack_Click(object sender, RoutedEventArgs e)
         {
             if (Frame.CanGoBack)

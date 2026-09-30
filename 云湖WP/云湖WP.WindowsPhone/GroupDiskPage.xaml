@@ -1,0 +1,244 @@
+<Page
+    x:Class="云湖WP.GroupDiskPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 顶部全局下载/上传进度提示条 (带 ✕ 取消按钮) -->
+        <Border x:Name="TransferStatusBorder" Visibility="Collapsed" Background="{ThemeResource PhoneAccentBrush}" Padding="16,6" Canvas.ZIndex="100">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="TransferStatusText" Text="正在传输文件..." FontSize="12" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                    <ProgressBar x:Name="TransferProgressBar" Value="0" Maximum="100" Margin="0,3,0,0" Height="3" Foreground="White" Background="#40FFFFFF"/>
+                </StackPanel>
+                <Button Grid.Column="1" Content="取消" Margin="8,0,0,0" FontSize="11" Padding="8,2" Click="CancelTransfer_Click"/>
+            </Grid>
+        </Border>
+
+        <Pivot x:Name="DiskPivot" Grid.Row="1" Title="群网盘" Margin="0" SelectionChanged="DiskPivot_SelectionChanged">
+            
+            <!-- 1. 群文件标签页 -->
+            <PivotItem Header="群文件" Margin="0">
+                <Grid Margin="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 面包屑导航栏 -->
+                    <Border Grid.Row="0" Margin="19,4,19,4" Padding="0,2" BorderThickness="0,0,0,1" BorderBrush="#18FFFFFF">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                            <StackPanel x:Name="BreadcrumbPanel" Orientation="Horizontal" VerticalAlignment="Center">
+                                <!-- 动态填充面包屑按钮 -->
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- 文件列表 -->
+                    <Grid Grid.Row="1">
+                        <ListView x:Name="FilesList"
+                                  Padding="0"
+                                  HorizontalAlignment="Stretch"
+                                  IsItemClickEnabled="True"
+                                  ItemClick="File_Click">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0"/>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="19,10" HorizontalAlignment="Stretch" BorderThickness="0,0,0,1" BorderBrush="#18FFFFFF">
+                                        <Grid HorizontalAlignment="Stretch">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            
+                                            <!-- 图标 (Segoe UI Symbol) -->
+                                            <TextBlock Text="{Binding IconText}" FontFamily="Segoe UI Symbol" FontSize="22" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                            
+                                            <!-- 文件信息 -->
+                                            <StackPanel Grid.Column="1" Margin="6,0,10,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontSize="15" TextWrapping="Wrap" MaxLines="2" FontWeight="Normal"/>
+                                                <TextBlock Text="{Binding SubtitleText}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                            
+                                            <!-- 右侧类型/大小 -->
+                                            <TextBlock Grid.Column="2" Text="{Binding TypeText}" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+
+                        <!-- 空状态提示 -->
+                        <TextBlock x:Name="EmptyFilesText" Text="此文件夹暂无文件" FontSize="14" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+                    </Grid>
+                </Grid>
+            </PivotItem>
+
+            <!-- 2. WebDAV 挂载标签页 -->
+            <PivotItem Header="WebDAV" Margin="0">
+                <Grid Margin="0">
+                    <!-- 视图 A: WebDAV 挂载点列表 -->
+                    <Grid x:Name="WebDavMountsView" Visibility="Visible">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Margin="19,10,19,6">
+                            <TextBlock Text="WebDAV 挂载存储" FontSize="18" FontWeight="SemiBold"/>
+                            <TextBlock Text="挂载外部 WebDAV 网盘，服务端安全加密存储密码，支持直接浏览、上传与下载。" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <ListView x:Name="MountsList"
+                                  Grid.Row="1"
+                                  Padding="0"
+                                  HorizontalAlignment="Stretch"
+                                  IsItemClickEnabled="True"
+                                  ItemClick="Mount_Click">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0"/>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="19,12" HorizontalAlignment="Stretch" BorderThickness="0,0,0,1" BorderBrush="#18FFFFFF">
+                                        <Grid HorizontalAlignment="Stretch">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="&#xE17B;" FontFamily="Segoe UI Symbol" FontSize="22" VerticalAlignment="Center"/>
+                                            <StackPanel Grid.Column="1" Margin="6,0,10,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding DisplayTitle}" FontSize="16" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding DisplaySubtitle}" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding WebdavRootPath, TargetNullValue='/'}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Content="删除" FontSize="11" Padding="8,4" Click="DeleteMount_Click" Tag="{Binding}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+
+                        <TextBlock x:Name="EmptyMountsText" Grid.Row="1" Text="暂无 WebDAV 挂载点，点击下方按钮添加" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+
+                        <Button Grid.Row="2" Content="添加 WebDAV 挂载" HorizontalAlignment="Stretch" Margin="19,8,19,12" Click="AddMount_Click"/>
+                    </Grid>
+
+                    <!-- 视图 B: WebDAV 文件浏览器 -->
+                    <Grid x:Name="WebDavFilesView" Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- WebDAV 顶部返回与信息 -->
+                        <Border Grid.Row="0" Margin="19,6,19,4" Padding="0,4" BorderThickness="0,0,0,1" BorderBrush="#18FFFFFF">
+                            <Grid HorizontalAlignment="Stretch">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock x:Name="WebDavMountTitle" Text="挂载点名称" FontSize="16" FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="WebDavMountSub" Text="URL" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                                <Button Content="退出挂载" FontSize="11" HorizontalAlignment="Right" Padding="8,4" Click="ExitWebDav_Click"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- WebDAV 面包屑路径 -->
+                        <Border Grid.Row="1" Margin="19,2,19,4" Padding="0,2">
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                <StackPanel x:Name="WebDavBreadcrumbPanel" Orientation="Horizontal" VerticalAlignment="Center"/>
+                            </ScrollViewer>
+                        </Border>
+
+                        <!-- WebDAV 文件列表 -->
+                        <Grid Grid.Row="2">
+                            <ListView x:Name="WebDavFilesList"
+                                      Padding="0"
+                                      HorizontalAlignment="Stretch"
+                                      IsItemClickEnabled="True"
+                                      ItemClick="WebDavFile_Click">
+                                <ListView.ItemContainerStyle>
+                                    <Style TargetType="ListViewItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="Margin" Value="0"/>
+                                    </Style>
+                                </ListView.ItemContainerStyle>
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="19,10" HorizontalAlignment="Stretch" BorderThickness="0,0,0,1" BorderBrush="#18FFFFFF">
+                                            <Grid HorizontalAlignment="Stretch">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="40"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding IconText}" FontFamily="Segoe UI Symbol" FontSize="22" VerticalAlignment="Center"/>
+                                                <StackPanel Grid.Column="1" Margin="6,0,10,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Name}" FontSize="15" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding SubtitleText}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="2" Text="{Binding TypeText}" FontSize="12" Foreground="{ThemeResource PhoneMidBrush}" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                            <TextBlock x:Name="EmptyWebDavFilesText" Text="此 WebDAV 目录为空" FontSize="13" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </PivotItem>
+        </Pivot>
+
+        <!-- 3. 底部极简网盘容量指示栏 (无背景、紧凑、缩小UI) -->
+        <Grid x:Name="CapacityBottomBar" Grid.Row="2" Margin="19,0,19,4">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <ProgressBar x:Name="CapacityProgressBar" Value="0" Maximum="100" Margin="0,0,0,2" Height="2" Foreground="{ThemeResource PhoneAccentBrush}" Background="#18FFFFFF"/>
+            <TextBlock x:Name="CapacityDetailText" Grid.Row="1" Text="0 B / 512.0 MB (0%)" FontSize="10" Foreground="{ThemeResource PhoneMidBrush}" HorizontalAlignment="Right"/>
+        </Grid>
+
+        <!-- 页面加载中进度条 -->
+        <ProgressBar x:Name="Progress" Grid.Row="1" IsIndeterminate="True" Visibility="Collapsed" VerticalAlignment="Top" Foreground="{ThemeResource PhoneAccentBrush}"/>
+    </Grid>
+
+    <Page.BottomAppBar>
+        <CommandBar x:Name="DiskCommandBar" ClosedDisplayMode="Minimal" IsSticky="False" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+            <CommandBar.PrimaryCommands>
+                <AppBarButton Icon="Refresh" Label="刷新" Click="Refresh_Click" />
+                <AppBarButton x:Name="UploadButton" Icon="Upload" Label="上传文件" Click="Upload_Click" />
+                <AppBarButton x:Name="NewFolderButton" Icon="NewFolder" Label="新建文件夹" Click="CreateFolder_Click" />
+            </CommandBar.PrimaryCommands>
+            <CommandBar.SecondaryCommands>
+                <AppBarButton x:Name="BackUpButton" Icon="Up" Label="返回上一级" Click="BackUp_Click" Visibility="Collapsed"/>
+            </CommandBar.SecondaryCommands>
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>

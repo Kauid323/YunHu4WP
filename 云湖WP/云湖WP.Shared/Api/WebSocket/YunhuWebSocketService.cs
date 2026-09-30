@@ -144,7 +144,7 @@ namespace 云湖WP.Api.WebSocket
             {
                 _isConnecting = false;
                 IsConnected = false;
-                AppLogger.Log("WebSocket", "❌ WebSocket 连接失败: " + ex.Message);
+                AppLogger.Log("WebSocket", "❌ WebSocket 连接失败: " + ex.ToString());
                 ScheduleReconnect();
             }
         }
@@ -219,7 +219,7 @@ namespace 云湖WP.Api.WebSocket
             }
             catch (Exception ex)
             {
-                AppLogger.Log("WebSocket", "处理消息帧异常: " + ex.Message);
+                AppLogger.Log("WebSocket", "处理消息帧异常: " + ex.ToString());
             }
         }
 
@@ -268,7 +268,7 @@ namespace 云湖WP.Api.WebSocket
             }
             catch (Exception ex)
             {
-                AppLogger.Log("WebSocket", "SendStringAsync error: " + ex.Message);
+                AppLogger.Log("WebSocket", "SendStringAsync error: " + ex.ToString());
             }
         }
 

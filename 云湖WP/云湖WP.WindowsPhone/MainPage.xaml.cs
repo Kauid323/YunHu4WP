@@ -149,6 +149,7 @@ namespace 云湖WP
             if (MainPivot.SelectedIndex == 2) // 动态 Tab
             {
                 if (AppBarBtnFilter != null) AppBarBtnFilter.Visibility = Visibility.Visible;
+                if (AppBarBtnBoards != null) AppBarBtnBoards.Visibility = Visibility.Visible;
                 if (AppBarBtnNewChat != null) AppBarBtnNewChat.Visibility = Visibility.Collapsed;
                 if (AppBarBtnSearch != null) AppBarBtnSearch.Visibility = Visibility.Collapsed;
 
@@ -160,6 +161,7 @@ namespace 云湖WP
             else
             {
                 if (AppBarBtnFilter != null) AppBarBtnFilter.Visibility = Visibility.Collapsed;
+                if (AppBarBtnBoards != null) AppBarBtnBoards.Visibility = Visibility.Collapsed;
                 if (AppBarBtnNewChat != null) AppBarBtnNewChat.Visibility = Visibility.Visible;
                 if (AppBarBtnSearch != null) AppBarBtnSearch.Visibility = Visibility.Visible;
             }
@@ -291,7 +293,7 @@ namespace 云湖WP
             }
             catch (Exception ex)
             {
-                initError = "页面加载异常: " + ex.Message;
+                initError = "页面加载异常: " + ex.ToString();
             }
 
             if (initError != null)
@@ -393,7 +395,7 @@ namespace 云湖WP
             }
             catch (Exception ex)
             {
-                AppLogger.Log("UserProfile", "LoadUserProfile exception: " + ex.Message);
+                AppLogger.Log("UserProfile", "LoadUserProfile exception: " + ex.ToString());
             }
         }
 
@@ -421,7 +423,7 @@ namespace 云湖WP
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine("LoadUserAvatarAsync failed: " + ex.Message);
+                    System.Diagnostics.Debug.WriteLine("LoadUserAvatarAsync failed: " + ex.ToString());
                 }
             });
         }
@@ -467,7 +469,7 @@ namespace 云湖WP
             catch (Exception ex)
             {
                 ConvProgressBar.Visibility = Visibility.Collapsed;
-                convError = "加载会话错误: " + ex.Message;
+                convError = "加载会话错误: " + ex.ToString();
             }
 
             if (convError != null)
@@ -557,7 +559,7 @@ namespace 云湖WP
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine("Preload avatar failed for " + currentItem.DisplayTitle + ": " + ex.Message);
+                        System.Diagnostics.Debug.WriteLine("Preload avatar failed for " + currentItem.DisplayTitle + ": " + ex.ToString());
                     }
 
                     // 每次微小休眠 20ms，平滑 CPU 占用与网络带宽
@@ -645,7 +647,7 @@ namespace 云湖WP
             }
             catch (Exception ex)
             {
-                errMsg = "获取社区动态异常: " + ex.Message;
+                errMsg = "获取社区动态异常: " + ex.ToString();
             }
             finally
             {
@@ -715,6 +717,12 @@ namespace 云湖WP
             if (FlyoutItemLatest != null) FlyoutItemLatest.Text = "最新文章";
             if (FlyoutItemHot != null) FlyoutItemHot.Text = "热门推荐 (当前)";
             await LoadCommunityPostsAsync(isRefresh: true);
+        }
+
+        private void AppBarBtnBoards_Click(object sender, RoutedEventArgs e)
+        {
+            if (BottomAppBar != null) BottomAppBar.IsOpen = false;
+            Frame.Navigate(typeof(MyActivityPage), "boards");
         }
 
         private void CommunityListView_ItemClick(object sender, ItemClickEventArgs e)

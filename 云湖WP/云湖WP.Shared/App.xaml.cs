@@ -53,6 +53,7 @@ namespace 云湖WP
         {
             e.Handled = true;
             string err = string.Format("未捕获异常: {0}\n{1}", e.Message, e.Exception != null ? e.Exception.ToString() : "");
+            System.Diagnostics.Debug.WriteLine("[UnhandledException] " + err);
             云湖WP.Utils.AppLogger.Log("UnhandledException", err);
             try
             {
@@ -99,6 +100,9 @@ namespace 云湖WP
             }
 
             // 尽早激活 Window 窗口，最速关闭系统 Splash 画面过渡
+            // Ensure every page fills the window instead of being measured to its content width.
+            rootFrame.HorizontalContentAlignment = HorizontalAlignment.Stretch;
+            rootFrame.VerticalContentAlignment = VerticalAlignment.Stretch;
             Window.Current.Activate();
 
             var chatArgs = 云湖WP.Utils.NotificationHelper.ParseChatLaunchArgs(e.Arguments);
@@ -143,7 +147,11 @@ namespace 云湖WP
                     }
                 }
 #else
-                if (!rootFrame.Navigate(typeof(MainPage), e.Arguments))
+                // Windows 包体使用已移植的社区页作为登录后的首页；未登录时先显示登录页。
+                var initialPage = 云湖WP.Token.TokenManager.HasToken()
+                    ? typeof(CommunityPage)
+                    : typeof(LoginPage);
+                if (!rootFrame.Navigate(initialPage, e.Arguments))
                 {
                     throw new Exception("Failed to create initial page");
                 }

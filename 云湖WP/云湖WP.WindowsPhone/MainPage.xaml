@@ -375,6 +375,7 @@
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
+                <AppBarButton x:Name="AppBarBtnBoards" Icon="AllApps" Label="查看板块" Visibility="Collapsed" Click="AppBarBtnBoards_Click" />
                 <AppBarButton x:Name="AppBarBtnNewChat" Icon="Add" Label="发起聊天" Click="AppBarBtnNewChat_Click" />
                 <AppBarButton x:Name="AppBarBtnSearch" Icon="Find" Label="搜索" Click="AppBarBtnSearch_Click" />
             </CommandBar.PrimaryCommands>

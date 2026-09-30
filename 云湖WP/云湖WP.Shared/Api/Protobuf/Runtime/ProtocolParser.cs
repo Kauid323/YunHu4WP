@@ -291,11 +291,9 @@ namespace SilentOrbit.ProtocolBuffers
             int b = stream.ReadByte();
             if (b < 0)
                 throw new IOException("Stream ended too early");
-            if (b == 1)
-                return true;
-            if (b == 0)
-                return false;
-            throw new ProtocolBufferException("Invalid boolean value");
+            // protobuf bool 的规范值是 0/1，但部分接口会把布尔值编码成其它非零 varint。
+            // 按 protobuf 的非零即 true 语义兼容读取，避免群详情因一个异常布尔值整页失败。
+            return b != 0;
         }
 
         public static void WriteBool(Stream stream, bool val)

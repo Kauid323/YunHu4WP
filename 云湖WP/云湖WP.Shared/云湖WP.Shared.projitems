@@ -71,6 +71,16 @@
     <Compile Include="$(MSBuildThisFileDirectory)Api\Friend\FriendModels.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Friend\FriendProtobufCodec.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Friend\FriendApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Group\GroupModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Group\GroupApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Group\GroupTagApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Group\GroupBotApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Group\GroupAuxApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\Group\GroupDiskApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\WebDAV\WebDAVEncryption.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\WebDAV\WebDAVModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\WebDAV\WebDAVClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Api\WebDAV\GroupMountApi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Share\ShareModels.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\Share\ShareApi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Api\WebApi\User\UserWebModels.cs" />

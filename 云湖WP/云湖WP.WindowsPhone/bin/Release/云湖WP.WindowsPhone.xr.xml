@@ -43,14 +43,24 @@
     <RootPropertyPathName Name="UserId" />
     <RootPropertyPathName Name="Subtitle" />
     <RootPropertyPathName Name="RoleTag" />
-    <RootPropertyPathName Name="StatsText" />
     <RootPropertyPathName Name="Name" />
+    <RootPropertyPathName Name="Initial" />
+    <RootPropertyPathName Name="RoleText" />
+    <RootPropertyPathName Name="TypeText" />
+    <RootPropertyPathName Name="UploadByName" />
+    <RootPropertyPathName Name="StatsText" />
     <RootPropertyPathName Name="NameLetter" />
     <RootPropertyPathName Name="IdText" />
     <RootPropertyPathName Name="DraftBadgeVisibility" />
   </Roots.PropertyPathNames>
   <Roots.RootTypes>
-    <RootType FullName="Windows.UI.Xaml.Application" />
+    <RootType FullName="Windows.UI.Xaml.Application">
+      <RootProperty Name="Resources" />
+    </RootType>
+    <RootType FullName="Windows.UI.Xaml.ResourceDictionary" />
+    <RootType FullName="Windows.UI.Xaml.Media.SolidColorBrush">
+      <RootProperty Name="Color" />
+    </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.Page">
       <RootProperty Name="Background" />
       <RootProperty Name="Content" />
@@ -80,6 +90,9 @@
       <RootProperty Name="Title" />
       <RootProperty Name="Margin" />
       <RootProperty Name="Items" />
+      <RootProperty Name="HorizontalAlignment" />
+      <RootProperty Name="HorizontalContentAlignment" />
+      <RootProperty Name="Padding" />
       <RootEvent Name="SelectionChanged" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.StackPanel">
@@ -123,6 +136,8 @@
       <RootProperty Name="Header" />
       <RootProperty Name="Margin" />
       <RootProperty Name="Content" />
+      <RootProperty Name="HorizontalContentAlignment" />
+      <RootProperty Name="Padding" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.ScrollViewer">
       <RootProperty Name="HorizontalScrollMode" />
@@ -136,10 +151,13 @@
       <RootProperty Name="Background" />
       <RootProperty Name="HorizontalAlignment" />
       <RootProperty Name="VerticalAlignment" />
+      <RootProperty Name="HorizontalContentAlignment" />
       <RootProperty Name="Margin" />
       <RootEvent Name="ViewChanged" />
       <RootEvent Name="DoubleTapped" />
       <RootEvent Name="SizeChanged" />
+      <RootMethod Name="GetHorizontalScrollBarVisibility" />
+      <RootMethod Name="SetHorizontalScrollBarVisibility" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.TextBox">
       <RootProperty Name="Header" />
@@ -156,6 +174,7 @@
       <RootProperty Name="TextWrapping" />
       <RootEvent Name="KeyDown" />
       <RootEvent Name="GotFocus" />
+      <RootEvent Name="TextChanged" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.Button">
       <RootProperty Name="Content" />
@@ -217,6 +236,7 @@
       <RootProperty Name="IsChecked" />
       <RootProperty Name="FontSize" />
       <RootProperty Name="VerticalAlignment" />
+      <RootProperty Name="Tag" />
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.HyperlinkButton">
       <RootProperty Name="Content" />
@@ -253,6 +273,7 @@
       <RootProperty Name="ItemsPanel" />
       <RootProperty Name="ItemContainerTransitions" />
       <RootProperty Name="Header" />
+      <RootProperty Name="Margin" />
       <RootProperty Name="Footer" />
       <RootEvent Name="ItemClick" />
       <RootEvent Name="Loaded" />
@@ -398,6 +419,9 @@
     <RootType FullName="云湖WP.VideoPlayerPage" />
     <RootType FullName="云湖WP.FriendsPage" />
     <RootType FullName="云湖WP.GroupsPage" />
+    <RootType FullName="云湖WP.GroupDetailPage" />
+    <RootType FullName="云湖WP.MessageTypeLimitPage" />
+    <RootType FullName="云湖WP.GroupDiskPage" />
     <RootType FullName="云湖WP.BotsPage" />
     <RootType FullName="云湖WP.AuthorRecommendPage" />
     <RootType FullName="云湖WP.MyActivityPage" />

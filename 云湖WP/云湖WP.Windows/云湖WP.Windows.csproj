@@ -109,6 +109,18 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="CommunityPage.xaml.cs">
+      <DependentUpon>CommunityPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="LoginPage.xaml.cs">
+      <DependentUpon>LoginPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PostDetailPage.xaml.cs">
+      <DependentUpon>PostDetailPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CreatePostPage.xaml.cs">
+      <DependentUpon>CreatePostPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -128,6 +140,134 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="CommunityPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="LoginPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="PostDetailPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="CreatePostPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <!-- Phone pages are linked for browsing/editing only. Their Phone-only XAML controls
+       must not be compiled by the Windows 8.1 project. -->
+  <ItemGroup>
+    
+    <None Include="..\云湖WP.WindowsPhone\ChatPage.xaml">
+      <Link>ChatPage.xaml</Link>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\ChatPage.xaml.cs">
+      <Link>ChatPage.xaml.cs</Link>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\UserDetailPage.xaml">
+      <Link>UserDetailPage.xaml</Link>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\UserDetailPage.xaml.cs">
+      <Link>UserDetailPage.xaml.cs</Link>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\SettingsPage.xaml">
+      <Link>SettingsPage.xaml</Link>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\SettingsPage.xaml.cs">
+      <Link>SettingsPage.xaml.cs</Link>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\ImageViewerPage.xaml">
+      <Link>ImageViewerPage.xaml</Link>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\ImageViewerPage.xaml.cs">
+      <Link>ImageViewerPage.xaml.cs</Link>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\ProfileEditPage.xaml">
+      <Link>ProfileEditPage.xaml</Link>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\ProfileEditPage.xaml.cs">
+      <Link>ProfileEditPage.xaml.cs</Link>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\MyProfilePage.xaml">
+      <Link>MyProfilePage.xaml</Link>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\MyProfilePage.xaml.cs">
+      <Link>MyProfilePage.xaml.cs</Link>
+    </None>
+    
+    <None Include="..\云湖WP.WindowsPhone\TextViewerPage.xaml">
+      <Link>TextViewerPage.xaml</Link>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\TextViewerPage.xaml.cs">
+      <Link>TextViewerPage.xaml.cs</Link>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\VideoPlayerPage.xaml">
+      <Link>VideoPlayerPage.xaml</Link>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\VideoPlayerPage.xaml.cs">
+      <Link>VideoPlayerPage.xaml.cs</Link>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\FriendsPage.xaml">
+      <Link>FriendsPage.xaml</Link>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\FriendsPage.xaml.cs">
+      <Link>FriendsPage.xaml.cs</Link>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\GroupsPage.xaml">
+      <Link>GroupsPage.xaml</Link>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\GroupsPage.xaml.cs">
+      <Link>GroupsPage.xaml.cs</Link>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\BotsPage.xaml">
+      <Link>BotsPage.xaml</Link>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\BotsPage.xaml.cs">
+      <Link>BotsPage.xaml.cs</Link>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\AuthorRecommendPage.xaml">
+      <Link>AuthorRecommendPage.xaml</Link>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\AuthorRecommendPage.xaml.cs">
+      <Link>AuthorRecommendPage.xaml.cs</Link>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\BoardDetailPage.xaml">
+      <Link>BoardDetailPage.xaml</Link>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\BoardDetailPage.xaml.cs">
+      <Link>BoardDetailPage.xaml.cs</Link>
+    </None>
+    
+    <None Include="..\云湖WP.WindowsPhone\MyActivityPage.xaml">
+      <Link>MyActivityPage.xaml</Link>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\MyActivityPage.xaml.cs">
+      <Link>MyActivityPage.xaml.cs</Link>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\EditBoardPage.xaml">
+      <Link>EditBoardPage.xaml</Link>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="..\云湖WP.WindowsPhone\EditBoardPage.xaml.cs">
+      <Link>EditBoardPage.xaml.cs</Link>
+    </None>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
     <VisualStudioVersion>12.0</VisualStudioVersion>

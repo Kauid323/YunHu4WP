@@ -1,0 +1,177 @@
+<Page
+    x:Class="云湖WP.LoginPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:云湖WP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <!-- 标题 -->
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,30,0,0">
+            <TextBlock Text="云湖" FontSize="11" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Typography.Capitals="SmallCaps" />
+            <TextBlock Text="登录" FontSize="42" FontWeight="Light" Margin="0,-4,0,0" />
+        </StackPanel>
+
+        <!-- 切换按钮 -->
+        <StackPanel x:Name="TogglePanel" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,120,0,0">
+            <Button x:Name="BtnEmailToggle" Content="邮箱登录" Width="160" Height="40" Margin="0,0,10,0" Click="BtnEmailToggle_Click" Background="{ThemeResource SystemControlHighlightAccentBrush}" Foreground="White" FontSize="16"/>
+            <Button x:Name="BtnPhoneToggle" Content="手机号登录" Width="160" Height="40" Margin="10,0,0,0" Click="BtnPhoneToggle_Click" Background="#FFE6E6E6" Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}" FontSize="16"/>
+        </StackPanel>
+
+        <!-- 邮箱登录面板 -->
+        <StackPanel x:Name="EmailPanel" Margin="16,200,16,0" VerticalAlignment="Top">
+            <TextBox x:Name="TxtEmail"
+                     Header="邮箱"
+                     PlaceholderText="请输入邮箱地址"
+                     InputScope="EmailSmtpAddress"
+                     HorizontalAlignment="Stretch"
+                     FontSize="16"
+                     Margin="0,0,0,20" />
+
+            <PasswordBox x:Name="TxtEmailPassword"
+                         Header="密码"
+                         PlaceholderText="请输入登录密码"
+                         HorizontalAlignment="Stretch"
+                         FontSize="16"
+                         Margin="0,0,0,16" />
+
+            <Grid Margin="0,4,0,28">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <CheckBox x:Name="ChkRememberMe"
+                          Content="记住我"
+                          IsChecked="True"
+                          FontSize="15"
+                          VerticalAlignment="Center" />
+                <HyperlinkButton x:Name="BtnForgotPassword"
+                                 Grid.Column="1"
+                                 Content="忘记密码?"
+                                 FontSize="15"
+                                 Foreground="{ThemeResource SystemControlHighlightAccentBrush}"
+                                 VerticalAlignment="Center"
+                                 Click="BtnForgotPassword_Click" />
+            </Grid>
+
+            <Button x:Name="BtnEmailLogin"
+                    Content="登 录"
+                    HorizontalAlignment="Stretch"
+                    Height="52"
+                    FontSize="16"
+                    FontWeight="SemiBold"
+                    Background="{ThemeResource SystemControlHighlightAccentBrush}"
+                    Foreground="White"
+                    Click="BtnEmailLogin_Click" />
+        </StackPanel>
+
+        <!-- 手机号登录面板 -->
+        <StackPanel x:Name="PhonePanel" Margin="16,200,16,0" VerticalAlignment="Top" Visibility="Collapsed">
+            <TextBox x:Name="TxtPhone"
+                     Header="手机号"
+                     PlaceholderText="请输入11位手机号"
+                     InputScope="TelephoneNumber"
+                     HorizontalAlignment="Stretch"
+                     FontSize="16"
+                     Margin="0,0,0,16" />
+
+            <!-- 图形验证码 -->
+            <Grid Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="120" />
+                </Grid.ColumnDefinitions>
+
+                <TextBox x:Name="TxtImageCode"
+                         Header="图形验证码"
+                         PlaceholderText="输入图形码"
+                         InputScope="AlphanumericHalfWidth"
+                         FontSize="16"
+                         Grid.Column="0" />
+
+                <Border Grid.Column="2"
+                        VerticalAlignment="Bottom"
+                        Height="42"
+                        Background="#FFFFFFFF"
+                        BorderBrush="#55000000"
+                        BorderThickness="1"
+                        Margin="0,0,0,2"
+                        Tapped="ImgCaptcha_Tapped">
+                    <Grid>
+                        <Image x:Name="ImgCaptcha"
+                               Stretch="Uniform"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                        <TextBlock x:Name="TxtCaptchaTip"
+                                   Text="点击获取"
+                                   FontSize="12"
+                                   Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- 短信验证码输入与获取按钮 -->
+            <Grid Margin="0,0,0,28">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="120" />
+                </Grid.ColumnDefinitions>
+
+                <TextBox x:Name="TxtVerifyCode"
+                         Header="短信验证码"
+                         PlaceholderText="6位短信码"
+                         InputScope="Number"
+                         FontSize="16"
+                         Grid.Column="0" />
+
+                <Button x:Name="BtnGetVerifyCode"
+                        Content="获取验证码"
+                        Grid.Column="2"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Stretch"
+                        Height="42"
+                        FontSize="13"
+                        Margin="0,0,0,2"
+                        Click="BtnGetVerifyCode_Click" />
+            </Grid>
+
+            <Button x:Name="BtnPhoneLogin"
+                    Content="登 录"
+                    HorizontalAlignment="Stretch"
+                    Height="52"
+                    FontSize="16"
+                    FontWeight="SemiBold"
+                    Background="{ThemeResource SystemControlHighlightAccentBrush}"
+                    Foreground="White"
+                    Click="BtnPhoneLogin_Click" />
+        </StackPanel>
+
+        <!-- 登录加载指示遮罩层 -->
+        <Grid x:Name="LoadingOverlay"
+              Background="#99000000"
+              Visibility="Collapsed"
+              VerticalAlignment="Stretch"
+              HorizontalAlignment="Stretch">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ProgressRing x:Name="ProgressIndicator"
+                              Width="48"
+                              Height="48"
+                              IsActive="False"
+                              Foreground="{ThemeResource SystemControlHighlightAccentBrush}"/>
+                <TextBlock x:Name="TxtLoadingStatus"
+                           Text="正在登录中..."
+                           FontSize="15"
+                           Foreground="White"
+                           HorizontalAlignment="Center"
+                           Margin="0,16,0,0"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>

@@ -124,15 +124,23 @@ namespace 云湖WP.云湖WP_Windows_XamlTypeInfo
 
         private void InitTypeTables()
         {
-            _typeNameTable = new string[3];
+            _typeNameTable = new string[7];
             _typeNameTable[0] = "云湖WP.MainPage";
             _typeNameTable[1] = "Windows.UI.Xaml.Controls.Page";
             _typeNameTable[2] = "Windows.UI.Xaml.Controls.UserControl";
+            _typeNameTable[3] = "云湖WP.CommunityPage";
+            _typeNameTable[4] = "云湖WP.LoginPage";
+            _typeNameTable[5] = "云湖WP.PostDetailPage";
+            _typeNameTable[6] = "云湖WP.CreatePostPage";
 
-            _typeTable = new global::System.Type[3];
+            _typeTable = new global::System.Type[7];
             _typeTable[0] = typeof(global::云湖WP.MainPage);
             _typeTable[1] = typeof(global::Windows.UI.Xaml.Controls.Page);
             _typeTable[2] = typeof(global::Windows.UI.Xaml.Controls.UserControl);
+            _typeTable[3] = typeof(global::云湖WP.CommunityPage);
+            _typeTable[4] = typeof(global::云湖WP.LoginPage);
+            _typeTable[5] = typeof(global::云湖WP.PostDetailPage);
+            _typeTable[6] = typeof(global::云湖WP.CreatePostPage);
         }
 
         private int LookupTypeIndexByName(string typeName)
@@ -168,6 +176,10 @@ namespace 云湖WP.云湖WP_Windows_XamlTypeInfo
         }
 
         private object Activate_0_MainPage() { return new global::云湖WP.MainPage(); }
+        private object Activate_3_CommunityPage() { return new global::云湖WP.CommunityPage(); }
+        private object Activate_4_LoginPage() { return new global::云湖WP.LoginPage(); }
+        private object Activate_5_PostDetailPage() { return new global::云湖WP.PostDetailPage(); }
+        private object Activate_6_CreatePostPage() { return new global::云湖WP.CreatePostPage(); }
 
         private global::Windows.UI.Xaml.Markup.IXamlType CreateXamlType(int typeIndex)
         {
@@ -192,6 +204,34 @@ namespace 云湖WP.云湖WP_Windows_XamlTypeInfo
 
             case 2:   //  Windows.UI.Xaml.Controls.UserControl
                 xamlType = new global::云湖WP.云湖WP_Windows_XamlTypeInfo.XamlSystemBaseType(typeName, type);
+                break;
+
+            case 3:   //  云湖WP.CommunityPage
+                userType = new global::云湖WP.云湖WP_Windows_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Windows.UI.Xaml.Controls.Page"));
+                userType.Activator = Activate_3_CommunityPage;
+                userType.SetIsLocalType();
+                xamlType = userType;
+                break;
+
+            case 4:   //  云湖WP.LoginPage
+                userType = new global::云湖WP.云湖WP_Windows_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Windows.UI.Xaml.Controls.Page"));
+                userType.Activator = Activate_4_LoginPage;
+                userType.SetIsLocalType();
+                xamlType = userType;
+                break;
+
+            case 5:   //  云湖WP.PostDetailPage
+                userType = new global::云湖WP.云湖WP_Windows_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Windows.UI.Xaml.Controls.Page"));
+                userType.Activator = Activate_5_PostDetailPage;
+                userType.SetIsLocalType();
+                xamlType = userType;
+                break;
+
+            case 6:   //  云湖WP.CreatePostPage
+                userType = new global::云湖WP.云湖WP_Windows_XamlTypeInfo.XamlUserType(this, typeName, type, GetXamlTypeByName("Windows.UI.Xaml.Controls.Page"));
+                userType.Activator = Activate_6_CreatePostPage;
+                userType.SetIsLocalType();
+                xamlType = userType;
                 break;
             }
             return xamlType;

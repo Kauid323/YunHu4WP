@@ -370,17 +370,18 @@
                 <AppBarButton x:Name="AppBarBtnFilter" Icon="Filter" Label="筛选" Visibility="Collapsed">
                     <AppBarButton.Flyout>
                         <MenuFlyout>
-                            <MenuFlyoutItem x:ConnectionId='18' x:Name="FlyoutItemLatest" Text="最新文章 (当前)"                            />
-                            <MenuFlyoutItem x:ConnectionId='19' x:Name="FlyoutItemHot" Text="热门推荐"                         />
+                            <MenuFlyoutItem x:ConnectionId='19' x:Name="FlyoutItemLatest" Text="最新文章 (当前)"                            />
+                            <MenuFlyoutItem x:ConnectionId='20' x:Name="FlyoutItemHot" Text="热门推荐"                         />
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
-                <AppBarButton x:ConnectionId='16' x:Name="AppBarBtnNewChat" Icon="Add" Label="发起聊天"                                />
-                <AppBarButton x:ConnectionId='17' x:Name="AppBarBtnSearch" Icon="Find" Label="搜索"                               />
+                <AppBarButton x:ConnectionId='16' x:Name="AppBarBtnBoards" Icon="AllApps" Label="查看板块" Visibility="Collapsed"                               />
+                <AppBarButton x:ConnectionId='17' x:Name="AppBarBtnNewChat" Icon="Add" Label="发起聊天"                                />
+                <AppBarButton x:ConnectionId='18' x:Name="AppBarBtnSearch" Icon="Find" Label="搜索"                               />
             </CommandBar.PrimaryCommands>
             <CommandBar.SecondaryCommands>
-                <AppBarButton x:ConnectionId='20' x:Name="AppBarBtnSettings" Label="设置"                                 />
-                <AppBarButton x:ConnectionId='21' x:Name="AppBarBtnLogout" Label="退出登录"                               />
+                <AppBarButton x:ConnectionId='21' x:Name="AppBarBtnSettings" Label="设置"                                 />
+                <AppBarButton x:ConnectionId='22' x:Name="AppBarBtnLogout" Label="退出登录"                               />
             </CommandBar.SecondaryCommands>
         </CommandBar>
     </Page.BottomAppBar>

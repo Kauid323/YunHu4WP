@@ -16,7 +16,7 @@
         </Grid.RowDefinitions>
 
         <!-- 1. 顶部 Metro 标题栏 (纯几何直角风格，适中高度) -->
-        <Border Grid.Row="0" BorderThickness="0,0,0,1" BorderBrush="#22FFFFFF" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="10,6" Height="52">
+        <Border x:ConnectionId='1' Grid.Row="0" BorderThickness="0,0,0,1" BorderBrush="#22FFFFFF" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="10,6" Height="52"                           >
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="42" />
@@ -25,7 +25,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- 返回按钮 (原生 WinRT SymbolIcon) -->
-                <Button x:ConnectionId='19' x:Name="BtnBack" Width="40" Height="40" Padding="0" Margin="0" BorderThickness="0" Background="Transparent"                       VerticalAlignment="Center" HorizontalAlignment="Left">
+                <Button x:ConnectionId='20' x:Name="BtnBack" Width="40" Height="40" Padding="0" Margin="0" BorderThickness="0" Background="Transparent"                       VerticalAlignment="Center" HorizontalAlignment="Left">
                     <SymbolIcon Symbol="Back" />
                 </Button>
 
@@ -33,7 +33,7 @@
                 <TextBlock x:Name="TxtChatTitle" Grid.Column="1" Text="云湖聊天" FontSize="19" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="8,0,8,0" />
 
                 <!-- 右上角刷新/选项按钮 (原生 WinRT SymbolIcon) -->
-                <Button x:ConnectionId='20' x:Name="BtnRefresh" Grid.Column="2" Width="40" Height="40" Padding="0" Margin="0" BorderThickness="0" Background="Transparent"                          VerticalAlignment="Center" HorizontalAlignment="Right">
+                <Button x:ConnectionId='21' x:Name="BtnRefresh" Grid.Column="2" Width="40" Height="40" Padding="0" Margin="0" BorderThickness="0" Background="Transparent"                          VerticalAlignment="Center" HorizontalAlignment="Right">
                     <SymbolIcon Symbol="Refresh" />
                 </Button>
             </Grid>
@@ -55,7 +55,7 @@
                     <TextBlock x:Name="TxtUploadStatus" Text="正在上传..." FontSize="13" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0" />
                     <ProgressBar x:Name="UploadProgressBar" Grid.Column="1" Minimum="0" Maximum="100" Value="0" IsIndeterminate="False" Height="4" Foreground="{ThemeResource PhoneAccentBrush}" VerticalAlignment="Center" />
                     <TextBlock x:Name="TxtUploadPercentage" Grid.Column="2" Text="0%" FontSize="13" Foreground="{ThemeResource PhoneAccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0,0,0" />
-                    <Button x:ConnectionId='18' x:Name="BtnCancelUpload" Grid.Column="3" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" Margin="10,0,0,0" Background="Transparent" BorderThickness="0"                               VerticalAlignment="Center">
+                    <Button x:ConnectionId='19' x:Name="BtnCancelUpload" Grid.Column="3" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" Margin="10,0,0,0" Background="Transparent" BorderThickness="0"                               VerticalAlignment="Center">
                         <SymbolIcon Symbol="Cancel" Foreground="#FFCCCCCC" />
                     </Button>
                 </Grid>
@@ -68,7 +68,7 @@
             </StackPanel>
 
             <!-- 消息虚拟化列表 -->
-            <ListView x:ConnectionId='3' x:Name="ChatListView"
+            <ListView x:ConnectionId='4' x:Name="ChatListView"
                       SelectionMode="None"
                       IsItemClickEnabled="False"
                       HorizontalAlignment="Stretch"
@@ -114,7 +114,7 @@
                                 </Grid.ColumnDefinitions>
 
                                 <!-- 对方头像 (Metro 直角 34x34) -->
-                                <Grid x:ConnectionId='11' Width="34" Height="34" VerticalAlignment="Top" Margin="0,2,6,0"                       >
+                                <Grid x:ConnectionId='12' Width="34" Height="34" VerticalAlignment="Top" Margin="0,2,6,0"                       >
                                     <Border Background="#FF555555" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="{Binding AvatarLetterVisibility}">
                                         <TextBlock Text="{Binding SenderAvatarLetter}" FontSize="15" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
@@ -126,10 +126,10 @@
                                     <TextBlock Text="{Binding DisplaySenderName}" FontSize="11" Foreground="{ThemeResource PhoneMidBrush}" Margin="2,0,0,3" Visibility="{Binding ShowSenderNameVisibility}" TextTrimming="CharacterEllipsis" MaxWidth="240" />
 
                                     <!-- 消息气泡 (半透明深色背景，无圆角) -->
-                                    <Border x:ConnectionId='12' Background="#20FFFFFF" BorderThickness="1" BorderBrush="#33FFFFFF" Padding="8,6"                              >
+                                    <Border x:ConnectionId='13' Background="#20FFFFFF" BorderThickness="1" BorderBrush="#33FFFFFF" Padding="8,6"                              >
                                         <StackPanel>
                                             <!-- 视频消息预览块 (紧凑单行，带播放图标与时长提示) -->
-                                            <Border x:ConnectionId='13' Visibility="{Binding VideoMsgVisibility}" 
+                                            <Border x:ConnectionId='14' Visibility="{Binding VideoMsgVisibility}" 
                                                     Background="Transparent" 
                                                     BorderThickness="0" 
                                                     Padding="0,2" 
@@ -150,7 +150,7 @@
                                             </Border>
 
                                             <!-- 图片消息预览块 (紧凑单行) -->
-                                            <Border x:ConnectionId='14' Visibility="{Binding ImageMsgVisibility}" 
+                                            <Border x:ConnectionId='15' Visibility="{Binding ImageMsgVisibility}" 
                                                     Background="Transparent" 
                                                     BorderThickness="0" 
                                                     Padding="0,2" 
@@ -169,7 +169,7 @@
                                             </Border>
 
                                             <!-- 文件消息卡片 (文件名、大小、进度条、下载状态) -->
-                                            <Border x:ConnectionId='15' Visibility="{Binding FileMsgVisibility}"
+                                            <Border x:ConnectionId='16' Visibility="{Binding FileMsgVisibility}"
                                                     Background="Transparent"
                                                     BorderThickness="0"
                                                     Padding="0,2"
@@ -205,7 +205,7 @@
                                             </Border>
 
                                             <!-- 动态/文章消息预览块 (动态图标 + 动态标题) -->
-                                            <Border x:ConnectionId='16' Visibility="{Binding PostMsgVisibility}" 
+                                            <Border x:ConnectionId='17' Visibility="{Binding PostMsgVisibility}" 
                                                     Background="Transparent" 
                                                     BorderThickness="0" 
                                                     Padding="0,2" 
@@ -225,7 +225,7 @@
                                             </Border>
 
                                             <!-- HTML 网页富文本消息预览卡片 (不渲染复杂 HTML，点击直接进入查看/复制页) -->
-                                            <Border x:ConnectionId='17' Visibility="{Binding HtmlMsgVisibility}" 
+                                            <Border x:ConnectionId='18' Visibility="{Binding HtmlMsgVisibility}" 
                                                     Background="Transparent" 
                                                     BorderThickness="0" 
                                                     Padding="0,2" 
@@ -262,10 +262,10 @@
 
                                 <StackPanel Grid.Column="0" HorizontalAlignment="Right">
                                     <!-- 消息气泡 (主题色实色背景，无圆角) -->
-                                    <Border x:ConnectionId='5' Background="{ThemeResource PhoneAccentBrush}" Padding="8,6"                              >
+                                    <Border x:ConnectionId='6' Background="{ThemeResource PhoneAccentBrush}" Padding="8,6"                              >
                                         <StackPanel>
                                             <!-- 视频消息预览块 (紧凑单行，带播放图标与时长提示) -->
-                                            <Border x:ConnectionId='6' Visibility="{Binding VideoMsgVisibility}" 
+                                            <Border x:ConnectionId='7' Visibility="{Binding VideoMsgVisibility}" 
                                                     Background="Transparent" 
                                                     BorderThickness="0" 
                                                     Padding="0,2" 
@@ -286,7 +286,7 @@
                                             </Border>
 
                                             <!-- 图片消息预览块 (紧凑单行) -->
-                                            <Border x:ConnectionId='7' Visibility="{Binding ImageMsgVisibility}" 
+                                            <Border x:ConnectionId='8' Visibility="{Binding ImageMsgVisibility}" 
                                                     Background="Transparent" 
                                                     BorderThickness="0" 
                                                     Padding="0,2" 
@@ -305,7 +305,7 @@
                                             </Border>
 
                                             <!-- 文件消息卡片 (文件名、大小、进度条、下载状态) -->
-                                            <Border x:ConnectionId='8' Visibility="{Binding FileMsgVisibility}"
+                                            <Border x:ConnectionId='9' Visibility="{Binding FileMsgVisibility}"
                                                     Background="Transparent"
                                                     BorderThickness="0" 
                                                     Padding="0,2"
@@ -341,7 +341,7 @@
                                             </Border>
 
                                             <!-- 动态/文章消息预览块 (动态图标 + 动态标题) -->
-                                            <Border x:ConnectionId='9' Visibility="{Binding PostMsgVisibility}" 
+                                            <Border x:ConnectionId='10' Visibility="{Binding PostMsgVisibility}" 
                                                     Background="Transparent" 
                                                     BorderThickness="0" 
                                                     Padding="0,2" 
@@ -361,7 +361,7 @@
                                             </Border>
 
                                             <!-- HTML 网页富文本消息预览卡片 (不渲染复杂 HTML，点击直接进入查看/复制页) -->
-                                            <Border x:ConnectionId='10' Visibility="{Binding HtmlMsgVisibility}" 
+                                            <Border x:ConnectionId='11' Visibility="{Binding HtmlMsgVisibility}" 
                                                     Background="Transparent" 
                                                     BorderThickness="0" 
                                                     Padding="0,2" 
@@ -389,7 +389,7 @@
                                 </StackPanel>
 
                                 <!-- 我方头像 (Metro 直角 34x34) -->
-                                <Grid x:ConnectionId='4' Grid.Column="1" Width="34" Height="34" VerticalAlignment="Top" Margin="6,2,0,0"                       >
+                                <Grid x:ConnectionId='5' Grid.Column="1" Width="34" Height="34" VerticalAlignment="Top" Margin="6,2,0,0"                       >
                                     <Border Background="{ThemeResource PhoneAccentBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="{Binding AvatarLetterVisibility}">
                                         <TextBlock Text="{Binding SenderAvatarLetter}" FontSize="15" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
@@ -412,7 +412,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- 消息输入框 (无圆角) -->
-                <TextBox x:ConnectionId='1' x:Name="TxtInput"
+                <TextBox x:ConnectionId='2' x:Name="TxtInput"
                          PlaceholderText="输入消息..."
                          Margin="0,0,8,0"
                          BorderThickness="1"
@@ -421,7 +421,7 @@
                          VerticalAlignment="Center" />
 
                 <!-- 发送按钮 (采用 Windows Phone 标准 Forward 箭头图标，ClickMode="Press" 触摸即发) -->
-                <Button x:ConnectionId='2' x:Name="BtnSend"
+                <Button x:ConnectionId='3' x:Name="BtnSend"
                         Grid.Column="1"
                         MinWidth="42"
                         MinHeight="36"
@@ -455,16 +455,16 @@
                     IsOpen="False"
                     IsSticky="False">
             <CommandBar.PrimaryCommands>
-                <AppBarButton x:ConnectionId='21' x:Name="AppBarBtnPickImage" Icon="Pictures" Label="发送图片"                                  />
-                <AppBarButton x:ConnectionId='22' x:Name="AppBarBtnSendVideo" Icon="Video" Label="发送视频"                                  />
-                <AppBarButton x:ConnectionId='23' x:Name="AppBarBtnSendFile" Icon="OpenFile" Label="发送文件"                                 />
-                <AppBarButton x:ConnectionId='24' x:Name="AppBarBtnSendUrl" Icon="World" Label="媒体链接"                                />
+                <AppBarButton x:ConnectionId='22' x:Name="AppBarBtnPickImage" Icon="Pictures" Label="发送图片"                                  />
+                <AppBarButton x:ConnectionId='23' x:Name="AppBarBtnSendVideo" Icon="Video" Label="发送视频"                                  />
+                <AppBarButton x:ConnectionId='24' x:Name="AppBarBtnSendFile" Icon="OpenFile" Label="发送文件"                                 />
+                <AppBarButton x:ConnectionId='25' x:Name="AppBarBtnSendUrl" Icon="World" Label="媒体链接"                                />
             </CommandBar.PrimaryCommands>
             <CommandBar.SecondaryCommands>
-                <AppBarButton x:ConnectionId='25' x:Name="AppBarBtnRefresh" Label="刷新聊天"                          />
-                <AppBarButton x:ConnectionId='26' x:Name="AppBarBtnClearInput" Label="清空输入框"                                   />
-                <AppBarButton x:ConnectionId='27' x:Name="AppBarBtnScrollBottom" Label="滚动到底部"                                     />
-                <AppBarButton x:ConnectionId='28' x:Name="AppBarBtnViewLogs" Label="查看诊断日志"                                 />
+                <AppBarButton x:ConnectionId='26' x:Name="AppBarBtnRefresh" Label="刷新聊天"                          />
+                <AppBarButton x:ConnectionId='27' x:Name="AppBarBtnClearInput" Label="清空输入框"                                   />
+                <AppBarButton x:ConnectionId='28' x:Name="AppBarBtnScrollBottom" Label="滚动到底部"                                     />
+                <AppBarButton x:ConnectionId='29' x:Name="AppBarBtnViewLogs" Label="查看诊断日志"                                 />
             </CommandBar.SecondaryCommands>
         </CommandBar>
     </Page.BottomAppBar>

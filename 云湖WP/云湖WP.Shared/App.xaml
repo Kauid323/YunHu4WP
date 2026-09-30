@@ -3,5 +3,15 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:云湖WP">
+    <Application.Resources>
+        <ResourceDictionary>
+            <!-- Windows 8.1 does not provide the Phone theme brushes used by the
+                 original phone pages, so keep the Windows palette local. -->
+            <SolidColorBrush x:Key="SystemControlForegroundBaseMediumBrush" Color="#99FFFFFF" />
+            <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="SystemControlHighlightAccentBrush" Color="#FF0078D7" />
+            <SolidColorBrush x:Key="ApplicationPageBackgroundThemeBrush" Color="#FF000000" />
+        </ResourceDictionary>
+    </Application.Resources>
 
 </Application>

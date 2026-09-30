@@ -1,0 +1,135 @@
+<Page
+    x:Class="云湖WP.CommunityPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:云湖WP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 顶部 Metro 大标题 -->
+        <StackPanel Grid.Row="0" Margin="19,18,19,12">
+            <TextBlock Text="云湖" FontSize="11" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Typography.Capitals="SmallCaps" />
+            <TextBlock Text="动态广场" FontSize="42" FontWeight="Light" Margin="0,-4,0,0" />
+        </StackPanel>
+
+        <!-- 主内容区 -->
+        <Grid Grid.Row="1">
+            <ProgressBar x:Name="LoadingProgressBar" IsIndeterminate="True" VerticalAlignment="Top" Visibility="Collapsed" Foreground="{ThemeResource SystemControlHighlightAccentBrush}" Canvas.ZIndex="10"/>
+
+            <!-- 空状态提示 -->
+            <StackPanel x:Name="EmptyPanel" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16,0,16,0">
+                <TextBlock Text="暂无动态内容" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                <TextBlock Text="点击下方刷新或切换筛选查看最新分享" FontSize="13" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" HorizontalAlignment="Center" />
+            </StackPanel>
+
+            <!-- 动态列表视图 -->
+                <ListView x:Name="PostsListView"
+                      Grid.Row="0"
+                      SelectionMode="None"
+                      IsItemClickEnabled="True"
+                      ItemClick="PostsListView_ItemClick"
+                      Loaded="PostsListView_Loaded"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch"
+                      Padding="24,8,24,88">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0,0,0,12" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderThickness="1" BorderBrush="#22000000" Background="#FFFFFFFF" Padding="14">
+                            <StackPanel>
+                                <!-- 作者信息行 -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="36" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- 作者头像 (纯直角 Metro 32x32) -->
+                                    <Grid Width="32" Height="32" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                        <Border Background="{ThemeResource SystemControlHighlightAccentBrush}">
+                                            <TextBlock Text="{Binding DisplayAvatarLetter}" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <Image Source="{Binding AvatarBitmap}" Stretch="UniformToFill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                                    </Grid>
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
+                                        <TextBlock Text="{Binding DisplayAuthor}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding DisplayTime}" FontSize="11" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Margin="0,1,0,0" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- 文章标题 (加粗) -->
+                                <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,6" />
+
+                                <!-- 文章内容预览 (精简段落) -->
+                                <TextBlock Text="{Binding Content}" FontSize="13" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" TextWrapping="Wrap" LineHeight="18" MaxHeight="54" TextTrimming="CharacterEllipsis" Margin="0,0,0,10" />
+
+                                <!-- 统计信息行 -->
+                                <Grid Margin="0,4,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- 1. 点赞数 -->
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                        <FontIcon FontFamily="Segoe UI Symbol" Glyph="&#xE19F;" FontSize="11" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding LikeText}" FontSize="11" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" VerticalAlignment="Center" />
+                                    </StackPanel>
+
+                                    <!-- 2. 评论数 -->
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                        <SymbolIcon Symbol="Message" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding CommentText}" FontSize="11" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" VerticalAlignment="Center" />
+                                    </StackPanel>
+
+                                    <!-- 3. 收藏数 -->
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                        <SymbolIcon Symbol="Favorite" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding CollectText}" FontSize="11" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" VerticalAlignment="Center" />
+                                    </StackPanel>
+
+                                    <!-- 4. 投币数 -->
+                                    <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                        <FontIcon FontFamily="Segoe UI Symbol" Glyph="&#xE13D;" FontSize="11" Foreground="{ThemeResource SystemControlHighlightAccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding AmountText}" FontSize="11" Foreground="{ThemeResource SystemControlHighlightAccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Grid>
+    </Grid>
+
+    <!-- 底部操作栏 -->
+    <Page.BottomAppBar>
+        <CommandBar x:Name="PageCommandBar" IsOpen="False">
+            <CommandBar.PrimaryCommands>
+                <AppBarButton Icon="Refresh" Label="刷新" Click="BtnRefresh_Click" />
+                <AppBarButton x:Name="AppBarBtnNewPost" Icon="Add" Label="发帖" Click="AppBarBtnNewPost_Click" />
+            </CommandBar.PrimaryCommands>
+            <CommandBar.SecondaryCommands>
+                <AppBarButton x:Name="FlyoutItemLatest" Label="最新文章" Click="FilterLatest_Click" />
+                <AppBarButton x:Name="FlyoutItemHot" Label="热门推荐" Click="FilterHot_Click" />
+            </CommandBar.SecondaryCommands>
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>

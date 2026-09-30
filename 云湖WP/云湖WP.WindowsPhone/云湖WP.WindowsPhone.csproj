@@ -127,6 +127,15 @@
     <Compile Include="GroupsPage.xaml.cs">
       <DependentUpon>GroupsPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="GroupDetailPage.xaml.cs">
+      <DependentUpon>GroupDetailPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MessageTypeLimitPage.xaml.cs">
+      <DependentUpon>MessageTypeLimitPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="GroupDiskPage.xaml.cs">
+      <DependentUpon>GroupDiskPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="BotsPage.xaml.cs">
       <DependentUpon>BotsPage.xaml</DependentUpon>
     </Compile>
@@ -218,6 +227,18 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="GroupsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="GroupDetailPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="MessageTypeLimitPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="GroupDiskPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

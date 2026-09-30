@@ -12,10 +12,13 @@ ChatPage.xbf
 CreatePostPage.xbf
 EditBoardPage.xbf
 FriendsPage.xbf
+GroupDetailPage.xbf
+GroupDiskPage.xbf
 GroupsPage.xbf
 ImageViewerPage.xbf
 LoginPage.xbf
 MainPage.xbf
+MessageTypeLimitPage.xbf
 MyActivityPage.xbf
 MyProfilePage.xbf
 PostDetailPage.xbf

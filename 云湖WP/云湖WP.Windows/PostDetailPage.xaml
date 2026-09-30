@@ -1,0 +1,130 @@
+<Page
+    x:Class="云湖WP.PostDetailPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:云湖WP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 顶部标题 -->
+        <Grid Grid.Row="0" Margin="19,18,19,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="48" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button x:Name="BackButton" Width="40" Height="40" Padding="0" Background="Transparent" BorderThickness="0" Click="BackButton_Click" AutomationProperties.Name="返回">
+                <SymbolIcon Symbol="Back" Foreground="{ThemeResource SystemControlHighlightAccentBrush}" />
+            </Button>
+            <StackPanel Grid.Column="1">
+                <TextBlock Text="云湖" FontSize="11" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" />
+                <TextBlock Text="动态详情" FontSize="32" FontWeight="Light" Margin="0,0,0,0" />
+            </StackPanel>
+        </Grid>
+
+        <!-- 主内容区 -->
+        <ScrollViewer Grid.Row="1" x:Name="ContentScrollViewer">
+            <StackPanel x:Name="ContentPanel" Margin="24,8,24,88">
+                <ProgressBar x:Name="LoadingProgressBar" IsIndeterminate="True" Visibility="Collapsed" Foreground="{ThemeResource SystemControlHighlightAccentBrush}" />
+
+                <StackPanel x:Name="DetailPanel" Visibility="Collapsed">
+                    <!-- 标题 -->
+                    <TextBlock x:Name="TxtTitle" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,16" />
+
+                    <!-- 正文 -->
+                    <TextBlock x:Name="TxtContent" FontSize="16" TextWrapping="Wrap" Margin="0,0,0,20" />
+
+                    <!-- 作者信息 -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="48" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Image x:Name="ImgAvatar" Width="48" Height="48" Stretch="UniformToFill" />
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                            <TextBlock x:Name="TxtAuthor" FontSize="16" FontWeight="SemiBold" />
+                            <TextBlock x:Name="TxtTime" FontSize="12" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 板块信息 -->
+                    <Grid Margin="0,0,0,20">
+                        <TextBlock x:Name="TxtBoard" FontSize="14" Foreground="{ThemeResource SystemControlHighlightAccentBrush}" />
+                    </Grid>
+
+                    <!-- 互动统计 -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                            <TextBlock x:Name="TxtLikeNum" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                            <TextBlock Text="点赞" FontSize="12" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                            <TextBlock x:Name="TxtCommentNum" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                            <TextBlock Text="评论" FontSize="12" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                            <TextBlock x:Name="TxtAmountNum" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                            <TextBlock Text="打赏" FontSize="12" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+
+                <!-- 评论列表 -->
+                <StackPanel x:Name="CommentsPanel" Margin="0,20,0,0">
+                    <TextBlock Text="评论" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,12" />
+                    <ListView x:Name="CommentListView">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40" />
+                                        <ColumnDefinition Width="*" />
+                                                                        </Grid.ColumnDefinitions>
+                                    <Image x:Name="ImgCommentAvatar" Width="40" Height="40" Stretch="UniformToFill" />
+                                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="TxtCommentAuthor" FontSize="14" FontWeight="SemiBold" />
+                                            <TextBlock x:Name="TxtCommentTime" FontSize="11" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Grid.Column="1" HorizontalAlignment="Right" />
+                                        </Grid>
+                                        <TextBlock x:Name="TxtCommentContent" FontSize="14" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+
+                <!-- 空状态 -->
+                <StackPanel x:Name="EmptyPanel" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="暂无评论" FontSize="16" HorizontalAlignment="Center" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 底部评论输入 -->
+        <Grid Grid.Row="1" VerticalAlignment="Bottom" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="TxtCommentInput" PlaceholderText="发表评论..." Margin="16,8" />
+            <AppBarButton Grid.Column="1" Icon="Send" Label="发送" Click="SendComment_Click" Margin="8" />
+        </Grid>
+    </Grid>
+</Page>

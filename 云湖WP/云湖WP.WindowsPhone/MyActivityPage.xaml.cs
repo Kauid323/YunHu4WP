@@ -77,6 +77,7 @@ namespace 云湖WP
             }
 
             await LoadMyPostsAsync(reset: true);
+            if (e.Parameter is string && (string)e.Parameter == "boards") ActivityPivot.SelectedIndex = 1;
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)

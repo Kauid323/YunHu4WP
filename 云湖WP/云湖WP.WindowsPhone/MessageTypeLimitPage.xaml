@@ -1,0 +1,24 @@
+<Page x:Class="云湖WP.MessageTypeLimitPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid>
+        <Pivot x:Name="MessagePivot" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Margin="0" Padding="0">
+            <PivotItem Header="消息类型" HorizontalContentAlignment="Stretch" Padding="0">
+                <ScrollViewer HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel HorizontalAlignment="Stretch" Margin="19,12,19,30">
+                <CheckBox x:Name="MsgTypeTextCheck" Tag="1" Content="文本" />
+                <CheckBox x:Name="MsgTypeImageCheck" Tag="2" Content="图片" />
+                <CheckBox x:Name="MsgTypeMarkdownCheck" Tag="3" Content="Markdown" />
+                <CheckBox x:Name="MsgTypeFileCheck" Tag="4" Content="文件" />
+                <CheckBox x:Name="MsgTypeFormCheck" Tag="5" Content="表单" />
+                <CheckBox x:Name="MsgTypeStickerCheck" Tag="7" Content="贴纸" />
+                <CheckBox x:Name="MsgTypeHtmlCheck" Tag="8" Content="HTML" />
+                <CheckBox x:Name="MsgTypeTipCheck" Tag="9" Content="提示" />
+                <CheckBox x:Name="MsgTypeAudioCheck" Tag="11" Content="语音" />
+                <CheckBox x:Name="MsgTypeCallCheck" Tag="13" Content="通话" />
+                <CheckBox x:Name="MsgTypeA2uiCheck" Tag="14" Content="交互消息" />
+                <Button Content="保存消息类型限制" HorizontalAlignment="Stretch" Margin="0,18,0,0" Click="Save_Click" />
+            </StackPanel>
+                </ScrollViewer>
+            </PivotItem>
+        </Pivot>
+    </Grid>
+</Page>

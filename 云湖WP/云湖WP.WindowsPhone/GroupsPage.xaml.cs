@@ -177,9 +177,9 @@ namespace 云湖WP
             Frame.Navigate(typeof(ChatPage), new ChatNavigationArgs
             {
                 ChatId = item.ChatId,
-                ChatType = 2, // 群聊
+                ChatType = 2,
                 Title = item.DisplayName,
-                AvatarUrl = item.AvatarUrl ?? "",
+                AvatarUrl = item.AvatarUrl, // 群聊
                 Token = _token
             });
         }
